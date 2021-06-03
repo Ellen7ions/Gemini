@@ -17,6 +17,10 @@ module issue (
     output  wire        id_en_2
 );
 
+
+    assign p_data_1     = 1'b1;
+    assign p_data_2     = 1'b1;
+
     assign id_pc_1      = fifo_r_data_1[63:32];
     assign id_inst_1    = fifo_r_data_1[31: 0];
     assign id_en_1      = 1'b1;
