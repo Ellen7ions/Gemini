@@ -25,7 +25,7 @@ module regfile (
         if (w_ena) begin
             if (w_addr_1 == w_addr_2) begin
                 if (w_addr_1 != 32'h0) begin
-                    rf[w_addr_1] <= w_data_2;
+                    rf[w_addr_2] <= w_data_2;
                 end
             end else begin
                 if (w_addr_1 != 32'h0) begin
@@ -41,27 +41,39 @@ module regfile (
 
     always @(*) begin
         if (r_addr_1 == 32'h0) begin
-            r_data_1 = {32{1'b0}};
-        end else if ((w_addr_1 == w_addr_2) && (w_addr_1 == r_addr_1)) begin
-            r_data_1 = w_data_2;
-        end else if (w_addr_1 == r_addr_1) begin
-            r_data_1 = w_data_1;
-        end else if (w_addr_2 == r_addr_2) begin
-            r_data_1 = w_data_2;
+            r_data_1 = 32'h0;
+        end else if (w_addr_1 == w_addr_2) begin
+            if (r_addr_1 == w_addr_1) begin
+                r_data_1 = w_data_2;
+            end else begin
+                r_data_1 = rf[r_addr_1];
+            end
         end else begin
-            r_data_1 = rf[r_addr_1];
+            if (r_addr_1 == w_addr_1) begin
+                r_data_1 = w_data_1;
+            end else if (r_addr_1 == w_addr_2) begin
+                r_data_1 = w_data_2;
+            end else begin
+                r_data_1 = rf[r_addr_1];
+            end
         end
 
         if (r_addr_2 == 32'h0) begin
-            r_data_2 = {32{1'b0}};
-        end else if ((w_addr_1 == w_addr_2) && (w_addr_2 == r_addr_2)) begin
-            r_data_2 = w_data_2;
-        end else if (w_addr_1 == r_addr_2) begin
-            r_data_2 = w_data_1;
-        end else if (w_addr_2 == r_addr_2) begin
-            r_data_2 = w_data_2;
+            r_data_2 = 32'h0;
+        end else if (w_addr_1 == w_addr_2) begin
+            if (r_addr_2 == w_addr_1) begin
+                r_data_2 = w_data_2;
+            end else begin
+                r_data_2 = rf[r_addr_2];
+            end
         end else begin
-            r_data_2 = rf[r_addr_2];
+            if (r_addr_2 == w_addr_1) begin
+                r_data_2 = w_data_1;
+            end else if (r_addr_1 == w_addr_2) begin
+                r_data_2 = w_data_2;
+            end else begin
+                r_data_2 = rf[r_addr_2];
+            end
         end
     end
 
