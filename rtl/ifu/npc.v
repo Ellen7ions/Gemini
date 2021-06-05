@@ -20,11 +20,11 @@ module npc (
 );
 
   assign next_pc = 
-            { 32{id_take_j_imme  }} & {id_pc[31:28], id_j_imme, 2'b00} |
-            { 32{id_take_branch  }} & {id_pc + {{16{id_branch_offset[16]}}, id_branch_offset}} |
-            { 32{id_take_jr      }} & {id_rs_data} |
-            {{32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr)}} & ~inst_rdata_1_ok & ~inst_rdata_2_ok} & {pc} |
-            {{32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr)}} &  inst_rdata_1_ok & ~inst_rdata_2_ok} & {pc + 32'h4} |
-            {{32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr)}} &  inst_rdata_1_ok &  inst_rdata_2_ok} & {pc + 32'h8};
+            {32{id_take_j_imme  }} & {id_pc[31:28], id_j_imme, 2'b00} |
+            {32{id_take_branch  }} & {id_pc + {{16{id_branch_offset[16]}}, id_branch_offset}} |
+            {32{id_take_jr      }} & {id_rs_data} |
+            {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) & ~inst_rdata_1_ok & ~inst_rdata_2_ok}} & {pc} |
+            {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) &  inst_rdata_1_ok & ~inst_rdata_2_ok}} & {pc + 32'h4} |
+            {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) &  inst_rdata_1_ok &  inst_rdata_2_ok}} & {pc + 32'h8};
 
 endmodule

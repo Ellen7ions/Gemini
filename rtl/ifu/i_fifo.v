@@ -4,20 +4,15 @@ module i_fifo (
     input   wire        clk,
     input   wire        rst,
     input   wire        flush,
-
     input   wire        p_data_1,
     input   wire        p_data_2,
-
     output  wire [63:0] r_data_1,
     output  wire [63:0] r_data_2,
     output  wire        r_data_1_ok,
     output  wire        r_data_2_ok,
-
     output  wire        fifo_stall_req,
-
     input   wire        w_ena_1,
     input   wire        w_ena_2,
-
     input   wire [63:0] w_data_1,
     input   wire [63:0] w_data_2
 );

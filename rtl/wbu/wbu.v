@@ -6,12 +6,14 @@ module wbu (
     input   wire [31:0] mem_data,
     input   wire [4 :0] w_reg_dst,
 
+    output  wire        wb_w_reg_ena,
     output  wire [4 :0] wb_w_reg_addr,
-    output  wire [31:0] wb_w_data
+    output  wire [31:0] wb_w_reg_data
 );
 
+    assign wb_w_reg_ena     = 1'b0;
     assign wb_w_reg_addr    = w_reg_dst;
-    assign wb_w_data        = 
+    assign wb_w_reg_data    = 
             ({32{~wb_sel}} & alu_res) | 
             ({32{ wb_sel}} & mem_data);
 endmodule

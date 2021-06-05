@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 
 module issue (
+    input   wire        stall,
+
     input   wire [63:0] fifo_r_data_1,
     input   wire        fifo_r_data_1_ok,
     input   wire [63:0] fifo_r_data_2,
@@ -20,7 +22,8 @@ module issue (
     output  wire [4 :0] id1_rd_1,
     output  wire [4 :0] id1_sa_1,
     output  wire [5 :0] id1_funct_1,
-    output  wire        id1_w_reg_dst_1,
+    output  wire        id1_w_reg_ena_1,
+    output  wire [4 :0] id1_w_reg_dst_1,
     output  wire [15:0] id1_imme_1,
     output  wire [25:0] id1_j_imme_1,
     output  wire        id1_is_branch_1,
@@ -38,7 +41,8 @@ module issue (
     output  wire [4 :0] id1_rd_2,
     output  wire [4 :0] id1_sa_2,
     output  wire [5 :0] id1_funct_2,
-    output  wire        id1_w_reg_dst_2,
+    output  wire        id1_w_reg_ena_2,
+    output  wire [4 :0] id1_w_reg_dst_2,
     output  wire [15:0] id1_imme_2,
     output  wire [25:0] id1_j_imme_2,
     output  wire        id1_is_branch_2,
@@ -46,12 +50,18 @@ module issue (
     output  wire        id1_is_jr_2,
     output  wire        id1_is_ls_2
 );
+    wire id1_r_rs_ena_1, id1_r_rs_ena_2;
+    wire id1_r_rt_ena_1, id1_r_rt_ena_2;
 
     wire inst_jmp_1, inst_jmp_2;
+    wire raw_conflict;
     assign inst_jmp_1 =
             id1_is_branch_1 | id1_is_j_imme_1 | id1_is_jr_1;
     assign inst_jmp_2 =
             id1_is_branch_2 | id1_is_j_imme_2 | id1_is_jr_2;
+    assign raw_conflict = 
+            (id1_w_reg_ena_1 & id1_r_rs_ena_2 & (id1_w_reg_dst_1 == id1_rs_2)) |
+            (id1_w_reg_ena_1 & id1_r_rt_ena_2 & (id1_w_reg_dst_1 == id1_rt_2));
 
     always @(*) begin
         if (!fifo_r_data_1_ok) begin
@@ -64,7 +74,7 @@ module issue (
             end else if (inst_jmp_1 & fifo_r_data_2_ok) begin
                 p_data_1 = 1'b1;
                 p_data_2 = 1'b1;
-            end else if (fifo_r_data_2_ok & (id1_w_reg_dst_1 == id1_rs_2 || id1_w_reg_dst_1 == id1_rt_2)) begin
+            end else if (fifo_r_data_2_ok & raw_conflict) begin
                 p_data_1 = 1'b1;
                 p_data_2 = 1'b0; 
             end else if (id1_is_ls_1) begin
@@ -96,6 +106,9 @@ module issue (
         .id1_rd         (id1_rd_1),
         .id1_sa         (id1_sa_1),
         .id1_funct      (id1_funct_1),
+        .id1_r_rs_ena   (id1_r_rs_ena_1),
+        .id1_r_rt_ena   (id1_r_rt_ena_1),
+        .id1_w_reg_ena  (id1_w_reg_ena_1),
         .id1_w_reg_dst  (id1_w_reg_dst_1),
         .id1_imme       (id1_imme_1),
         .id1_j_imme     (id1_j_imme_1),
@@ -113,6 +126,9 @@ module issue (
         .id1_rd         (id1_rd_2),
         .id1_sa         (id1_sa_2),
         .id1_funct      (id1_funct_2),
+        .id1_r_rs_ena   (id1_r_rs_ena_2),
+        .id1_r_rt_ena   (id1_r_rt_ena_2),
+        .id1_w_reg_ena  (id1_w_reg_ena_2),
         .id1_w_reg_dst  (id1_w_reg_dst_2),
         .id1_imme       (id1_imme_2),
         .id1_j_imme     (id1_j_imme_2),
