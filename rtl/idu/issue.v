@@ -9,8 +9,8 @@ module issue (
     input   wire        fifo_r_data_2_ok,
 
     // pop fifo    
-    output  reg          p_data_1,
-    output  reg          p_data_2,
+    output  reg         p_data_1,
+    output  reg         p_data_2,
 
     // to iduc
     output  wire        id1_valid_1,
@@ -50,9 +50,7 @@ module issue (
     output  wire        id1_is_jr_2,
     output  wire        id1_is_ls_2
 );
-    wire id1_r_rs_ena_1, id1_r_rs_ena_2;
-    wire id1_r_rt_ena_1, id1_r_rt_ena_2;
-
+    wire id1_is_hilo_1, id1_is_hilo_2;
     wire inst_jmp_1, inst_jmp_2;
     wire raw_conflict;
     assign inst_jmp_1 =
@@ -60,32 +58,40 @@ module issue (
     assign inst_jmp_2 =
             id1_is_branch_2 | id1_is_j_imme_2 | id1_is_jr_2;
     assign raw_conflict = 
-            (id1_w_reg_ena_1 & id1_r_rs_ena_2 & (id1_w_reg_dst_1 == id1_rs_2)) |
-            (id1_w_reg_ena_1 & id1_r_rt_ena_2 & (id1_w_reg_dst_1 == id1_rt_2));
+            (id1_w_reg_ena_1  & ((id1_w_reg_dst_1 == id1_rs_2) & (id1_rs_2 != 5'h0))) |
+            (id1_w_reg_ena_1  & ((id1_w_reg_dst_1 == id1_rt_2) & (id1_rt_2 != 5'h0)));
 
     always @(*) begin
-        if (!fifo_r_data_1_ok) begin
+        if (stall) begin
             p_data_1 = 1'b0;
             p_data_2 = 1'b0;
         end else begin
-            if (inst_jmp_1 & !fifo_r_data_2_ok) begin
-                p_data_1 = 1'b1;
-                p_data_2 = 1'b0;
-            end else if (inst_jmp_1 & fifo_r_data_2_ok) begin
-                p_data_1 = 1'b1;
-                p_data_2 = 1'b1;
-            end else if (fifo_r_data_2_ok & raw_conflict) begin
-                p_data_1 = 1'b1;
-                p_data_2 = 1'b0; 
-            end else if (id1_is_ls_1) begin
-                p_data_1 = 1'b1;
-                p_data_2 = 1'b0;
-            end else if (!inst_jmp_1 & inst_jmp_2) begin
-                p_data_1 = 1'b1;
+            if (!fifo_r_data_1_ok) begin
+                p_data_1 = 1'b0;
                 p_data_2 = 1'b0;
             end else begin
-                p_data_1 = 1'b1;
-                p_data_2 = 1'b1;
+                if (inst_jmp_1 & !fifo_r_data_2_ok) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b0;
+                end else if (inst_jmp_1 & fifo_r_data_2_ok) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b1;
+                end else if (fifo_r_data_2_ok & raw_conflict) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b0; 
+                end else if (id1_is_ls_1) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b0;
+                end else if (!inst_jmp_1 & inst_jmp_2) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b0;
+                end else if (id1_is_hilo_1) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b0;
+                end else begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b1;
+                end
             end
         end
     end
@@ -106,8 +112,6 @@ module issue (
         .id1_rd         (id1_rd_1),
         .id1_sa         (id1_sa_1),
         .id1_funct      (id1_funct_1),
-        .id1_r_rs_ena   (id1_r_rs_ena_1),
-        .id1_r_rt_ena   (id1_r_rt_ena_1),
         .id1_w_reg_ena  (id1_w_reg_ena_1),
         .id1_w_reg_dst  (id1_w_reg_dst_1),
         .id1_imme       (id1_imme_1),
@@ -115,7 +119,8 @@ module issue (
         .id1_is_branch  (id1_is_branch_1),
         .id1_is_j_imme  (id1_is_j_imme_1),
         .id1_is_jr      (id1_is_jr_1),
-        .id1_is_ls      (id_is_ls_1)
+        .id1_is_ls      (id1_is_ls_1),
+        .id1_is_hilo    (id1_is_hilo_1)
     );
 
     idu_1 idp (
@@ -126,8 +131,6 @@ module issue (
         .id1_rd         (id1_rd_2),
         .id1_sa         (id1_sa_2),
         .id1_funct      (id1_funct_2),
-        .id1_r_rs_ena   (id1_r_rs_ena_2),
-        .id1_r_rt_ena   (id1_r_rt_ena_2),
         .id1_w_reg_ena  (id1_w_reg_ena_2),
         .id1_w_reg_dst  (id1_w_reg_dst_2),
         .id1_imme       (id1_imme_2),
@@ -135,7 +138,8 @@ module issue (
         .id1_is_branch  (id1_is_branch_2),
         .id1_is_j_imme  (id1_is_j_imme_2),
         .id1_is_jr      (id1_is_jr_2),
-        .id1_is_ls      (id1_is_ls_2)
+        .id1_is_ls      (id1_is_ls_2),
+        .id1_is_hilo    (id1_is_hilo_2)
     );
 
 endmodule

@@ -17,10 +17,10 @@ module idu_1 (
     output  wire            id1_is_branch,
     output  wire            id1_is_j_imme,
     output  wire            id1_is_jr,
-    output  wire            id1_is_ls
+    output  wire            id1_is_ls,
+
+    output  wire            id1_is_hilo
 );
-    wire id1_r_rs_ena;
-    wire id1_r_rt_ena;
 
     assign id1_op_code   = inst[31:26];
     assign id1_rs        = inst[25:21];
@@ -107,8 +107,43 @@ module idu_1 (
             id1_op_code == `SH_OP_CODE  |
             id1_op_code == `SW_OP_CODE  ;
 
-    assign id1_r_rs_ena     = 1'b0;
-    assign id1_r_rt_ena     = 1'b0;
-    assign id1_w_reg_ena    = 1'b0;    
+    assign id1_is_hilo      =
+            (id1_op_code == `SPECIAL_OP_CODE & (
+                id1_funct == `DIV_FUNCT     |
+                id1_funct == `DIVU_FUNCT    |
+                id1_funct == `MULT_FUNCT    |
+                id1_funct == `MULTU_FUNCT   |
+                id1_funct == `MFHI_FUNCT    |
+                id1_funct == `MFLO_FUNCT    |
+                id1_funct == `MTHI_FUNCT    |
+                id1_funct == `MTLO_FUNCT    
+            ));
+
+    assign id1_w_reg_ena    = 
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `DIV_FUNCT     )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `DIVU_FUNCT    )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MULT_FUNCT    )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MULTU_FUNCT   )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `JR_FUNCT      )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `JALR_FUNCT    )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MTHI_FUNCT    )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MTLO_FUNCT    )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `BREAK_FUNCT   )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `SYSCALL_FUNCT )   &
+            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `ERET_FUNCT    )   &
+            !(id1_op_code == `BEQ_OP_CODE   )  &
+            !(id1_op_code == `BNE_OP_CODE   )  &
+            !(id1_op_code == `BGTZ_OP_CODE  )  &
+            !(id1_op_code == `BLEZ_OP_CODE  )  &
+            !(id1_op_code == `J_OP_CODE     )  &
+            !(id1_op_code == `JAL_OP_CODE   )  &
+            !(id1_op_code == `SB_OP_CODE    )  &
+            !(id1_op_code == `SH_OP_CODE    )  &
+            !(id1_op_code == `SW_OP_CODE    )  &
+            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZ_RT_CODE  )   &
+            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZ_RT_CODE  )   &
+            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZAL_RT_CODE)   &
+            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZAL_RT_CODE)   &
+            !(id1_op_code == `COP0_OP_CODE   & id1_rt == `MTC0_RS_CODE  )   ;
     
 endmodule

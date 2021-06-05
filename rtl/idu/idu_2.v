@@ -21,7 +21,6 @@ module idu_2 (
     input  wire [1 :0]      forward_rs,
     input  wire [1 :0]      forward_rt,
 
-
     // regfile
     output wire [4 :0]      reg_r_addr_1,
     output wire [4 :0]      reg_r_addr_2,
@@ -49,11 +48,13 @@ module idu_2 (
     output wire [15:0]      id2_imme,
     output wire [25:0]      id2_j_imme,
     output wire [31:0]      id2_ext_imme,
+    output wire [31:0]      id2_pc,
     
     // control signals
     output wire             id2_take_branch,
     output wire             id2_take_j_imme,
     output wire             id2_take_jr,
+    output wire             id2_flush_req,
 
     output reg  [2 :0]      id2_src_a_sel,
     output reg  [2 :0]      id2_src_b_sel,
@@ -114,7 +115,14 @@ module idu_2 (
 
     assign id2_take_branch  =
             id2_is_branch & (
-                ?
+                (id1_op_code == `BEQ_OP_CODE                                    ) & ($signed(id2_rs_data) == $signed(id2_rt_data))    |
+                (id1_op_code == `BNE_OP_CODE                                    ) & ($signed(id2_rs_data) != $signed(id2_rt_data))    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BGEZ_RT_CODE    ) & ($signed(id2_rs_data) >= $signed(32'h0      ))    |
+                (id1_op_code == `BGTZ_OP_CODE                                   ) & ($signed(id2_rs_data) >  $signed(32'h0      ))    |
+                (id1_op_code == `BLEZ_OP_CODE                                   ) & ($signed(id2_rs_data) <= $signed(32'h0      ))    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BLTZ_RT_CODE    ) & ($signed(id2_rs_data) <  $signed(32'h0      ))    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BGEZAL_RT_CODE  ) & ($signed(id2_rs_data) >= $signed(32'h0      ))    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BLTZAL_RT_CODE  ) & ($signed(id2_rs_data) <  $signed(32'h0      ))    
             );
     
     assign id2_take_j_imme  =
@@ -126,6 +134,9 @@ module idu_2 (
             id2_is_jr & (
                 1'b1
             );
+
+    assign id2_flush_req    =
+            id2_take_jr | id2_take_j_imme | id2_take_branch;
 
     always @(*) begin
         if (id1_op_code == `SPECIAL_OP_CODE & (
@@ -299,32 +310,7 @@ module idu_2 (
                 )
             }} & (`ALU_RES_SEL_PC_8));
 
-    assign id2_w_reg_ena    =
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `DIV_FUNCT     )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `DIVU_FUNCT    )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MULT_FUNCT    )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MULTU_FUNCT   )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `JR_FUNCT      )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `JALR_FUNCT    )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MTHI_FUNCT    )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MTLO_FUNCT    )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `BREAK_FUNCT   )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `SYSCALL_FUNCT )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `ERET_FUNCT    )   &
-            !(id1_op_code == `BEQ_OP_CODE   )  &
-            !(id1_op_code == `BNE_OP_CODE   )  &
-            !(id1_op_code == `BGTZ_OP_CODE  )  &
-            !(id1_op_code == `BLEZ_OP_CODE  )  &
-            !(id1_op_code == `J_OP_CODE     )  &
-            !(id1_op_code == `JAL_OP_CODE   )  &
-            !(id1_op_code == `SB_OP_CODE    )  &
-            !(id1_op_code == `SH_OP_CODE    )  &
-            !(id1_op_code == `SW_OP_CODE    )  &
-            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZ_RT_CODE  )   &
-            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZ_RT_CODE  )   &
-            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZAL_RT_CODE)   &
-            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZAL_RT_CODE)   &
-            !(id1_op_code == `COP0_OP_CODE   & id1_rt == `MTC0_RS_CODE  )   ;
+    assign id2_w_reg_ena    = id1_w_reg_ena;
 
     assign id2_w_hilo_ena   =
             ({2{
