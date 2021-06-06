@@ -3,11 +3,9 @@
 module hilo (
     input   wire        clk,
     input   wire        rst,
-    input   wire        w_hi_ena,
+    input   wire [1 :0] w_hilo_ena,
     input   wire [31:0] w_hi_data,
-    input   wire        w_lo_ena,
     input   wire [31:0] w_lo_data,
-    
     output  wire [31:0] r_hi_data,
     output  wire [31:0] r_lo_data
 );
@@ -17,11 +15,11 @@ module hilo (
             hi <= 32'h0;
             lo <= 32'h0;
         end else begin
-            if (w_hi_ena) begin
+            if (w_hilo_ena[1]) begin
                 hi <= w_hi_data;
             end
 
-            if (w_lo_ena) begin
+            if (w_hilo_ena[0]) begin
                 lo <= w_lo_data;
             end
         end

@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "id_def.v"
+`include "../utils/forward_def.v"
 
 module idu_2 (
     input  wire [5 :0]      id1_op_code,
@@ -20,6 +21,11 @@ module idu_2 (
 
     input  wire [1 :0]      forward_rs,
     input  wire [1 :0]      forward_rt,
+    input  wire [31:0]      exc_alu_res,
+    input  wire [31:0]      exp_alu_res,
+    input  wire [31:0]      memc_alu_res,
+    input  wire [31:0]      memc_r_data,
+    input  wire [31:0]      memp_alu_res,
 
     // regfile
     output wire [4 :0]      reg_r_addr_1,
@@ -110,8 +116,45 @@ module idu_2 (
     assign id2_ext_imme     = sign_ext ? {{16{id1_imme[15]}}, id1_imme} : {{16{1'b0}}, id1_imme};
     
     // forward !
-    assign id2_rs_data      = reg_r_data_1;
-    assign id2_rt_data      = reg_r_data_2;
+    assign id2_rs_data      =
+            ({3{
+                forward_rs == `FORWARD_NOP
+            }} & reg_r_data_1   )   |
+            ({3{
+                forward_rs == `FORWARD_EXC_ALU_RES
+            }} & exc_alu_res    )   |
+            ({3{
+                forward_rs == `FORWARD_EXP_ALU_RES
+            }} & exp_alu_res    )   |
+            ({3{
+                forward_rs == `FORWARD_MEMC_ALU_RES
+            }} & memc_alu_res   )   |
+            ({3{
+                forward_rs == `FORWARD_MEMC_MEM_DATA
+            }} & memc_r_data    )   |
+            ({3{
+                forward_rs == `FORWARD_MEMP_ALU_RES
+            }} & memp_alu_res   )   ;
+    
+    assign id2_rt_data      =
+            ({3{
+                forward_rt == `FORWARD_NOP
+            }} & reg_r_data_2   )   |
+            ({3{
+                forward_rt == `FORWARD_EXC_ALU_RES
+            }} & exc_alu_res    )   |
+            ({3{
+                forward_rt == `FORWARD_EXP_ALU_RES
+            }} & exp_alu_res    )   |
+            ({3{
+                forward_rt == `FORWARD_MEMC_ALU_RES
+            }} & memc_alu_res   )   |
+            ({3{
+                forward_rt == `FORWARD_MEMC_MEM_DATA
+            }} & memc_r_data    )   |
+            ({3{
+                forward_rt == `FORWARD_MEMP_ALU_RES
+            }} & memp_alu_res   )   ;
 
     assign id2_take_branch  =
             id2_is_branch & (

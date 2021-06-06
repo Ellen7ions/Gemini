@@ -11,7 +11,6 @@ module alu (
     output  wire [31:0] alu_res,
     output  reg  [31:0] alu_hi_res,
     output  reg  [31:0] alu_lo_res,
-
     output  wire        alu_stall_req
 );
     wire [32:0] ext_src_a, ext_src_b;
