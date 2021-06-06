@@ -22,8 +22,12 @@ module forward (
     input   wire [4 :0] mem_w_reg_dst_2,
     input   wire        mem_ls_ena_2,
 
+    input   wire [1 :0] ex_mem_w_hilo_ena,
+
     output  reg  [2 :0] forward_rs,
     output  reg  [2 :0] forward_rt,
+    output  reg         forward_hi,
+    output  reg         forward_lo,
 
     output  wire        forward_stall_req,  // stall issue id1_id2
     output  wire        forward_flush_req   // flush id2_ex
@@ -67,6 +71,14 @@ module forward (
         end else begin
             forward_rt = `FORWARD_NOP;
         end
+    end
+
+    always @(*) begin
+        forward_hi = ex_mem_w_hilo_ena[1];
+    end
+
+    always @(*) begin
+        forward_lo = ex_mem_w_hilo_ena[0];
     end
     
     assign forward_stall_req = 

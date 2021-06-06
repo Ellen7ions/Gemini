@@ -68,6 +68,7 @@ module idu_2 (
     output wire [2 :0]      id2_alu_res_sel,
     output wire             id2_w_reg_ena,
     output wire [1 :0]      id2_w_hilo_ena,
+    output wire             id2_w_cp0_ena,
     output wire             id2_ls_ena,
     output wire [3 :0]      id2_ls_sel,
     output wire             id2_wb_reg_sel
@@ -374,6 +375,9 @@ module idu_2 (
                     id1_funct == `MTLO_FUNCT
                 )
             )}}) & 2'b01;
+    
+    assign id2_w_cp0_ena    =
+            (id1_op_code == `COP0_OP_CODE & id1_rs == `MTC0_RS_CODE);
 
     assign id2_ls_ena       =
             id2_ls_sel != `LS_SEL_NOP;

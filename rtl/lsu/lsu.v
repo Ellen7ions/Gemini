@@ -13,11 +13,20 @@ module lsu (
     input   wire        ex_mem_ls_ena,
     input   wire [3 :0] ex_mem_ls_sel,
     input   wire [31:0] ex_mem_wb_reg_sel,
+    
+    input   wire [1 :0] ex_mem_w_hilo_ena,
+    input   wire [31:0] ex_mem_hi_res,
+    input   wire [31:0] ex_mem_lo_res,
+    
     output  wire [31:0] mem_alu_res,
     output  wire        mem_w_reg_ena,
     output  wire [4 :0] mem_w_reg_dst,
     output  wire [31:0] mem_r_data,
     output  wire        mem_wb_reg_sel,
+
+    output  wire [1 :0] mem_w_hilo_ena,
+    output  wire [31:0] mem_hi_res,
+    output  wire [31:0] mem_lo_res,
     // send from ex
     output  wire        data_ram_en,
     output  wire [3 :0] data_ram_wen,
@@ -78,5 +87,9 @@ module lsu (
     assign mem_wb_reg_sel   = ex_mem_wb_reg_sel;
     assign mem_alu_res      = ex_mem_alu_res;
     assign mem_w_reg_dst    = ex_mem_w_reg_dst;
+
+    assign mem_w_hilo_ena   = ex_mem_w_hilo_ena;     
+    assign mem_hi_res       = ex_mem_hi_res;
+    assign mem_lo_res       = ex_mem_lo_res; 
 
 endmodule

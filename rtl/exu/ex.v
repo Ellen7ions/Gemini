@@ -26,11 +26,18 @@ module ex (
     input   wire [31:0]     id2_pc,
 
     // hilo
+    input   wire            forward_hi,
+    input   wire            forward_lo,
     input   wire [31:0]     hilo_hi,
     input   wire [31:0]     hilo_lo,
+    input   wire [31:0]     memc_hi_res,
+    input   wire [31:0]     memc_lo_res,
     // cp0
-    output  wire [5 :0]     ex_cp0_addr,
-    input   wire [31:0]     ex_cp0_data,
+    output  wire [4 :0]     ex_cp0_r_addr,
+    input   wire [31:0]     ex_cp0_r_data,
+    output  wire            ex_cp0_w_ena,
+    output  wire [4 :0]     ex_cp0_w_addr,
+    output  wire [31:0]     ex_cp0_w_data,
 
     // control signals
     input   wire [2 :0]     id2_src_a_sel,
@@ -39,6 +46,7 @@ module ex (
     input   wire [2 :0]     id2_alu_res_sel,
     input   wire            id2_w_reg_ena,
     input   wire [1 :0]     id2_w_hilo_ena,
+    input   wire            id2_w_cp0_ena,
     input   wire            id2_ls_ena,
     input   wire [3 :0]     id2_ls_sel,
     input   wire            id2_wb_reg_sel,
@@ -62,6 +70,24 @@ module ex (
 
     wire [31: 0] src_a, src_b, alu_res;
     wire [31: 0] alu_hi_res, alu_lo_res;
+
+    wire [31: 0] fw_hi, fw_lo;
+
+    assign fw_hi        =
+            ({32{
+                forward_hi
+            }} & memc_hi_res)   |
+            ({32{
+                ~forward_hi
+            }} & hilo_hi    )   ;
+    
+    assign fw_lo        =
+            ({32{
+                forward_lo
+            }} & memc_hi_res)   |
+            ({32{
+                ~forward_lo
+            }} & hilo_lo    )   ;
 
     assign src_a        =
             ({32{
@@ -97,29 +123,32 @@ module ex (
             }} & alu_res        )   |
             ({32{
                 id2_alu_res_sel == `ALU_RES_SEL_HI
-            }} & hilo_hi        )   |
+            }} & fw_hi          )   |
             ({32{
                 id2_alu_res_sel == `ALU_RES_SEL_LO
-            }} & hilo_lo        )   |
+            }} & fw_lo          )   |
             ({32{
                 id2_alu_res_sel == `ALU_RES_SEL_PC_8
             }} & (id2_pc + 32'h8))  |
             ({32{
                 id2_alu_res_sel == `ALU_RES_SEL_CP0
-            }} & ex_cp0_data);
+            }} & ex_cp0_r_data);
     
-    assign ex_cp0_addr  = id2_rd;
+    assign ex_cp0_r_addr    = id2_rd;
+    assign ex_cp0_w_ena     = id2_w_cp0_ena;
+    assign ex_cp0_w_addr    = id2_rd;
+    assign ex_cp0_w_data    = id2_rt_data;
 
-    assign ex_w_hilo_ena= id2_w_hilo_ena;
-    assign ex_hi_res    = alu_hi_res;
-    assign ex_lo_res    = alu_lo_res;
+    assign ex_w_hilo_ena    = id2_w_hilo_ena;
+    assign ex_hi_res        = alu_hi_res;
+    assign ex_lo_res        = alu_lo_res;
 
-    assign ex_w_reg_ena = id2_w_reg_ena;
-    assign ex_w_reg_dst = id2_w_reg_dst;
-    assign ex_ls_ena    = id2_ls_ena;
-    assign ex_ls_sel    = id2_ls_sel;
-    assign ex_wb_reg_sel= id2_wb_reg_sel;
-    assign ex_rt_data   = id2_rt_data;
+    assign ex_w_reg_ena     = id2_w_reg_ena;
+    assign ex_w_reg_dst     = id2_w_reg_dst;
+    assign ex_ls_ena        = id2_ls_ena;
+    assign ex_ls_sel        = id2_ls_sel;
+    assign ex_wb_reg_sel    = id2_wb_reg_sel;
+    assign ex_rt_data       = id2_rt_data;
 
     alu alu_kernel (
         .clk            (clk            ),

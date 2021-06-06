@@ -27,9 +27,11 @@ module id2_ex (
     input   wire [2 :0] id2_alu_res_sel_o,
     input   wire        id2_w_reg_ena_o,
     input   wire [1 :0] id2_w_hilo_ena_o,
+    input   wire        id2_w_cp0_ena_o,
     input   wire        id2_ls_ena_o,
     input   wire [3 :0] id2_ls_sel_o,
     input   wire        id2_wb_reg_sel_o,
+
     output  reg         id2_is_branch_i,
     output  reg         id2_is_j_imme_i,
     output  reg         id2_is_jr_i,
@@ -51,6 +53,7 @@ module id2_ex (
     output  reg  [2 :0] id2_alu_res_sel_i,
     output  reg         id2_w_reg_ena_i,
     output  reg  [1 :0] id2_w_hilo_ena_i,
+    output  reg         id2_w_cp0_ena_i,
     output  reg         id2_ls_ena_i,
     output  reg  [3 :0] id2_ls_sel_i,
     output  reg         id2_wb_reg_sel_i
@@ -78,6 +81,7 @@ module id2_ex (
             id2_alu_res_sel_i   <= 3'h0;
             id2_w_reg_ena_i     <= 1'h0;
             id2_w_hilo_ena_i    <= 2'h0;
+            id2_w_cp0_ena_i     <= 1'h0;
             id2_ls_ena_i        <= 1'h0;
             id2_ls_sel_i        <= 4'h0;
             id2_wb_reg_sel_i    <= 1'h0;
@@ -103,6 +107,7 @@ module id2_ex (
             id2_alu_res_sel_i   <= id2_alu_res_sel_o;
             id2_w_reg_ena_i     <= id2_w_reg_ena_o;
             id2_w_hilo_ena_i    <= id2_w_hilo_ena_o;
+            id2_w_cp0_ena_i     <= id2_w_cp0_ena_o;
             id2_ls_ena_i        <= id2_ls_ena_o;
             id2_ls_sel_i        <= id2_ls_sel_o;
             id2_wb_reg_sel_i    <= id2_wb_reg_sel_o;
