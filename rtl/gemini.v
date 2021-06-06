@@ -4,7 +4,6 @@ module gemini (
     input   wire        clk,
     input   wire        rst,
     input   wire [5 :0] interupt,
-    
     output  wire        inst_ena,
     output  wire [31:0] inst_addr_1,
     output  wire [31:0] inst_addr_2,
@@ -13,15 +12,12 @@ module gemini (
     input   wire        inst_rdata_1_ok,
     input   wire        inst_rdata_2_ok,
     input   wire        i_cache_stall_req,
-
-
     output  wire        data_ena,
     output  wire [3 :0] data_wea,
     output  wire [31:0] data_waddr,
     output  wire [31:0] data_wdata,
     output  wire [31:0] data_rdata,
     input   wire        d_cache_stall_req,
-
     output  wire [31:0] debug_pc,
     output  wire        debug_w_ena,
     output  wire [31:0] debug_w_addr,
@@ -236,6 +232,12 @@ module gemini (
     wire            id2c_take_jr;
 
     // ex => mem
+    wire            exc_cp0_w_ena;
+    wire [4 :0]     exc_cp0_w_addr;
+    wire [31:0]     exc_cp0_w_data;
+    wire [31:0]     exc_cp0_r_addr;
+    wire [31:0]     exc_cp0_r_data;
+
     wire [31:0]     exc_alu_res_o;
     wire            exc_w_hilo_ena_o;
     wire [31:0]     exc_hi_res_o;
@@ -921,8 +923,8 @@ module gemini (
         .ex_cp0_w_ena       (exc_cp0_w_ena      ),
         .ex_cp0_w_addr      (exc_cp0_w_addr     ),
         .ex_cp0_w_data      (exc_cp0_w_data     ),
-        .ex_cp0_addr        (exc_cp0_addr       ),
-        .ex_cp0_data        (exc_cp0_data       ),
+        .ex_cp0_r_addr      (exc_cp0_r_addr     ),
+        .ex_cp0_r_data      (exc_cp0_r_data     ),
         .id2_src_a_sel      (id2c_src_a_sel_i   ),
         .id2_src_b_sel      (id2c_src_b_sel_i   ),
         .id2_alu_sel        (id2c_alu_sel_i     ),
@@ -961,8 +963,8 @@ module gemini (
         .hilo_lo            (),
         .memc_hi_res        (),
         .memc_lo_res        (),
-        .ex_cp0_addr        (),
-        .ex_cp0_data        (),
+        .ex_cp0_r_addr      (),
+        .ex_cp0_r_data      (),
         .ex_cp0_w_ena       (),
         .ex_cp0_w_addr      (),
         .ex_cp0_w_data      (),
