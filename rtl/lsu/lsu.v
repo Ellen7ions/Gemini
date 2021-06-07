@@ -83,7 +83,7 @@ module lsu (
                 ex_mem_ls_sel == `LS_SEL_LW
             }} & data_ram_rdata))                                    ;
     
-    assign mem_w_reg_dst    = ex_mem_w_reg_dst;
+    assign mem_w_reg_ena    = ex_mem_w_reg_ena;
     assign mem_wb_reg_sel   = ex_mem_wb_reg_sel;
     assign mem_alu_res      = ex_mem_alu_res;
     assign mem_w_reg_dst    = ex_mem_w_reg_dst;

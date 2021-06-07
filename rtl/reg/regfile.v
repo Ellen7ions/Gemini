@@ -13,10 +13,10 @@ module regfile (
     input   wire [4 :0] r_addr_4,
     output  reg  [31:0] r_data_4,
     input   wire        w_ena_1,
-    input   wire [5 :0] w_addr_1,
+    input   wire [4 :0] w_addr_1,
     input   wire [31:0] w_data_1,
     input   wire        w_ena_2,
-    input   wire [5 :0] w_addr_2,
+    input   wire [4 :0] w_addr_2,
     input   wire [31:0] w_data_2
 );
 

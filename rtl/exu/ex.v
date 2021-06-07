@@ -33,11 +33,11 @@ module ex (
     input   wire [31:0]     memc_hi_res,
     input   wire [31:0]     memc_lo_res,
     // cp0
-    output  wire [4 :0]     ex_cp0_r_addr,
-    input   wire [31:0]     ex_cp0_r_data,
     output  wire            ex_cp0_w_ena,
     output  wire [4 :0]     ex_cp0_w_addr,
     output  wire [31:0]     ex_cp0_w_data,
+    output  wire [4 :0]     ex_cp0_r_addr,
+    input   wire [31:0]     ex_cp0_r_data,
 
     // control signals
     input   wire [2 :0]     id2_src_a_sel,

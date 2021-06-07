@@ -118,42 +118,42 @@ module idu_2 (
     
     // forward !
     assign id2_rs_data      =
-            ({3{
+            ({32{
                 forward_rs == `FORWARD_NOP
             }} & reg_r_data_1   )   |
-            ({3{
+            ({32{
                 forward_rs == `FORWARD_EXC_ALU_RES
             }} & exc_alu_res    )   |
-            ({3{
+            ({32{
                 forward_rs == `FORWARD_EXP_ALU_RES
             }} & exp_alu_res    )   |
-            ({3{
+            ({32{
                 forward_rs == `FORWARD_MEMC_ALU_RES
             }} & memc_alu_res   )   |
-            ({3{
+            ({32{
                 forward_rs == `FORWARD_MEMC_MEM_DATA
             }} & memc_r_data    )   |
-            ({3{
+            ({32{
                 forward_rs == `FORWARD_MEMP_ALU_RES
             }} & memp_alu_res   )   ;
     
     assign id2_rt_data      =
-            ({3{
+            ({32{
                 forward_rt == `FORWARD_NOP
             }} & reg_r_data_2   )   |
-            ({3{
+            ({32{
                 forward_rt == `FORWARD_EXC_ALU_RES
             }} & exc_alu_res    )   |
-            ({3{
+            ({32{
                 forward_rt == `FORWARD_EXP_ALU_RES
             }} & exp_alu_res    )   |
-            ({3{
+            ({32{
                 forward_rt == `FORWARD_MEMC_ALU_RES
             }} & memc_alu_res   )   |
-            ({3{
+            ({32{
                 forward_rt == `FORWARD_MEMC_MEM_DATA
             }} & memc_r_data    )   |
-            ({3{
+            ({32{
                 forward_rt == `FORWARD_MEMP_ALU_RES
             }} & memp_alu_res   )   ;
 

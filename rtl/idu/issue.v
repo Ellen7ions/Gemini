@@ -96,11 +96,11 @@ module issue (
         end
     end
 
-    assign id1_valid1_1 = p_data_1;
+    assign id1_valid_1  = p_data_1;
     assign id1_pc_1     = fifo_r_data_1[63:32];
     assign id1_inst_1   = fifo_r_data_1[31: 0];
 
-    assign id1_valid1_1 = p_data_2;
+    assign id1_valid_2  = p_data_2;
     assign id1_pc_2     = fifo_r_data_2[63:32];
     assign id1_inst_2   = fifo_r_data_2[31: 0];
 
