@@ -11,7 +11,7 @@ module pc(
 
     always @(posedge clk) begin
         if (rst) begin
-            pc <= 32'hbfbf_fffc;
+            pc <= 32'h0;
         end else if (flush && !stall) begin
             pc <= 32'h0;
         end else if (!flush && !stall) begin

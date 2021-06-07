@@ -16,6 +16,8 @@ module i_fifo (
     input   wire [63:0] w_data_1,
     input   wire [63:0] w_data_2
 );
+    localparam SIZE         = 8;
+    localparam INDEX        = $clog2(SIZE);
 
     localparam [1:0] NORMAL = 2'b00;
     localparam [1:0] WAIT_1 = 2'b01;
@@ -24,31 +26,34 @@ module i_fifo (
 
     reg  [63:0] wait_reg_1, wait_reg_2;
 
-    reg  [63:0] queue[3:0];
-    reg  [4 :0] w_ptr, r_ptr;
-    wire [4 :0] wptr_plus_one;
+    reg  [63:0] queue[SIZE-1:0];
+    reg  [INDEX:0] w_ptr, r_ptr;
+    wire [INDEX:0] wptr_plus_one;
+    wire [INDEX:0] rptr_plus_one;
     wire left_one, full, empty;
-    assign full         = (w_ptr[4] ^ r_ptr[4]) & (w_ptr[3:0] == r_ptr[3:0]);
+    assign full         = (w_ptr[INDEX] ^ r_ptr[INDEX]) & (w_ptr[INDEX-1:0] == r_ptr[INDEX-1:0]);
     assign empty        = (r_ptr == w_ptr);
-    assign wptr_plus_one= (w_ptr + 5'h1);
-    assign left_one     = (wptr_plus_one[4] ^ r_ptr[4]) & (wptr_plus_one[3:0] == r_ptr[3:0]);
+    assign wptr_plus_one= (w_ptr + 4'h1);
+    assign rptr_plus_one= (r_ptr + 4'h1);
+    assign left_one     = (wptr_plus_one[INDEX] ^ r_ptr[INDEX]) & (wptr_plus_one[INDEX-1:0] == r_ptr[INDEX-1:0]);
 
     assign r_data_1_ok  = ~empty;
-    assign r_data_2_ok  = ~empty & (r_ptr + 5'h1 != w_ptr);
-
+    assign r_data_2_ok  = ~empty & (r_ptr + 4'h1 != w_ptr);
     assign fifo_stall_req = 
             (w_ena_1 &  w_ena_2 & (full | left_one))    | 
             (w_ena_1 & !w_ena_2 &  full)                |
             (cstate != NORMAL);
 
-    assign r_data_1     = queue[r_ptr       ];
-    assign r_data_2     = queue[r_ptr + 5'h1];
+    assign r_data_1     = queue[r_ptr           [INDEX-1:0]];
+    assign r_data_2     = queue[rptr_plus_one   [INDEX-1:0]];
 
     always @(posedge clk) begin
         if (rst || flush) begin
-            w_ptr   <= 5'h0;
-            r_ptr   <= 5'h0;
-            cstate  <= NORMAL;
+            w_ptr           <= {INDEX{1'b0}};
+            r_ptr           <= {INDEX{1'b0}};
+            cstate          <= NORMAL;
+            wait_reg_1      <= 64'h0;
+            wait_reg_2      <= 64'h0;
         end else begin
             // pop
             case({p_data_1, p_data_2})

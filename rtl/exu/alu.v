@@ -44,6 +44,8 @@ module alu (
         ext_alu_res = 33'h0;
         alu_hi_res  = 32'h0;
         alu_lo_res  = 32'h0;
+        div_en      = 1'b0;
+        div_sign    = 1'b0;
 
         case (alu_sel)
         `ALU_SEL_NOP    : begin

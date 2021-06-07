@@ -334,7 +334,7 @@ module idu_2 (
 
     assign id2_alu_res_sel  =
             ({3{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
+                (id1_op_code == `COP0_OP_CODE   ) & (
                 id1_rs == `MFC0_RS_CODE
             )}} & (`ALU_RES_SEL_CP0))   |
             ({3{

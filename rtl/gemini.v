@@ -5,8 +5,8 @@ module gemini (
     input   wire        rst,
     input   wire [5 :0] interupt,
     output  wire        inst_ena,
-    output  wire [31:0] inst_addr_1,
-    output  wire [31:0] inst_addr_2,
+    output  wire [31:0] inst_addr_next_pc,
+    output  wire [31:0] inst_addr_pc,
     input   wire [31:0] inst_rdata_1,
     input   wire [31:0] inst_rdata_2,
     input   wire        inst_rdata_1_ok,
@@ -654,9 +654,10 @@ module gemini (
         .next_pc            (npc_next_pc        )
     );
 
-    assign inst_ena     = ~(rst | i_cache_stall_req);
-    assign inst_addr_1  = npc_next_pc;
-    assign inst_addr_2  = npc_next_pc + 32'h4;
+    assign inst_ena             = ~(rst);
+    assign inst_addr_next_pc    = npc_next_pc;
+    assign inst_addr_pc         = pc_cur_pc;
+    // assign inst_addr_2          = npc_next_pc + 32'h4;
 
     pc pc_cp (
         .clk                (clk                ),
