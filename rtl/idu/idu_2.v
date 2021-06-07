@@ -4,6 +4,7 @@
 `include "../utils/forward_def.v"
 
 module idu_2 (
+    input  wire [31:0]      id1_pc,
     input  wire [5 :0]      id1_op_code,
     input  wire [4 :0]      id1_rs,
     input  wire [4 :0]      id1_rt,
@@ -105,6 +106,7 @@ module idu_2 (
     assign id2_is_jr        = id1_is_jr;
     assign id2_is_ls        = id1_is_ls;
 
+    assign id2_pc           = id1_pc;
     assign id2_rs           = id1_rs;            
     assign id2_rt           = id1_rt;
     assign id2_rd           = id1_rd;

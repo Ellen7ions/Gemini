@@ -2,16 +2,18 @@
 
 module wbu (
     input   wire        stall,
+    input   wire [31:0] mem_pc,
     input   wire [31:0] mem_alu_res,
     input   wire        mem_w_reg_ena,
     input   wire [4 :0] mem_w_reg_dst,
     input   wire [31:0] mem_r_data,
     input   wire        mem_wb_sel,
+    output  wire [31:0] wb_pc,
     output  wire        wb_w_reg_ena,
     output  wire [4 :0] wb_w_reg_addr,
     output  wire [31:0] wb_w_reg_data
 );
-
+    assign wb_pc            = mem_pc;
     assign wb_w_reg_ena     = !stall & (mem_w_reg_dst == 5'h0 ? 1'b0 : mem_w_reg_ena);
     assign wb_w_reg_addr    = mem_w_reg_dst;
     assign wb_w_reg_data    = 

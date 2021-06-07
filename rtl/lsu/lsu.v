@@ -3,6 +3,7 @@
 `include "../idu/id_def.v"
 
 module lsu (
+    input   wire [31:0] ex_pc,
     input   wire [31:0] ex_alu_res,
     input   wire [31:0] ex_rt_data,
     input   wire        ex_ls_ena,
@@ -18,6 +19,7 @@ module lsu (
     input   wire [31:0] ex_mem_hi_res,
     input   wire [31:0] ex_mem_lo_res,
     
+    output  wire [31:0] mem_pc,
     output  wire [31:0] mem_alu_res,
     output  wire        mem_w_reg_ena,
     output  wire [4 :0] mem_w_reg_dst,
@@ -92,4 +94,5 @@ module lsu (
     assign mem_hi_res       = ex_mem_hi_res;
     assign mem_lo_res       = ex_mem_lo_res; 
 
+    assign mem_pc           = ex_pc;
 endmodule

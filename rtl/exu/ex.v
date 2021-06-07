@@ -60,6 +60,7 @@ module ex (
     output  wire [31:0]     ex_lo_res,
 
     // pass down
+    output  wire [31:0]     ex_pc,
     output  wire [31:0]     ex_rt_data,
     output  wire [31:0]     ex_w_reg_ena,
     output  wire [4 :0]     ex_w_reg_dst,
@@ -149,6 +150,8 @@ module ex (
     assign ex_ls_sel        = id2_ls_sel;
     assign ex_wb_reg_sel    = id2_wb_reg_sel;
     assign ex_rt_data       = id2_rt_data;
+
+    assign ex_pc            = id2_pc;
 
     alu alu_kernel (
         .clk            (clk            ),

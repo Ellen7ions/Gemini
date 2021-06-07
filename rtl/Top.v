@@ -14,8 +14,8 @@ module Top (
         .inst_addr_2        (),
         .inst_rdata_1       (),
         .inst_rdata_2       (),
-        .inst_rdata_1_ok    (),
-        .inst_rdata_2_ok    (),
+        .inst_rdata_1_ok    (1'b0           ),
+        .inst_rdata_2_ok    (1'b0           ),
 
         .i_cache_stall_req  (),
         .data_ena           (),
