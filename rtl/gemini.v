@@ -1063,7 +1063,7 @@ module gemini (
         .ex_mem_hi_res      (exc_hi_res_i       ),
         .ex_mem_lo_res      (exc_lo_res_i       ),
 
-        .mem_pc             (memc_pc_o           ),
+        .mem_pc             (memc_pc_o          ),
         .mem_alu_res        (memc_alu_res_o     ),
         .mem_w_reg_ena      (memc_w_reg_ena_o   ),
         .mem_w_reg_dst      (memc_w_reg_dst_o   ),
