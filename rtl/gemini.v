@@ -18,10 +18,15 @@ module gemini (
     output  wire [31:0] data_wdata,
     output  wire [31:0] data_rdata,
     input   wire        d_cache_stall_req,
-    output  wire [31:0] debug_pc,
-    output  wire        debug_w_ena,
-    output  wire [31:0] debug_w_addr,
-    output  wire [31:0] debug_w_data
+    
+    output  wire [31:0] debug_wb_pc_1,
+    output  wire [3 :0] debug_wb_rf_wen_1,
+    output  wire [31:0] debug_wb_rf_wnum_1,
+    output  wire [31:0] debug_wb_rf_wdata_1,
+    output  wire [31:0] debug_wb_pc_2,
+    output  wire [3 :0] debug_wb_rf_wen_2,
+    output  wire [31:0] debug_wb_rf_wnum_2,
+    output  wire [31:0] debug_wb_rf_wdata_2
 );
 
     // pipeline regs
@@ -1117,6 +1122,16 @@ module gemini (
         .wb_w_reg_addr      (wbp_w_reg_addr_o   ),
         .wb_w_reg_data      (wbp_w_reg_data_o   )
     );
+
+    assign debug_wb_pc_1        = wbc_pc_o;
+    assign debug_wb_rf_wen_1    = {4{wbc_w_reg_ena_o}};
+    assign debug_wb_rf_wnum_1   = wbc_w_reg_addr_o;
+    assign debug_wb_rf_wdata_1  = wbc_w_reg_data_o;
+
+    assign debug_wb_pc_2        = wbp_pc_o;
+    assign debug_wb_rf_wen_2    = {4{wbp_w_reg_ena_o}};
+    assign debug_wb_rf_wnum_2   = wbp_w_reg_addr_o;
+    assign debug_wb_rf_wdata_2  = wbp_w_reg_data_o;
 
     hilo hl (
         .clk                (clk                ),
