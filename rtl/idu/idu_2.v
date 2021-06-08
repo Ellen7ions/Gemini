@@ -27,6 +27,7 @@ module idu_2 (
     input  wire [31:0]      memc_alu_res,
     input  wire [31:0]      memc_r_data,
     input  wire [31:0]      memp_alu_res,
+    input  wire [31:0]      memp_r_data,
 
     // regfile
     output wire [4 :0]      reg_r_addr_1,
@@ -137,7 +138,10 @@ module idu_2 (
             }} & memc_r_data    )   |
             ({32{
                 forward_rs == `FORWARD_MEMP_ALU_RES
-            }} & memp_alu_res   )   ;
+            }} & memp_alu_res   )   |
+            ({32{
+                forward_rs == `FORWARD_MEMP_MEM_DATA
+            }} & memp_r_data    )   ;
     
     assign id2_rt_data      =
             ({32{
@@ -157,7 +161,10 @@ module idu_2 (
             }} & memc_r_data    )   |
             ({32{
                 forward_rt == `FORWARD_MEMP_ALU_RES
-            }} & memp_alu_res   )   ;
+            }} & memp_alu_res   )   |
+            ({32{
+                forward_rt == `FORWARD_MEMP_MEM_DATA
+            }} & memp_r_data    )   ;
 
     assign id2_take_branch  =
             id2_is_branch & (

@@ -7,3 +7,4 @@
 `define FORWARD_MEMC_MEM_DATA   3'h4
 
 `define FORWARD_MEMP_ALU_RES    3'h5
+`define FORWARD_MEMP_MEM_DATA   3'h6

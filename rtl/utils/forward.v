@@ -38,12 +38,14 @@ module forward (
     wire rs_hazard_mem_alu_2;
     wire rs_hazard_mem_alu_1;
     wire rs_hazard_mem_ls_1;
+    wire rs_hazard_mem_ls_2;
 
     wire rt_hazard_ex_alu_2;
     wire rt_hazard_ex_alu_1;
     wire rt_hazard_mem_alu_2;
     wire rt_hazard_mem_alu_1;
     wire rt_hazard_mem_ls_1;
+    wire rt_hazard_mem_ls_2;
 
     assign rs_hazard_ex_alu_2   = 
             (id_rs == ex_w_reg_dst_2) & ex_w_reg_ena_2;
@@ -53,8 +55,10 @@ module forward (
             (id_rs == mem_w_reg_dst_2) & mem_w_reg_ena_2;
     assign rs_hazard_mem_alu_1  =
             (id_rs == mem_w_reg_dst_1) & mem_w_reg_ena_1;
+    assign rs_hazard_mem_ls_2   =
+            (id_rs == mem_w_reg_dst_2) & mem_w_reg_ena_2 & mem_ls_ena_2;
     assign rs_hazard_mem_ls_1   =
-            (id_rs == mem_w_reg_dst_1) & mem_w_reg_dst_1 & mem_ls_ena_1;
+            (id_rs == mem_w_reg_dst_1) & mem_w_reg_ena_1 & mem_ls_ena_1;
 
     assign rt_hazard_ex_alu_2   = 
             (id_rt == ex_w_reg_dst_2) & ex_w_reg_ena_2;
@@ -64,8 +68,10 @@ module forward (
             (id_rt == mem_w_reg_dst_2) & mem_w_reg_ena_2;
     assign rt_hazard_mem_alu_1  =
             (id_rt == mem_w_reg_dst_1) & mem_w_reg_ena_1;
+    assign rt_hazard_mem_ls_2   =
+            (id_rt == mem_w_reg_dst_2) & mem_w_reg_ena_2 & mem_ls_ena_2;
     assign rt_hazard_mem_ls_1   =
-            (id_rt == mem_w_reg_dst_1) & mem_w_reg_dst_1 & mem_ls_ena_1;
+            (id_rs == mem_w_reg_dst_1) & mem_w_reg_ena_1 & mem_ls_ena_1;
 
     always @(*) begin
         if (rs_hazard_ex_alu_2) begin
@@ -74,6 +80,8 @@ module forward (
             forward_rs = `FORWARD_EXC_ALU_RES;
         end else if (rs_hazard_mem_alu_2) begin
             forward_rs = `FORWARD_MEMP_ALU_RES;
+        end else if (rs_hazard_mem_ls_2) begin
+            forward_rs = `FORWARD_MEMP_MEM_DATA;
         end else if (rs_hazard_mem_alu_1) begin
             forward_rs = `FORWARD_MEMC_ALU_RES;
         end else if (rs_hazard_mem_ls_1) begin
@@ -90,6 +98,8 @@ module forward (
             forward_rt = `FORWARD_EXC_ALU_RES;
         end else if (rt_hazard_mem_alu_2) begin
             forward_rt = `FORWARD_MEMP_ALU_RES;
+        end else if (rt_hazard_mem_ls_2) begin
+            forward_rt = `FORWARD_MEMP_MEM_DATA;
         end else if (rt_hazard_mem_alu_1) begin
             forward_rt = `FORWARD_MEMC_ALU_RES;
         end else if (rt_hazard_mem_ls_1) begin
@@ -108,7 +118,8 @@ module forward (
     end
     
     assign forward_stall_req = 
-            (ex_ls_ena_1 & ex_w_reg_ena_1 & ((ex_w_reg_dst_1 == id_rs) || (ex_w_reg_dst_1 == id_rt)));
+            (ex_ls_ena_1 & ex_w_reg_ena_1 & ((ex_w_reg_dst_1 == id_rs) || (ex_w_reg_dst_1 == id_rt)))   |
+            (ex_ls_ena_2 & ex_w_reg_ena_2 & ((ex_w_reg_dst_2 == id_rs) || (ex_w_reg_dst_2 == id_rt)))   ;
     assign forward_flush_req =
             forward_stall_req;
 
