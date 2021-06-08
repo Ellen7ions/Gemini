@@ -659,7 +659,7 @@ module gemini (
         .next_pc            (npc_next_pc        )
     );
 
-    assign inst_ena             = ~(rst);
+    assign inst_ena             = ~(rst | pc_stall);
     assign inst_addr_next_pc    = npc_next_pc;
     assign inst_addr_pc         = pc_cur_pc;
     // assign inst_addr_2          = npc_next_pc + 32'h4;
@@ -689,8 +689,8 @@ module gemini (
         .r_data_1_ok        (fifo_r_data_1_ok   ),
         .r_data_2_ok        (fifo_r_data_2_ok   ),
         .fifo_stall_req     (fifo_stall_req     ),
-        .w_ena_1            (inst_rdata_1_ok    ),
-        .w_ena_2            (inst_rdata_2_ok    ),
+        .w_ena_1            (inst_rdata_1_ok & ~pc_stall),
+        .w_ena_2            (inst_rdata_2_ok & ~pc_stall),
         .w_data_1           (fifo_w_data_1      ),
         .w_data_2           (fifo_w_data_2      ) 
     );

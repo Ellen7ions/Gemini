@@ -136,7 +136,6 @@ module idu_1 (
             !(id1_op_code == `BGTZ_OP_CODE  )  &
             !(id1_op_code == `BLEZ_OP_CODE  )  &
             !(id1_op_code == `J_OP_CODE     )  &
-            !(id1_op_code == `JAL_OP_CODE   )  &
             !(id1_op_code == `SB_OP_CODE    )  &
             !(id1_op_code == `SH_OP_CODE    )  &
             !(id1_op_code == `SW_OP_CODE    )  &

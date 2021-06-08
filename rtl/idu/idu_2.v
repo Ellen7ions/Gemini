@@ -321,7 +321,7 @@ module idu_2 (
                 (id1_op_code == `SPECIAL_OP_CODE) & (
                 id1_funct == `SRLV_FUNCT|
                 id1_funct == `SRL_FUNCT
-            )}} & (`ALU_SEL_SRA))   |
+            )}} & (`ALU_SEL_SRL))   |
             ({6{
                 (id1_op_code == `SPECIAL_OP_CODE) & (
                 id1_funct == `XOR_FUNCT
