@@ -905,10 +905,10 @@ module gemini (
         .memp_alu_res       (memp_alu_res_o     ),
         .memp_r_data        (memp_r_data_o      ),
 
-        .reg_r_addr_1       (id2p_r_addr_1),
-        .reg_r_addr_2       (id2p_r_addr_2),
-        .reg_r_data_1       (id2p_r_data_1),
-        .reg_r_data_2       (id2p_r_data_2),
+        .reg_r_addr_1       (id2p_r_addr_1      ),
+        .reg_r_addr_2       (id2p_r_addr_2      ),
+        .reg_r_data_1       (id2p_r_data_1      ),
+        .reg_r_data_2       (id2p_r_data_2      ),
 
         .id2_is_branch      (id2p_is_branch_o   ),
         .id2_is_j_imme      (id2p_is_j_imme_o   ),
