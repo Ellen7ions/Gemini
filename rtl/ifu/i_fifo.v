@@ -21,7 +21,7 @@ module i_fifo (
 
     localparam [1:0] NORMAL = 2'b00;
     localparam [1:0] WAIT_1 = 2'b01;
-    localparam [1:0] WAIT_2 = 2'b01;
+    localparam [1:0] WAIT_2 = 2'b10;
     reg  [1:0]  cstate;
 
     reg  [63:0] wait_reg_1, wait_reg_2;
@@ -37,8 +37,8 @@ module i_fifo (
     assign rptr_plus_one= (r_ptr + 4'h1);
     assign left_one     = (wptr_plus_one[INDEX] ^ r_ptr[INDEX]) & (wptr_plus_one[INDEX-1:0] == r_ptr[INDEX-1:0]);
 
-    assign r_data_1_ok  = ~empty;
-    assign r_data_2_ok  = ~empty & (r_ptr + 4'h1 != w_ptr);
+    assign r_data_1_ok  = ~empty & ~flush;
+    assign r_data_2_ok  = ~empty & (r_ptr + 4'h1 != w_ptr) & ~flush;
     assign fifo_stall_req = 
             (w_ena_1 &  w_ena_2 & (full | left_one))    | 
             (w_ena_1 & !w_ena_2 &  full)                |
@@ -86,18 +86,18 @@ module i_fifo (
                 end else if (left_one   &&  w_ena_1 &&  w_ena_2) begin
                     cstate  <= WAIT_1;
 
-                    queue[w_ptr] <= w_data_1;
+                    queue[w_ptr[INDEX-1:0]] <= w_data_1;
                     w_ptr   <= w_ptr + 5'h1;
                     wait_reg_1  <= w_data_2;
                 end else if (!full      &&  w_ena_1 &&  w_ena_2) begin
                     cstate  <= NORMAL;
 
-                    queue[w_ptr         ] <= w_data_1;
-                    queue[w_ptr + 5'h1  ] <= w_data_2;
+                    queue[w_ptr[INDEX-1:0]          ] <= w_data_1;
+                    queue[wptr_plus_one[INDEX-1:0]  ] <= w_data_2;
                     w_ptr   <= w_ptr + 5'h2;
                 end else if (!full      &&  w_ena_1 && !w_ena_2) begin
                     cstate  <= NORMAL;
-                    queue[w_ptr         ] <= w_data_1;
+                    queue[w_ptr[INDEX-1:0]          ] <= w_data_1;
                     w_ptr   <= w_ptr + 5'h1;
                 end else begin
                     cstate  <= NORMAL;
@@ -105,29 +105,29 @@ module i_fifo (
             end
 
             WAIT_1:   begin
-                if (p_data_1) begin
-                    cstate              <= NORMAL;
+                if (!full) begin
+                    cstate                  <= NORMAL;
 
-                    queue[w_ptr]        <= wait_reg_1;
-                    w_ptr               <= w_ptr + 5'h1;
+                    queue[w_ptr[INDEX-1:0]] <= wait_reg_1;
+                    w_ptr                   <= w_ptr + 5'h1;
                 end else begin  
-                    cstate              <= WAIT_1;
+                    cstate                  <= WAIT_1;
                 end
             end
 
             WAIT_2:   begin
-                if (p_data_1 && !p_data_2) begin
-                    cstate              <= WAIT_1;
+                if (left_one) begin
+                    cstate                  <= WAIT_1;
 
-                    queue[w_ptr]        <= wait_reg_1;
-                    wait_reg_1          <= wait_reg_2;
-                    w_ptr               <= w_ptr + 5'h1;
-                end if (p_data_1 && p_data_2) begin
-                    cstate              <= NORMAL;
+                    queue[w_ptr[INDEX-1:0]] <= wait_reg_1;
+                    wait_reg_1              <= wait_reg_2;
+                    w_ptr                   <= w_ptr + 5'h1;
+                end if (!full) begin
+                    cstate                  <= NORMAL;
 
-                    queue[w_ptr]        <= wait_reg_1;
-                    queue[w_ptr + 5'h1] <= wait_reg_2;
-                    w_ptr               <= w_ptr + 5'h2;
+                    queue[w_ptr[INDEX-1:0]]         <= wait_reg_1;
+                    queue[wptr_plus_one[INDEX-1:0]] <= wait_reg_2;
+                    w_ptr                           <= w_ptr + 5'h2;
                 end else begin  
                     cstate              <= WAIT_2;
                 end

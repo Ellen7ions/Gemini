@@ -13,7 +13,7 @@ module lsu (
     input   wire [4 :0] ex_mem_w_reg_dst,
     input   wire        ex_mem_ls_ena,
     input   wire [3 :0] ex_mem_ls_sel,
-    input   wire [31:0] ex_mem_wb_reg_sel,
+    input   wire        ex_mem_wb_reg_sel,
     
     input   wire [1 :0] ex_mem_w_hilo_ena,
     input   wire [31:0] ex_mem_hi_res,
@@ -69,7 +69,7 @@ module lsu (
     // mem
 
     assign mem_r_data =
-            ex_mem_ls_ena & (({32{
+            {{32{ex_mem_ls_ena}}} & (({32{
                 ex_mem_ls_sel == `LS_SEL_LB
             }} & {{24{data_ram_rdata[7]}},  data_ram_rdata[7:0]})   |
             ({32{

@@ -144,6 +144,7 @@ module idu_1 (
             !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZ_RT_CODE  )   &
             !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZAL_RT_CODE)   &
             !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZAL_RT_CODE)   &
-            !(id1_op_code == `COP0_OP_CODE   & id1_rt == `MTC0_RS_CODE  )   ;
+            !(id1_op_code == `COP0_OP_CODE   & id1_rt == `MTC0_RS_CODE  )   &
+            (id1_w_reg_dst != 5'h0);
     
 endmodule

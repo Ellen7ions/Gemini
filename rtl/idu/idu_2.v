@@ -20,8 +20,8 @@ module idu_2 (
     input  wire             id1_is_jr,
     input  wire             id1_is_ls,
 
-    input  wire [1 :0]      forward_rs,
-    input  wire [1 :0]      forward_rt,
+    input  wire [2 :0]      forward_rs,
+    input  wire [2 :0]      forward_rt,
     input  wire [31:0]      exc_alu_res,
     input  wire [31:0]      exp_alu_res,
     input  wire [31:0]      memc_alu_res,
