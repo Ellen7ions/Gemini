@@ -44,7 +44,7 @@ module issue_id2 (
 );
 
     always @(posedge clk) begin
-        if (rst || (flush & !stall) || !id1_valid_o) begin
+        if (rst || (flush & !stall) || (!id1_valid_o & !stall)) begin
             id1_pc_i           <=  32'h0;
             id1_inst_i         <=  32'h0;
             id1_op_code_i      <=  6'h0;
