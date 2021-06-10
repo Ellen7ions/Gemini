@@ -68,22 +68,76 @@ module lsu (
 
     // mem
 
+    wire [31:0] mem_lb_data;
+    wire [31:0] mem_lbu_data;
+    wire [31:0] mem_lh_data;
+    wire [31:0] mem_lhu_data;
+    wire [31:0] mem_lw_data;
+    wire [31:0] mem_lwl_data;
+
+    assign mem_lb_data = 
+            {32{
+                mem_alu_res[1:0] == 2'b00
+            }} & {{24{data_ram_rdata[ 7]}}, data_ram_rdata[7 : 0]} |
+            {32{
+                mem_alu_res[1:0] == 2'b01
+            }} & {{24{data_ram_rdata[15]}}, data_ram_rdata[15: 8]} |
+            {32{
+                mem_alu_res[1:0] == 2'b10
+            }} & {{24{data_ram_rdata[23]}}, data_ram_rdata[23:16]} |
+            {32{
+                mem_alu_res[1:0] == 2'b11
+            }} & {{24{data_ram_rdata[31]}}, data_ram_rdata[31:24]} ;
+
+    assign mem_lbu_data =
+            {32{
+                mem_alu_res[1:0] == 2'b00
+            }} & {{24{1'b0}}, data_ram_rdata[7 : 0]} |
+            {32{
+                mem_alu_res[1:0] == 2'b01
+            }} & {{24{1'b0}}, data_ram_rdata[15: 8]} |
+            {32{
+                mem_alu_res[1:0] == 2'b10
+            }} & {{24{1'b0}}, data_ram_rdata[23:16]} |
+            {32{
+                mem_alu_res[1:0] == 2'b11
+            }} & {{24{1'b0}}, data_ram_rdata[31:24]} ;
+
+    assign mem_lh_data  =
+            {32{
+                mem_alu_res[1:0] == 2'b00
+            }} & {{16{data_ram_rdata[15]}}, data_ram_rdata[15: 0]}   |
+            {32{
+                mem_alu_res[1:0] == 2'b10
+            }} & {{16{data_ram_rdata[31]}}, data_ram_rdata[31:16]}   ;
+
+    assign mem_lhu_data =
+            {32{
+                mem_alu_res[1:0] == 2'b00
+            }} & {{16{1'b0}}, data_ram_rdata[15: 0]}   |
+            {32{
+                mem_alu_res[1:0] == 2'b10
+            }} & {{16{1'b0}}, data_ram_rdata[31:16]}   ;
+    
+    assign mem_lw_data  =
+            data_ram_rdata;
+
     assign mem_r_data =
             {{32{ex_mem_ls_ena}}} & (({32{
                 ex_mem_ls_sel == `LS_SEL_LB
-            }} & {{24{data_ram_rdata[7]}},  data_ram_rdata[7:0]})   |
+            }} & mem_lb_data    )   |
             ({32{
                 ex_mem_ls_sel == `LS_SEL_LBU
-            }} & {{24{1'b0}},               data_ram_rdata[7:0]})   |
+            }} & mem_lbu_data   )   |
             ({32{
                 ex_mem_ls_sel == `LS_SEL_LH
-            }} & {{16{data_ram_rdata[15]}}, data_ram_rdata[15:0]})  |
+            }} & mem_lh_data    )   |
             ({32{
                 ex_mem_ls_sel == `LS_SEL_LHU
-            }} & {{16{1'b0}},               data_ram_rdata[15:0]})  |
+            }} & mem_lhu_data   )   |
             ({32{
                 ex_mem_ls_sel == `LS_SEL_LW
-            }} & data_ram_rdata))                                    ;
+            }} & mem_lw_data    ))  ;
     
     assign mem_w_reg_ena    = ex_mem_w_reg_ena;
     assign mem_wb_reg_sel   = ex_mem_wb_reg_sel;
