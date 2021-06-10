@@ -57,6 +57,8 @@
 `define SB_OP_CODE          6'b101_000
 `define SH_OP_CODE          6'b101_001
 `define SW_OP_CODE          6'b101_011
+`define SWL_OP_CODE         6'b101_010
+`define SWR_OP_CODE         6'b101_110
 
 // jmp
 `define BEQ_OP_CODE         6'b000_100
@@ -131,3 +133,5 @@
 `define LS_SEL_SW           4'h8
 `define LS_SEL_LWL          4'h9
 `define LS_SEL_LWR          4'ha
+`define LS_SEL_SWL          4'hb
+`define LS_SEL_SWR          4'hc

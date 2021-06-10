@@ -108,6 +108,8 @@ module idu_1 (
             id1_op_code == `SB_OP_CODE  |
             id1_op_code == `SH_OP_CODE  |
             id1_op_code == `SW_OP_CODE  |
+            id1_op_code == `SWL_OP_CODE |
+            id1_op_code == `SWR_OP_CODE |
             id1_op_code == `LWL_OP_CODE |
             id1_op_code == `LWR_OP_CODE ;
 
@@ -142,6 +144,8 @@ module idu_1 (
             !(id1_op_code == `SB_OP_CODE    )  &
             !(id1_op_code == `SH_OP_CODE    )  &
             !(id1_op_code == `SW_OP_CODE    )  &
+            !(id1_op_code == `SWL_OP_CODE   )  &
+            !(id1_op_code == `SWR_OP_CODE   )  &
             !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZ_RT_CODE  )   &
             !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZ_RT_CODE  )   &
             !(id1_op_code == `COP0_OP_CODE   & id1_rt == `MTC0_RS_CODE  )   &

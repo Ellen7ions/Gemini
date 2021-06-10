@@ -100,7 +100,9 @@ module idu_2 (
             (id1_op_code == `LWR_OP_CODE    )   |
             (id1_op_code == `SB_OP_CODE     )   |
             (id1_op_code == `SH_OP_CODE     )   |
-            (id1_op_code == `SW_OP_CODE     )   ;
+            (id1_op_code == `SW_OP_CODE     )   |
+            (id1_op_code == `SWL_OP_CODE    )   |
+            (id1_op_code == `SWR_OP_CODE    )   ;
 
     // output signals
 
@@ -252,7 +254,9 @@ module idu_2 (
             id1_op_code == `LWR_OP_CODE     |
             id1_op_code == `SB_OP_CODE      |
             id1_op_code == `SH_OP_CODE      |
-            id1_op_code == `SW_OP_CODE     
+            id1_op_code == `SW_OP_CODE      |
+            id1_op_code == `SWL_OP_CODE     |
+            id1_op_code == `SWR_OP_CODE
         ) begin
             id2_src_b_sel = `SRC_B_SEL_IMME;
         end else if (id1_op_code == `SPECIAL_OP_CODE & (
@@ -289,7 +293,9 @@ module idu_2 (
                 (id1_op_code == `LWR_OP_CODE    )   |
                 (id1_op_code == `SB_OP_CODE     )   |
                 (id1_op_code == `SH_OP_CODE     )   |
-                (id1_op_code == `SW_OP_CODE     )
+                (id1_op_code == `SW_OP_CODE     )   |
+                (id1_op_code == `SWL_OP_CODE    )   |
+                (id1_op_code == `SWR_OP_CODE    )
             }} & (`ALU_SEL_ADD))   |
             ({6{
                 (id1_op_code == `SPECIAL_OP_CODE) & (
@@ -423,6 +429,8 @@ module idu_2 (
             ({4{id1_op_code == `SB_OP_CODE  }}) & (`LS_SEL_SB   )   |
             ({4{id1_op_code == `SH_OP_CODE  }}) & (`LS_SEL_SH   )   |
             ({4{id1_op_code == `SW_OP_CODE  }}) & (`LS_SEL_SW   )   |
+            ({4{id1_op_code == `SWL_OP_CODE }}) & (`LS_SEL_SWL  )   |
+            ({4{id1_op_code == `SWR_OP_CODE }}) & (`LS_SEL_SWR  )   |
             ({4{id1_op_code == `LWL_OP_CODE }}) & (`LS_SEL_LWL  )   |
             ({4{id1_op_code == `LWR_OP_CODE }}) & (`LS_SEL_LWR  )   ;
 

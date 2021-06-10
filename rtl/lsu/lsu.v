@@ -41,18 +41,63 @@ module lsu (
 
     // ex
 
-    assign data_ram_en  = ex_ls_ena;
-    
-    assign data_ram_wen = 
-            ({4{
-                ex_ls_sel == `LS_SEL_SB
-            }} & 4'b0001)   |
-            ({4{
-                ex_ls_sel == `LS_SEL_SH
-            }} & 4'b0011)   |
-            ({4{
-                ex_ls_sel == `LS_SEL_SW
-            }} & 4'b1111);
+    assign data_ram_en  =
+            ex_ls_ena;
+
+    assign data_ram_wen =
+            {4{ex_ls_ena}} & (
+                {4{
+                    ex_ls_sel == `LS_SEL_SB
+                }} & {
+                    ex_alu_res[1:0] == 2'b11,
+                    ex_alu_res[1:0] == 2'b10,
+                    ex_alu_res[1:0] == 2'b01,
+                    ex_alu_res[1:0] == 2'b00
+                }               |
+                {4{
+                    ex_ls_sel == `LS_SEL_SH
+                }} & {
+                    ex_alu_res[1:0] == 2'b10,
+                    ex_alu_res[1:0] == 2'b10,
+                    ex_alu_res[1:0] == 2'b00,
+                    ex_alu_res[1:0] == 2'b00
+                }               |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWL) &
+                    (ex_alu_res[1:0] == 2'b00)
+                }} & 4'b0001    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWL) &
+                    (ex_alu_res[1:0] == 2'b01)
+                }} & 4'b0011    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWL) &
+                    (ex_alu_res[1:0] == 2'b10)
+                }} & 4'b0111    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWL) &
+                    (ex_alu_res[1:0] == 2'b11)
+                }} & 4'b1111    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWR) &
+                    (ex_alu_res[1:0] == 2'b00)
+                }} & 4'b1111    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWR) &
+                    (ex_alu_res[1:0] == 2'b01)
+                }} & 4'b1110    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWR) &
+                    (ex_alu_res[1:0] == 2'b10)
+                }} & 4'b1100    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SWR) &
+                    (ex_alu_res[1:0] == 2'b11)
+                }} & 4'b1000    |
+                {4{
+                    (ex_ls_sel == `LS_SEL_SW)
+                }} & 4'b1111
+            );
     
     assign data_ram_addr = {32{data_ram_en}} & ex_alu_res;
 
@@ -65,7 +110,39 @@ module lsu (
             }} & {2{ex_rt_data[15:0]}}) |
             ({32{
                 ex_ls_sel == `LS_SEL_SW
-            }} & ex_rt_data);
+            }} & ex_rt_data)            |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWL) &
+                (ex_alu_res[1:0] == 2'b00)
+            }} & {{24{1'b0}}, ex_rt_data[31:24]})   |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWL) &
+                (ex_alu_res[1:0] == 2'b01)
+            }} & {{16{1'b0}}, ex_rt_data[31:16]})   |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWL) &
+                (ex_alu_res[1:0] == 2'b10)
+            }} & {{8{1'b0}},  ex_rt_data[31:8]})    |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWL) &
+                (ex_alu_res[1:0] == 2'b11)
+            }} & {ex_rt_data[31:0]})                |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWR) &
+                (ex_alu_res[1:0] == 2'b00)
+            }} & {ex_rt_data[31:0]})                |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWR) &
+                (ex_alu_res[1:0] == 2'b01)
+            }} & {ex_rt_data[23:0], {8{1'b0}}})     |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWR) &
+                (ex_alu_res[1:0] == 2'b10)
+            }} & {ex_rt_data[15:0], {16{1'b0}}})    |
+            ({32{
+                (ex_ls_sel == `LS_SEL_SWR) &
+                (ex_alu_res[1:0] == 2'b11)
+            }} & {ex_rt_data[7 :0], {24{1'b0}}})     ;
 
     // mem
 
