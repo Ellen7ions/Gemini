@@ -712,6 +712,8 @@ module gemini (
     );
 
     issue issue_inst (
+        .clk                (clk                ),
+        .rst                (rst                ),
         .stall              (issue_stall        ),
 
         .fifo_r_data_1      (fifo_r_data_1      ),

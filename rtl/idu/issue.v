@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 
 module issue (
+    input   wire        clk,
+    input   wire        rst,
     input   wire        stall,
 
     input   wire [63:0] fifo_r_data_1,
@@ -50,6 +52,21 @@ module issue (
     output  wire        id1_is_jr_2,
     output  wire        id1_is_ls_2
 );
+
+    // Test the performance of dual issue
+    reg [31:0] c_issue_counter, p_issue_counter;
+    always @(posedge clk) begin
+        if (rst) begin
+            c_issue_counter <= 32'h0;
+            p_issue_counter <= 32'h0;
+        end else begin
+            if (p_data_1) 
+                c_issue_counter <= c_issue_counter + 32'h1;
+            if (p_data_2) 
+                p_issue_counter <= p_issue_counter + 32'h1;
+        end
+    end
+
     wire id1_is_hilo_1, id1_is_hilo_2;
     wire inst_jmp_1, inst_jmp_2;
     wire raw_conflict;
