@@ -69,6 +69,8 @@ module idu_1 (
                 (id1_op_code == `LBU_OP_CODE    )   |
                 (id1_op_code == `LHU_OP_CODE    )   |
                 (id1_op_code == `LW_OP_CODE     )   |
+                (id1_op_code == `LWL_OP_CODE    )   |
+                (id1_op_code == `LWR_OP_CODE    )   |
                 (id1_op_code == `COP0_OP_CODE & id1_rs == `MFC0_RS_CODE)
             }} & id1_rt) |
             ({5{
@@ -105,7 +107,9 @@ module idu_1 (
             id1_op_code == `LW_OP_CODE  |
             id1_op_code == `SB_OP_CODE  |
             id1_op_code == `SH_OP_CODE  |
-            id1_op_code == `SW_OP_CODE  ;
+            id1_op_code == `SW_OP_CODE  |
+            id1_op_code == `LWL_OP_CODE |
+            id1_op_code == `LWR_OP_CODE ;
 
     assign id1_is_hilo      =
             (id1_op_code == `SPECIAL_OP_CODE & (

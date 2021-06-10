@@ -293,6 +293,7 @@ module gemini (
     wire [31:0]     exc_lo_res_i;
     wire [31:0]     exc_w_reg_ena_i;
     wire [4 :0]     exc_w_reg_dst_i;
+    wire [31:0]     exc_rt_data_i;
     wire            exc_ls_ena_i;
     wire [3 :0]     exc_ls_sel_i;
     wire            exc_wb_reg_sel_i;
@@ -314,6 +315,7 @@ module gemini (
     wire [4 :0]     exp_w_reg_dst_i;
     wire            exp_wb_reg_sel_i;
     wire            exp_ls_ena_i;
+    wire [31:0]     exp_rt_data_i;
     wire [3 :0]     exp_ls_sel_i;
     wire [1 :0]     exp_w_hilo_ena_i;
     wire [31:0]     exp_hi_res_i;
@@ -585,6 +587,7 @@ module gemini (
         .ex_ls_ena_o        (exc_ls_ena_o       ),
         .ex_ls_sel_o        (exc_ls_sel_o       ),
         .ex_wb_reg_sel_o    (exc_wb_reg_sel_o   ),
+        .ex_rt_data_o       (exc_rt_data_o      ),
         .ex_pc_i            (exc_pc_i           ),
         .ex_alu_res_i       (exc_alu_res_i      ),
         .ex_w_hilo_ena_i    (exc_w_hilo_ena_i   ),
@@ -594,7 +597,8 @@ module gemini (
         .ex_w_reg_dst_i     (exc_w_reg_dst_i    ),
         .ex_ls_ena_i        (exc_ls_ena_i       ),
         .ex_ls_sel_i        (exc_ls_sel_i       ),
-        .ex_wb_reg_sel_i    (exc_wb_reg_sel_i   )
+        .ex_wb_reg_sel_i    (exc_wb_reg_sel_i   ),
+        .ex_rt_data_i       (exc_rt_data_i      )
     );
 
     ex_mem ex_memp (
@@ -612,6 +616,7 @@ module gemini (
         .ex_ls_ena_o        (exp_ls_ena_o       ),
         .ex_ls_sel_o        (exp_ls_sel_o       ),
         .ex_wb_reg_sel_o    (exp_wb_reg_sel_o   ),
+        .ex_rt_data_o       (exp_rt_data_o      ),
         .ex_pc_i            (exp_pc_i           ),
         .ex_alu_res_i       (exp_alu_res_i      ),
         .ex_w_hilo_ena_i    (exp_w_hilo_ena_i   ),
@@ -621,7 +626,8 @@ module gemini (
         .ex_w_reg_dst_i     (exp_w_reg_dst_i    ),
         .ex_ls_ena_i        (exp_ls_ena_i       ),
         .ex_ls_sel_i        (exp_ls_sel_i       ),
-        .ex_wb_reg_sel_i    (exp_wb_reg_sel_i   )
+        .ex_wb_reg_sel_i    (exp_wb_reg_sel_i   ),
+        .ex_rt_data_i       (exp_rt_data_i      )
     );
 
     mem_wb mem_wbc (
@@ -1100,6 +1106,7 @@ module gemini (
         .ex_ls_sel          (exc_ls_sel_o       ),
 
         .ex_mem_alu_res     (exc_alu_res_i      ),
+        .ex_mem_rt_data     (exc_rt_data_i      ),
         .ex_mem_w_reg_ena   (exc_w_reg_ena_i    ),
         .ex_mem_w_reg_dst   (exc_w_reg_dst_i    ),
         .ex_mem_ls_ena      (exc_ls_ena_i       ),
@@ -1136,6 +1143,7 @@ module gemini (
         .ex_ls_sel          (exp_ls_sel_o       ),
 
         .ex_mem_alu_res     (exp_alu_res_i      ),
+        .ex_mem_rt_data     (exp_rt_data_i      ),
         .ex_mem_w_reg_ena   (exp_w_reg_ena_i    ),
         .ex_mem_w_reg_dst   (exp_w_reg_dst_i    ),
         .ex_mem_ls_ena      (exp_ls_ena_i       ),

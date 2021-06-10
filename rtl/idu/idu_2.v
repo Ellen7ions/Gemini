@@ -96,6 +96,8 @@ module idu_2 (
             (id1_op_code == `LH_OP_CODE     )   |
             (id1_op_code == `LHU_OP_CODE    )   |
             (id1_op_code == `LW_OP_CODE     )   |
+            (id1_op_code == `LWL_OP_CODE    )   |
+            (id1_op_code == `LWR_OP_CODE    )   |
             (id1_op_code == `SB_OP_CODE     )   |
             (id1_op_code == `SH_OP_CODE     )   |
             (id1_op_code == `SW_OP_CODE     )   ;
@@ -246,6 +248,8 @@ module idu_2 (
             id1_op_code == `LH_OP_CODE      |
             id1_op_code == `LHU_OP_CODE     |
             id1_op_code == `LW_OP_CODE      |
+            id1_op_code == `LWL_OP_CODE     |
+            id1_op_code == `LWR_OP_CODE     |
             id1_op_code == `SB_OP_CODE      |
             id1_op_code == `SH_OP_CODE      |
             id1_op_code == `SW_OP_CODE     
@@ -281,6 +285,8 @@ module idu_2 (
                 (id1_op_code == `LH_OP_CODE     )   |
                 (id1_op_code == `LHU_OP_CODE    )   |
                 (id1_op_code == `LW_OP_CODE     )   |
+                (id1_op_code == `LWL_OP_CODE    )   |
+                (id1_op_code == `LWR_OP_CODE    )   |
                 (id1_op_code == `SB_OP_CODE     )   |
                 (id1_op_code == `SH_OP_CODE     )   |
                 (id1_op_code == `SW_OP_CODE     )
@@ -409,20 +415,24 @@ module idu_2 (
             id2_ls_sel != `LS_SEL_NOP;
 
     assign id2_ls_sel       =   
-            ({4{id1_op_code == `LB_OP_CODE  }}) & (`LS_SEL_LB   )    |
-            ({4{id1_op_code == `LBU_OP_CODE }}) & (`LS_SEL_LBU  )    |
-            ({4{id1_op_code == `LH_OP_CODE  }}) & (`LS_SEL_LH   )    |
-            ({4{id1_op_code == `LHU_OP_CODE }}) & (`LS_SEL_LHU  )    |
-            ({4{id1_op_code == `LW_OP_CODE  }}) & (`LS_SEL_LW   )    |
-            ({4{id1_op_code == `SB_OP_CODE  }}) & (`LS_SEL_SB   )    |
-            ({4{id1_op_code == `SH_OP_CODE  }}) & (`LS_SEL_SH   )    |
-            ({4{id1_op_code == `SW_OP_CODE  }}) & (`LS_SEL_SW   )    ;
+            ({4{id1_op_code == `LB_OP_CODE  }}) & (`LS_SEL_LB   )   |
+            ({4{id1_op_code == `LBU_OP_CODE }}) & (`LS_SEL_LBU  )   |
+            ({4{id1_op_code == `LH_OP_CODE  }}) & (`LS_SEL_LH   )   |
+            ({4{id1_op_code == `LHU_OP_CODE }}) & (`LS_SEL_LHU  )   |
+            ({4{id1_op_code == `LW_OP_CODE  }}) & (`LS_SEL_LW   )   |
+            ({4{id1_op_code == `SB_OP_CODE  }}) & (`LS_SEL_SB   )   |
+            ({4{id1_op_code == `SH_OP_CODE  }}) & (`LS_SEL_SH   )   |
+            ({4{id1_op_code == `SW_OP_CODE  }}) & (`LS_SEL_SW   )   |
+            ({4{id1_op_code == `LWL_OP_CODE }}) & (`LS_SEL_LWL  )   |
+            ({4{id1_op_code == `LWR_OP_CODE }}) & (`LS_SEL_LWR  )   ;
 
     assign id2_wb_reg_sel   =   
             (id1_op_code == `LB_OP_CODE )   |
             (id1_op_code == `LBU_OP_CODE)   |
             (id1_op_code == `LH_OP_CODE )   |
             (id1_op_code == `LHU_OP_CODE)   |
-            (id1_op_code == `LW_OP_CODE )   ;
+            (id1_op_code == `LW_OP_CODE )   |
+            (id1_op_code == `LWR_OP_CODE)   |
+            (id1_op_code == `LWL_OP_CODE)   ;
     
 endmodule

@@ -52,6 +52,8 @@
 `define LH_OP_CODE          6'b100_001
 `define LHU_OP_CODE         6'b100_101
 `define LW_OP_CODE          6'b100_011
+`define LWL_OP_CODE         6'b100_010
+`define LWR_OP_CODE         6'b100_110
 `define SB_OP_CODE          6'b101_000
 `define SH_OP_CODE          6'b101_001
 `define SW_OP_CODE          6'b101_011
@@ -127,3 +129,5 @@
 `define LS_SEL_SB           4'h6
 `define LS_SEL_SH           4'h7
 `define LS_SEL_SW           4'h8
+`define LS_SEL_LWL          4'h9
+`define LS_SEL_LWR          4'ha
