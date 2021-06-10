@@ -245,15 +245,15 @@ module idu_2 (
         ) begin
             id2_src_b_sel = `SRC_B_SEL_IMME;
         end else if (id1_op_code == `SPECIAL_OP_CODE & (
-            id1_op_code == `SLLV_FUNCT      |
-            id1_op_code == `SRAV_FUNCT      |
-            id1_op_code == `SRLV_FUNCT      
+            id1_funct == `SLLV_FUNCT      |
+            id1_funct == `SRAV_FUNCT      |
+            id1_funct == `SRLV_FUNCT      
         )) begin
             id2_src_b_sel = `SRC_B_SEL_RS;
         end else if (id1_op_code == `SPECIAL_OP_CODE & (
-            id1_op_code == `SLL_FUNCT       |
-            id1_op_code == `SRA_FUNCT       |
-            id1_op_code == `SRL_FUNCT       
+            id1_funct == `SLL_FUNCT       |
+            id1_funct == `SRA_FUNCT       |
+            id1_funct == `SRL_FUNCT       
         )) begin
             id2_src_b_sel = `SRC_B_SEL_SA;
         end else begin

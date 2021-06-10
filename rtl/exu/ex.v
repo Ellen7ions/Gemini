@@ -85,7 +85,7 @@ module ex (
     assign fw_lo        =
             ({32{
                 forward_lo
-            }} & memc_hi_res)   |
+            }} & memc_lo_res)   |
             ({32{
                 ~forward_lo
             }} & hilo_lo    )   ;

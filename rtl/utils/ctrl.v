@@ -42,7 +42,7 @@ module ctrl (
             id2c_flush_req;
     
     assign ii_id2_stall =
-            issue_stall | (pc_stall & fifo_flush) | forwardc_stall_req | forwardp_stall_req;
+            issue_stall | (pc_stall & fifo_flush) | forwardc_stall_req | forwardp_stall_req | exc_stall_req;
     
     assign id2_ex_flush =
             forwardc_flush_req | forwardp_flush_req;

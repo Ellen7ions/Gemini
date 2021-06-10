@@ -39,7 +39,7 @@ module ex_mem (
             ex_ls_sel_i     <= 4'h0             ;
             ex_wb_reg_sel_i <= 1'h0             ;
             ex_pc_i         <= 32'h0            ;
-        end else begin
+        end else if (!flush & !stall) begin
             ex_alu_res_i    <= ex_alu_res_o     ;
             ex_w_hilo_ena_i <= ex_w_hilo_ena_o  ;
             ex_hi_res_i     <= ex_hi_res_o      ;

@@ -39,7 +39,7 @@ module mem_wb (
             mem_hi_res_i        <= 32'h0;
             mem_lo_res_i        <= 32'h0;
             mem_pc_i            <= 32'h0;
-        end else begin
+        end else if (!flush & !stall) begin
             mem_alu_res_i       <= mem_alu_res_o;
             mem_w_reg_ena_i     <= mem_w_reg_ena_o;
             mem_w_reg_dst_i     <= mem_w_reg_dst_o;
