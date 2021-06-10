@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "../idu/id_def.v"
+`include "../utils/forward_def.v"
 
 module ex (
     input   wire            clk,
@@ -26,12 +27,14 @@ module ex (
     input   wire [31:0]     id2_pc,
 
     // hilo
-    input   wire            forward_hi,
-    input   wire            forward_lo,
+    input   wire [2 :0]     forward_hi,
+    input   wire [2 :0]     forward_lo,
     input   wire [31:0]     hilo_hi,
     input   wire [31:0]     hilo_lo,
     input   wire [31:0]     memc_hi_res,
     input   wire [31:0]     memc_lo_res,
+    input   wire [31:0]     memp_hi_res,
+    input   wire [31:0]     memp_lo_res,
     // cp0
     output  wire            ex_cp0_w_ena,
     output  wire [4 :0]     ex_cp0_w_addr,
@@ -76,18 +79,24 @@ module ex (
 
     assign fw_hi        =
             ({32{
-                forward_hi
+                forward_hi == `FORWARD_MEMP_HI
+            }} & memp_hi_res)   |
+            ({32{
+                forward_hi == `FORWARD_MEMC_HI
             }} & memc_hi_res)   |
             ({32{
-                ~forward_hi
+                forward_hi == `FORWARD_HILI_NOP
             }} & hilo_hi    )   ;
     
     assign fw_lo        =
             ({32{
-                forward_lo
+                forward_lo == `FORWARD_MEMP_LO
+            }} & memp_lo_res)   |
+            ({32{
+                forward_lo == `FORWARD_MEMC_LO
             }} & memc_lo_res)   |
             ({32{
-                ~forward_lo
+                forward_lo == `FORWARD_HILI_NOP
             }} & hilo_lo    )   ;
 
     assign src_a        =

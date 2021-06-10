@@ -10,6 +10,7 @@ module ctrl (
     input   wire    forwardp_flush_req,
     input   wire    id2c_flush_req,
     input   wire    exc_stall_req,
+    input   wire    exp_stall_req,
     
     output  wire    pc_stall,
     output  wire    pc_flush,
@@ -27,7 +28,7 @@ module ctrl (
 );
 
     assign pc_stall     =
-            i_cache_stall_req | fifo_stall_req | exc_stall_req | forwardc_stall_req | forwardp_stall_req;
+            i_cache_stall_req | fifo_stall_req | exc_stall_req | exp_stall_req | forwardc_stall_req | forwardp_stall_req;
     
     assign pc_flush     = 
             1'b0;
@@ -36,32 +37,32 @@ module ctrl (
             id2c_flush_req & (~forwardc_stall_req & ~forwardp_stall_req);
     
     assign issue_stall  =
-            d_cache_stall_req | forwardc_stall_req | forwardp_stall_req | exc_stall_req;
+            d_cache_stall_req | forwardc_stall_req | forwardp_stall_req | exc_stall_req | exp_stall_req;
     
     assign ii_id2_flush =
             id2c_flush_req;
     
     assign ii_id2_stall =
-            issue_stall | (pc_stall & fifo_flush) | forwardc_stall_req | forwardp_stall_req | exc_stall_req;
+            issue_stall | (pc_stall & fifo_flush) | forwardc_stall_req | forwardp_stall_req | exc_stall_req | exp_stall_req;
     
     assign id2_ex_flush =
             forwardc_flush_req | forwardp_flush_req;
 
     assign id2_ex_stall =
-            d_cache_stall_req | exc_stall_req;
+            d_cache_stall_req | exc_stall_req | exp_stall_req;
     
     assign ex_mem_flush =
             1'b0;
 
     assign ex_mem_stall =
-            d_cache_stall_req | exc_stall_req;
+            d_cache_stall_req | exc_stall_req | exp_stall_req;
     
     assign mem_wb_flush =
             1'b0;
     
     assign mem_wb_stall =
-            d_cache_stall_req | exc_stall_req;
+            d_cache_stall_req | exc_stall_req | exp_stall_req;
 
     assign wb_stall     =
-            d_cache_stall_req | exc_stall_req;
+            d_cache_stall_req | exc_stall_req | exp_stall_req;
 endmodule

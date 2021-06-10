@@ -38,12 +38,14 @@ module gemini (
     wire [63:0]     fifo_r_data_2;
     wire            fifo_r_data_1_ok;
     wire            fifo_r_data_2_ok;
-    wire [2:0]      forwardc_rs;
-    wire [2:0]      forwardc_rt;
-    wire [2:0]      forwardp_rs;
-    wire [2:0]      forwardp_rt;
-    wire            forwardc_hi;
-    wire            forwardc_lo;
+    wire [2 :0]     forwardc_rs;
+    wire [2 :0]     forwardc_rt;
+    wire [2 :0]     forwardp_rs;
+    wire [2 :0]     forwardp_rt;
+    wire [2 :0]     forwardc_hi;
+    wire [2 :0]     forwardc_lo;
+    wire [2 :0]     forwardp_hi;
+    wire [2 :0]     forwardp_lo;
 
     wire [4 :0]     id2c_r_addr_1;
     wire [4 :0]     id2c_r_addr_2;
@@ -78,6 +80,7 @@ module gemini (
     wire            forwardp_flush_req;
     wire            id2c_flush_req;
     wire            exc_stall_req;
+    wire            exp_stall_req;
 
     wire [31:0]     r_hi_data;
     wire [31:0]     r_lo_data;
@@ -302,6 +305,9 @@ module gemini (
     wire            exp_ls_ena_o;
     wire [3 :0]     exp_ls_sel_o;
     wire [31:0]     exp_rt_data_o;
+    wire [1 :0]     exp_w_hilo_ena_o;
+    wire [31:0]     exp_hi_res_o;
+    wire [31:0]     exp_lo_res_o;
     wire [31:0]     exp_pc_i;
     wire [31:0]     exp_alu_res_i;
     wire [31:0]     exp_w_reg_ena_i;
@@ -309,6 +315,9 @@ module gemini (
     wire            exp_wb_reg_sel_i;
     wire            exp_ls_ena_i;
     wire [3 :0]     exp_ls_sel_i;
+    wire [1 :0]     exp_w_hilo_ena_i;
+    wire [31:0]     exp_hi_res_i;
+    wire [31:0]     exp_lo_res_i;
 
     // mem => wb
     wire [31:0]     memc_alu_res_o;
@@ -335,12 +344,18 @@ module gemini (
     wire [31:0]     memp_r_data_o;
     wire            memp_wb_reg_sel_o;
     wire [31:0]     memp_pc_o;
+    wire [1 :0]     memp_w_hilo_ena_o;
+    wire [31:0]     memp_hi_res_o;
+    wire [31:0]     memp_lo_res_o;
     wire [31:0]     memp_alu_res_i;
     wire            memp_w_reg_ena_i;
     wire [4 :0]     memp_w_reg_dst_i;
     wire [31:0]     memp_r_data_i;
     wire            memp_wb_reg_sel_i;
     wire [31:0]     memp_pc_i;
+    wire [1 :0]     memp_w_hilo_ena_i;
+    wire [31:0]     memp_hi_res_i;
+    wire [31:0]     memp_lo_res_i;
 
     wire            memc_data_ena;
     wire [3 :0]     memc_data_wea;
@@ -589,9 +604,9 @@ module gemini (
         .stall              (ex_mem_stall       ),
         .ex_pc_o            (exp_pc_o           ),
         .ex_alu_res_o       (exp_alu_res_o      ),
-        .ex_w_hilo_ena_o    (                   ),
-        .ex_hi_res_o        (                   ),
-        .ex_lo_res_o        (                   ),
+        .ex_w_hilo_ena_o    (exp_w_hilo_ena_o   ),
+        .ex_hi_res_o        (exp_hi_res_o       ),
+        .ex_lo_res_o        (exp_lo_res_o       ),
         .ex_w_reg_ena_o     (exp_w_reg_ena_o    ),
         .ex_w_reg_dst_o     (exp_w_reg_dst_o    ),
         .ex_ls_ena_o        (exp_ls_ena_o       ),
@@ -599,9 +614,9 @@ module gemini (
         .ex_wb_reg_sel_o    (exp_wb_reg_sel_o   ),
         .ex_pc_i            (exp_pc_i           ),
         .ex_alu_res_i       (exp_alu_res_i      ),
-        .ex_w_hilo_ena_i    (                   ),
-        .ex_hi_res_i        (                   ),
-        .ex_lo_res_i        (                   ),
+        .ex_w_hilo_ena_i    (exp_w_hilo_ena_i   ),
+        .ex_hi_res_i        (exp_hi_res_i       ),
+        .ex_lo_res_i        (exp_lo_res_i       ),
         .ex_w_reg_ena_i     (exp_w_reg_ena_i    ),
         .ex_w_reg_dst_i     (exp_w_reg_dst_i    ),
         .ex_ls_ena_i        (exp_ls_ena_i       ),
@@ -645,18 +660,18 @@ module gemini (
         .mem_w_reg_dst_o    (memp_w_reg_dst_o   ),            
         .mem_r_data_o       (memp_r_data_o      ),        
         .mem_wb_reg_sel_o   (memp_wb_reg_sel_o  ),
-        .mem_w_hilo_ena_o   (                   ),    
-        .mem_hi_res_o       (                   ),
-        .mem_lo_res_o       (                   ),        
+        .mem_w_hilo_ena_o   (memp_w_hilo_ena_o  ),    
+        .mem_hi_res_o       (memp_hi_res_o      ),
+        .mem_lo_res_o       (memp_lo_res_o      ),        
         .mem_pc_i           (memp_pc_i          ),
         .mem_alu_res_i      (memp_alu_res_i     ),
         .mem_w_reg_ena_i    (memp_w_reg_ena_i   ),
         .mem_w_reg_dst_i    (memp_w_reg_dst_i   ),
         .mem_r_data_i       (memp_r_data_i      ),
         .mem_wb_reg_sel_i   (memp_wb_reg_sel_i  ),
-        .mem_w_hilo_ena_i   (                   ),    
-        .mem_hi_res_i       (                   ),
-        .mem_lo_res_i       (                   )
+        .mem_w_hilo_ena_i   (memp_w_hilo_ena_i  ),    
+        .mem_hi_res_i       (memp_hi_res_i      ),
+        .mem_lo_res_i       (memp_lo_res_i      )
     );
     
     // 
@@ -777,7 +792,8 @@ module gemini (
         .mem_w_reg_dst_2    (exp_w_reg_dst_i    ),
         .mem_ls_ena_2       (exp_ls_ena_i       ),
 
-        .ex_mem_w_hilo_ena  (exc_w_hilo_ena_i   ),
+        .ex_mem_w_hilo_ena_1(exc_w_hilo_ena_i   ),
+        .ex_mem_w_hilo_ena_2(exp_w_hilo_ena_i   ),
 
         .forward_rs         (forwardc_rs        ),
         .forward_rt         (forwardc_rt        ),
@@ -804,12 +820,13 @@ module gemini (
         .mem_w_reg_dst_2    (exp_w_reg_dst_i    ),
         .mem_ls_ena_2       (exp_ls_ena_i       ),
 
-        .ex_mem_w_hilo_ena  (),
+        .ex_mem_w_hilo_ena_1(exc_w_hilo_ena_i   ),
+        .ex_mem_w_hilo_ena_2(exp_w_hilo_ena_i   ),
 
         .forward_rs         (forwardp_rs        ),
         .forward_rt         (forwardp_rt        ),
-        .forward_hi         (),
-        .forward_lo         (),
+        .forward_hi         (forwardp_hi        ),
+        .forward_lo         (forwardp_lo        ),
 
         .forward_stall_req  (forwardp_stall_req ),
         .forward_flush_req  (forwardp_flush_req )
@@ -988,6 +1005,8 @@ module gemini (
         .hilo_lo            (r_lo_data          ),
         .memc_hi_res        (exc_hi_res_i       ),
         .memc_lo_res        (exc_lo_res_i       ),
+        .memp_hi_res        (exp_hi_res_i       ),
+        .memp_lo_res        (exp_lo_res_i       ),
         .ex_cp0_w_ena       (exc_cp0_w_ena      ),
         .ex_cp0_w_addr      (exc_cp0_w_addr     ),
         .ex_cp0_w_data      (exc_cp0_w_data     ),
@@ -1027,12 +1046,14 @@ module gemini (
         .id2_rt_data        (id2p_rt_data_i     ),
         .id2_ext_imme       (id2p_ext_imme_i    ),
         .id2_pc             (id2p_pc_i          ),
-        .forward_hi         (),
-        .forward_lo         (),
-        .hilo_hi            (),
-        .hilo_lo            (),
-        .memc_hi_res        (),
-        .memc_lo_res        (),
+        .forward_hi         (forwardp_hi        ),
+        .forward_lo         (forwardp_lo        ),
+        .hilo_hi            (r_hi_data          ),
+        .hilo_lo            (r_lo_data          ),
+        .memc_hi_res        (exc_hi_res_i       ),
+        .memc_lo_res        (exc_lo_res_i       ),
+        .memp_hi_res        (exp_hi_res_i       ),
+        .memp_lo_res        (exp_lo_res_i       ),
         .ex_cp0_r_addr      (),
         .ex_cp0_r_data      (),
         .ex_cp0_w_ena       (),
@@ -1043,15 +1064,15 @@ module gemini (
         .id2_alu_sel        (id2p_alu_sel_i     ),
         .id2_alu_res_sel    (id2p_alu_res_sel_i ),
         .id2_w_reg_ena      (id2p_w_reg_ena_i   ),
-        .id2_w_hilo_ena     (),
+        .id2_w_hilo_ena     (id2p_w_hilo_ena_i  ),
         .id2_ls_ena         (id2p_ls_ena_i      ),
         .id2_ls_sel         (id2p_ls_sel_i      ),
         .id2_wb_reg_sel     (id2p_wb_reg_sel_i  ),
-        .ex_stall_req       (                   ),
+        .ex_stall_req       (exp_stall_req      ),
         .ex_alu_res         (exp_alu_res_o      ),
-        .ex_w_hilo_ena      (),
-        .ex_hi_res          (),
-        .ex_lo_res          (),
+        .ex_w_hilo_ena      (exp_w_hilo_ena_o   ),
+        .ex_hi_res          (exp_hi_res_o       ),
+        .ex_lo_res          (exp_lo_res_o       ),
         .ex_pc              (exp_pc_o           ),
         .ex_rt_data         (exp_rt_data_o      ),
         .ex_w_reg_ena       (exp_w_reg_ena_o    ),
@@ -1121,9 +1142,9 @@ module gemini (
         .ex_mem_ls_sel      (exp_ls_sel_i       ),
         .ex_mem_wb_reg_sel  (exp_wb_reg_sel_i   ),
 
-        .ex_mem_w_hilo_ena  (                   ),
-        .ex_mem_hi_res      (                   ),
-        .ex_mem_lo_res      (                   ),
+        .ex_mem_w_hilo_ena  (exp_w_hilo_ena_i   ),
+        .ex_mem_hi_res      (exp_hi_res_i       ),
+        .ex_mem_lo_res      (exp_lo_res_i       ),
 
         .mem_pc             (memp_pc_o          ),
         .mem_alu_res        (memp_alu_res_o     ),
@@ -1132,9 +1153,9 @@ module gemini (
         .mem_r_data         (memp_r_data_o      ),
         .mem_wb_reg_sel     (memp_wb_reg_sel_o  ),
 
-        .mem_w_hilo_ena     (                   ),
-        .mem_hi_res         (                   ),
-        .mem_lo_res         (                   ),
+        .mem_w_hilo_ena     (memp_w_hilo_ena_o  ),
+        .mem_hi_res         (memp_hi_res_o      ),
+        .mem_lo_res         (memp_lo_res_o      ),
 
         .data_ram_en        (memp_data_ena      ),
         .data_ram_wen       (memp_data_wea      ),
@@ -1196,12 +1217,22 @@ module gemini (
     assign debug_wb_rf_wnum_2   = wbp_w_reg_addr_o;
     assign debug_wb_rf_wdata_2  = wbp_w_reg_data_o;
 
+    wire [1 :0] w_hilo_ena_cp;
+    assign w_hilo_ena_cp[1]     = memc_w_hilo_ena_i[1] | memp_w_hilo_ena_i[1];
+    assign w_hilo_ena_cp[0]     = memc_w_hilo_ena_i[0] | memp_w_hilo_ena_i[0];
+    wire [31:0] w_hi_res_cp     =
+            {32{ memc_w_hilo_ena_i[1] & ~memp_w_hilo_ena_i[1]}} & memc_hi_res_i |
+            {32{~memc_w_hilo_ena_i[1] &  memp_w_hilo_ena_i[1]}} & memp_hi_res_i ;
+    wire [31:0] w_lo_res_cp     =
+            {32{ memc_w_hilo_ena_i[0] & ~memp_w_hilo_ena_i[0]}} & memc_lo_res_i |
+            {32{~memc_w_hilo_ena_i[0] &  memp_w_hilo_ena_i[0]}} & memp_lo_res_i ;
+
     hilo hl (
         .clk                (clk                ),
         .rst                (rst                ),
-        .w_hilo_ena         (memc_w_hilo_ena_i  ),
-        .w_hi_data          (memc_hi_res_i      ),
-        .w_lo_data          (memc_lo_res_i      ),
+        .w_hilo_ena         (w_hilo_ena_cp      ),
+        .w_hi_data          (w_hi_res_cp        ),
+        .w_lo_data          (w_lo_res_cp        ),
         .r_hi_data          (r_hi_data          ),    
         .r_lo_data          (r_lo_data          )    
     );
@@ -1216,6 +1247,7 @@ module gemini (
         .forwardp_flush_req  (forwardp_flush_req),
         .id2c_flush_req      (id2c_flush_req    ),
         .exc_stall_req       (exc_stall_req     ),
+        .exp_stall_req       (exp_stall_req     ),
         .pc_stall            (pc_stall          ),
         .pc_flush            (pc_flush          ),
         .fifo_flush          (fifo_flush        ),
