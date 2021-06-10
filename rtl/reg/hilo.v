@@ -25,6 +25,6 @@ module hilo (
         end
     end
 
-    assign r_hi_data = hi;
-    assign r_lo_data = lo;
+    assign r_hi_data = w_hilo_ena[1] ? w_hi_data : hi;
+    assign r_lo_data = w_hilo_ena[0] ? w_lo_data : lo;
 endmodule
