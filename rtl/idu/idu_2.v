@@ -166,16 +166,23 @@ module idu_2 (
                 forward_rt == `FORWARD_MEMP_MEM_DATA
             }} & memp_r_data    )   ;
 
+    wire beq_check      = $signed(id2_rs_data) == $signed(id2_rt_data);
+    wire bne_check      = $signed(id2_rs_data) != $signed(id2_rt_data);
+    wire bgez_check     = $signed(id2_rs_data) >= $signed(32'h0      );
+    wire bgtz_check     = $signed(id2_rs_data) >  $signed(32'h0      );
+    wire blez_check     = $signed(id2_rs_data) <= $signed(32'h0      );
+    wire bltz_check     = $signed(id2_rs_data) <  $signed(32'h0      );
+
     assign id2_take_branch  =
             id2_is_branch & (
-                (id1_op_code == `BEQ_OP_CODE                                    ) & ($signed(id2_rs_data) == $signed(id2_rt_data))    |
-                (id1_op_code == `BNE_OP_CODE                                    ) & ($signed(id2_rs_data) != $signed(id2_rt_data))    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BGEZ_RT_CODE    ) & ($signed(id2_rs_data) >= $signed(32'h0      ))    |
-                (id1_op_code == `BGTZ_OP_CODE                                   ) & ($signed(id2_rs_data) >  $signed(32'h0      ))    |
-                (id1_op_code == `BLEZ_OP_CODE                                   ) & ($signed(id2_rs_data) <= $signed(32'h0      ))    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BLTZ_RT_CODE    ) & ($signed(id2_rs_data) <  $signed(32'h0      ))    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BGEZAL_RT_CODE  ) & ($signed(id2_rs_data) >= $signed(32'h0      ))    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_funct == `BLTZAL_RT_CODE  ) & ($signed(id2_rs_data) <  $signed(32'h0      ))    
+                (id1_op_code == `BEQ_OP_CODE                                    ) & (beq_check  )    |
+                (id1_op_code == `BNE_OP_CODE                                    ) & (bne_check  )    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BGEZ_RT_CODE    ) & (bgez_check )    |
+                (id1_op_code == `BGTZ_OP_CODE                                   ) & (bgtz_check )    |
+                (id1_op_code == `BLEZ_OP_CODE                                   ) & (blez_check )    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BLTZ_RT_CODE    ) & (bltz_check )    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BGEZAL_RT_CODE  ) & (bgez_check )    |
+                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BLTZAL_RT_CODE  ) & (bltz_check )    
             );
     
     assign id2_take_j_imme  =
