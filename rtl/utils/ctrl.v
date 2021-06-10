@@ -27,13 +27,13 @@ module ctrl (
 );
 
     assign pc_stall     =
-            i_cache_stall_req | fifo_stall_req | exc_stall_req;
+            i_cache_stall_req | fifo_stall_req | exc_stall_req | forwardc_stall_req | forwardp_stall_req;
     
     assign pc_flush     = 
             1'b0;
     
     assign fifo_flush   =
-            id2c_flush_req;
+            id2c_flush_req & (~forwardc_stall_req & ~forwardp_stall_req);
     
     assign issue_stall  =
             d_cache_stall_req | forwardc_stall_req | forwardp_stall_req | exc_stall_req;
