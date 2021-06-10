@@ -337,7 +337,17 @@ module idu_2 (
             }} & (`ALU_SEL_XOR))    |
             ({6{
                 (id1_op_code == `LUI_OP_CODE)
-            }} & (`ALU_SEL_LUI));
+            }} & (`ALU_SEL_LUI))    |
+            ({6{
+                (id1_op_code == `SPECIAL_OP_CODE) & (
+                id1_funct == `MTHI_FUNCT
+                )
+            }} & (`ALU_SEL_MTHI))   |
+            ({6{
+                (id1_op_code == `SPECIAL_OP_CODE) & (
+                id1_funct == `MTLO_FUNCT
+                )
+            }} & (`ALU_SEL_MTLO))   ;
 
     assign id2_alu_res_sel  =
             ({3{

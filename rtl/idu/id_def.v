@@ -93,6 +93,8 @@
 `define ALU_SEL_SRA         6'he
 `define ALU_SEL_SRL         6'hf
 `define ALU_SEL_LUI         6'h10
+`define ALU_SEL_MTHI        6'h11
+`define ALU_SEL_MTLO        6'h12
 
 // ================================== //
 

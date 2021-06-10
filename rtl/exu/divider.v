@@ -7,8 +7,8 @@ module divider(
     input   wire [31:0] src_b,
     input   wire        en,
     input   wire        div_sign,
-    output  wire [63:0] s,
-    output  wire [63:0] r,
+    output  wire [31:0] s,
+    output  wire [31:0] r,
     output  reg         res_ready,
     output  reg         stall_all
     );

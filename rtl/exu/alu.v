@@ -107,6 +107,14 @@ module alu (
         `ALU_SEL_LUI    : begin
             ext_alu_res = {src_b, 16'h0};
         end
+        `ALU_SEL_MTHI   : begin
+            alu_hi_res  = src_a;
+            alu_lo_res  = 32'h0;
+        end
+        `ALU_SEL_MTLO   : begin
+            alu_hi_res  = 32'h0;
+            alu_lo_res  = src_a;
+        end
         default: begin
             ext_alu_res = 33'h0;
             alu_hi_res  = 32'h0;
