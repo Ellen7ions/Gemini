@@ -125,7 +125,6 @@ module idu_1 (
             !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MULT_FUNCT    )   &
             !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MULTU_FUNCT   )   &
             !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `JR_FUNCT      )   &
-            !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `JALR_FUNCT    )   &
             !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MTHI_FUNCT    )   &
             !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `MTLO_FUNCT    )   &
             !(id1_op_code == `SPECIAL_OP_CODE & id1_funct == `BREAK_FUNCT   )   &
@@ -141,8 +140,6 @@ module idu_1 (
             !(id1_op_code == `SW_OP_CODE    )  &
             !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZ_RT_CODE  )   &
             !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZ_RT_CODE  )   &
-            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BLTZAL_RT_CODE)   &
-            !(id1_op_code == `REGIMM_OP_CODE & id1_rt == `BGEZAL_RT_CODE)   &
             !(id1_op_code == `COP0_OP_CODE   & id1_rt == `MTC0_RS_CODE  )   &
             (id1_w_reg_dst != 5'h0);
     
