@@ -21,11 +21,11 @@ module gemini (
     
     output  wire [31:0] debug_wb_pc_1,
     output  wire [3 :0] debug_wb_rf_wen_1,
-    output  wire [31:0] debug_wb_rf_wnum_1,
+    output  wire [4 :0] debug_wb_rf_wnum_1,
     output  wire [31:0] debug_wb_rf_wdata_1,
     output  wire [31:0] debug_wb_pc_2,
     output  wire [3 :0] debug_wb_rf_wen_2,
-    output  wire [31:0] debug_wb_rf_wnum_2,
+    output  wire [4 :0] debug_wb_rf_wnum_2,
     output  wire [31:0] debug_wb_rf_wdata_2
 );
 
@@ -281,7 +281,7 @@ module gemini (
     wire [31:0]     exc_hi_res_o;
     wire [31:0]     exc_lo_res_o;
     wire [31:0]     exc_rt_data_o;
-    wire [31:0]     exc_w_reg_ena_o;
+    wire            exc_w_reg_ena_o;
     wire [4 :0]     exc_w_reg_dst_o;
     wire            exc_ls_ena_o;
     wire [3 :0]     exc_ls_sel_o;
@@ -291,7 +291,7 @@ module gemini (
     wire [1 :0]     exc_w_hilo_ena_i;
     wire [31:0]     exc_hi_res_i;
     wire [31:0]     exc_lo_res_i;
-    wire [31:0]     exc_w_reg_ena_i;
+    wire            exc_w_reg_ena_i;
     wire [4 :0]     exc_w_reg_dst_i;
     wire [31:0]     exc_rt_data_i;
     wire            exc_ls_ena_i;
@@ -300,7 +300,7 @@ module gemini (
 
     wire [31:0]     exp_pc_o;
     wire [31:0]     exp_alu_res_o;
-    wire [31:0]     exp_w_reg_ena_o;
+    wire            exp_w_reg_ena_o;
     wire [4 :0]     exp_w_reg_dst_o;
     wire            exp_wb_reg_sel_o;
     wire            exp_ls_ena_o;
@@ -311,7 +311,7 @@ module gemini (
     wire [31:0]     exp_lo_res_o;
     wire [31:0]     exp_pc_i;
     wire [31:0]     exp_alu_res_i;
-    wire [31:0]     exp_w_reg_ena_i;
+    wire            exp_w_reg_ena_i;
     wire [4 :0]     exp_w_reg_dst_i;
     wire            exp_wb_reg_sel_i;
     wire            exp_ls_ena_i;
@@ -1071,6 +1071,7 @@ module gemini (
         .id2_alu_res_sel    (id2p_alu_res_sel_i ),
         .id2_w_reg_ena      (id2p_w_reg_ena_i   ),
         .id2_w_hilo_ena     (id2p_w_hilo_ena_i  ),
+        .id2_w_cp0_ena      (id2p_w_cp0_ena_i   ),
         .id2_ls_ena         (id2p_ls_ena_i      ),
         .id2_ls_sel         (id2p_ls_sel_i      ),
         .id2_wb_reg_sel     (id2p_wb_reg_sel_i  ),

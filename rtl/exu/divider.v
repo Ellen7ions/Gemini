@@ -81,7 +81,7 @@ module divider(
             end
 
             default: begin
-                
+                state_next = DIV_FREE;
             end 
             endcase
         end

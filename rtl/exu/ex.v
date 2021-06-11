@@ -65,7 +65,7 @@ module ex (
     // pass down
     output  wire [31:0]     ex_pc,
     output  wire [31:0]     ex_rt_data,
-    output  wire [31:0]     ex_w_reg_ena,
+    output  wire            ex_w_reg_ena,
     output  wire [4 :0]     ex_w_reg_dst,
     output  wire            ex_ls_ena,
     output  wire [3 :0]     ex_ls_sel,
