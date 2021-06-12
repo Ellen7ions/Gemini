@@ -80,25 +80,25 @@
 
 // ================================== //
 
-`define ALU_SEL_NOP         6'h0
-`define ALU_SEL_ADD         6'h1
-`define ALU_SEL_SUB         6'h2
-`define ALU_SEL_SLT         6'h3
-`define ALU_SEL_SLTU        6'h4
-`define ALU_SEL_DIV         6'h5
-`define ALU_SEL_DIVU        6'h6
-`define ALU_SEL_MULT        6'h7
-`define ALU_SEL_MULTU       6'h8
-`define ALU_SEL_AND         6'h9
-`define ALU_SEL_NOR         6'ha
-`define ALU_SEL_OR          6'hb
-`define ALU_SEL_XOR         6'hc
-`define ALU_SEL_SLL         6'hd
-`define ALU_SEL_SRA         6'he
-`define ALU_SEL_SRL         6'hf
-`define ALU_SEL_LUI         6'h10
-`define ALU_SEL_MTHI        6'h11
-`define ALU_SEL_MTLO        6'h12
+`define ALU_SEL_NOP         6'd0
+`define ALU_SEL_ADD         6'd1
+`define ALU_SEL_SUB         6'd2
+`define ALU_SEL_SLT         6'd3
+`define ALU_SEL_SLTU        6'd4
+`define ALU_SEL_DIV         6'd5
+`define ALU_SEL_DIVU        6'd6
+`define ALU_SEL_MULT        6'd7
+`define ALU_SEL_MULTU       6'd8
+`define ALU_SEL_AND         6'd9
+`define ALU_SEL_NOR         6'd54
+`define ALU_SEL_OR          6'd56
+`define ALU_SEL_XOR         6'd57
+`define ALU_SEL_SLL         6'd58
+`define ALU_SEL_SRA         6'd59
+`define ALU_SEL_SRL         6'd60
+`define ALU_SEL_LUI         6'd61
+`define ALU_SEL_MTHI        6'd62
+`define ALU_SEL_MTLO        6'd63
 
 // ================================== //
 
@@ -106,19 +106,19 @@
 
 `define SRC_A_SEL_NOP       3'b000
 `define SRC_A_SEL_ZERO      3'b000
-`define SRC_A_SEL_RS        3'b001
-`define SRC_A_SEL_RT        3'b010
+`define SRC_A_SEL_RS        3'b101
+`define SRC_A_SEL_RT        3'b110
 
 `define SRC_B_SEL_NOP       3'b000
 `define SRC_B_SEL_ZERO      3'b000
-`define SRC_B_SEL_RT        3'b001
-`define SRC_B_SEL_IMME      3'b010
+`define SRC_B_SEL_RT        3'b101
+`define SRC_B_SEL_IMME      3'b110
 `define SRC_B_SEL_RS        3'b011
 `define SRC_B_SEL_SA        3'b100
 
 `define ALU_RES_SEL_ALU     3'b000
-`define ALU_RES_SEL_HI      3'b001
-`define ALU_RES_SEL_LO      3'b010
+`define ALU_RES_SEL_HI      3'b101
+`define ALU_RES_SEL_LO      3'b110
 `define ALU_RES_SEL_PC_8    3'b011
 `define ALU_RES_SEL_CP0     3'b100    
 

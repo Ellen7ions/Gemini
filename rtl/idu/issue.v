@@ -16,14 +16,14 @@ module issue (
 
     // to iduc
     output  wire        id1_valid_1,
+    output  wire [28:0] id1_op_codes_1,
+    output  wire [28:0] id1_func_codes_1,
     output  wire [31:0] id1_pc_1,
     output  wire [31:0] id1_inst_1,
-    output  wire [5 :0] id1_op_code_1,
     output  wire [4 :0] id1_rs_1,
     output  wire [4 :0] id1_rt_1,
     output  wire [4 :0] id1_rd_1,
     output  wire [4 :0] id1_sa_1,
-    output  wire [5 :0] id1_funct_1,
     output  wire        id1_w_reg_ena_1,
     output  wire [4 :0] id1_w_reg_dst_1,
     output  wire [15:0] id1_imme_1,
@@ -35,14 +35,14 @@ module issue (
 
     // to idup
     output  wire        id1_valid_2,
+    output  wire [28:0] id1_op_codes_2,
+    output  wire [28:0] id1_func_codes_2,
     output  wire [31:0] id1_pc_2,
     output  wire [31:0] id1_inst_2,
-    output  wire [5 :0] id1_op_code_2,
     output  wire [4 :0] id1_rs_2,
     output  wire [4 :0] id1_rt_2,
     output  wire [4 :0] id1_rd_2,
     output  wire [4 :0] id1_sa_2,
-    output  wire [5 :0] id1_funct_2,
     output  wire        id1_w_reg_ena_2,
     output  wire [4 :0] id1_w_reg_dst_2,
     output  wire [15:0] id1_imme_2,
@@ -123,7 +123,9 @@ module issue (
 
     idu_1 idc (
         .inst           (id1_inst_1),
-        .id1_op_code    (id1_op_code_1),
+        .id1_op_codes   (id1_op_codes_1),
+        .id1_func_codes (id1_func_codes_1),
+        .id1_op_code    (),
         .id1_rs         (id1_rs_1),
         .id1_rt         (id1_rt_1),
         .id1_rd         (id1_rd_1),
@@ -142,7 +144,9 @@ module issue (
 
     idu_1 idp (
         .inst           (id1_inst_2),
-        .id1_op_code    (id1_op_code_2),
+        .id1_op_codes   (id1_op_codes_2),
+        .id1_func_codes (id1_func_codes_2),
+        .id1_op_code    (),
         .id1_rs         (id1_rs_2),
         .id1_rt         (id1_rt_2),
         .id1_rd         (id1_rd_2),

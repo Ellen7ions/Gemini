@@ -41,6 +41,12 @@ module lsu (
 
     // ex
 
+    // wire ls_is_sb   = ex_ls_sel == `LS_SEL_SB;
+    // wire ls_is_sh   = ex_ls_sel == `LS_SEL_SH;
+    // wire ls_is_swl  = ex_ls_sel == `LS_SEL_SWL;
+    // wire ls_is_swr  = ex_ls_sel == `LS_SEL_SWR;
+    // wire ls_is_sw   = ex_ls_sel == `LS_SEL_SW;
+
     assign data_ram_en  =
             ex_ls_ena;
 

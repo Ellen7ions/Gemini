@@ -40,6 +40,12 @@ module alu (
         .stall_all  (alu_stall_req)
     );
 
+    wire        is_slt      = $signed(src_a) < $signed(src_b);
+    wire        is_sltu     = src_a < src_b;
+    wire [31:0] sll_val     = src_a << src_b[4:0];
+    wire [31:0] sra_val     = $signed(src_a) >>> src_b[4:0];
+    wire [31:0] srl_val     = src_a >> src_b[4:0];
+
     always @(*) begin
         ext_alu_res = 33'h0;
         alu_hi_res  = 32'h0;
@@ -58,10 +64,10 @@ module alu (
             ext_alu_res = ext_src_a - ext_src_b;
         end
         `ALU_SEL_SLT    : begin
-            ext_alu_res = {31'h0, $signed(src_a) < $signed(src_b)};
+            ext_alu_res = {31'h0, is_slt};
         end
         `ALU_SEL_SLTU   : begin
-            ext_alu_res = {31'h0, src_a < src_b};
+            ext_alu_res = {31'h0, is_sltu};
         end
         `ALU_SEL_DIV    : begin
             div_en      = 1'b1;
@@ -96,13 +102,13 @@ module alu (
             ext_alu_res = {1'b0, src_a ^ src_b};
         end
         `ALU_SEL_SLL    : begin
-            ext_alu_res = {1'b0, src_a << src_b[4:0]};
+            ext_alu_res = {1'b0, sll_val};
         end
         `ALU_SEL_SRA    : begin
-            ext_alu_res = {1'b0, $signed(src_a) >>> src_b[4:0]};
+            ext_alu_res = {1'b0, sra_val};
         end
         `ALU_SEL_SRL    : begin
-            ext_alu_res = {1'b0, src_a >> src_b[4:0]};
+            ext_alu_res = {1'b0, srl_val};
         end
         `ALU_SEL_LUI    : begin
             ext_alu_res = {src_b, 16'h0};

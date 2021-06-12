@@ -4,13 +4,13 @@
 `include "../utils/forward_def.v"
 
 module idu_2 (
+    input  wire [28:0]      id1_op_codes,
+    input  wire [28:0]      id1_func_codes,
     input  wire [31:0]      id1_pc,
-    input  wire [5 :0]      id1_op_code,
     input  wire [4 :0]      id1_rs,
     input  wire [4 :0]      id1_rt,
     input  wire [4 :0]      id1_rd,
     input  wire [4 :0]      id1_sa,
-    input  wire [5 :0]      id1_funct,
     input  wire             id1_w_reg_ena,
     input  wire [4 :0]      id1_w_reg_dst,
     input  wire [15:0]      id1_imme,
@@ -75,10 +75,130 @@ module idu_2 (
     output wire [3 :0]      id2_ls_sel,
     output wire             id2_wb_reg_sel
 );
-    // attention !
-    // w_hilo_ena   [1 :0]
-    // w_cp0_ena    
+    
+    wire op_code_is_special;
+    wire op_code_is_cop0;
+    wire op_code_is_regimm;
+    wire op_code_is_addi;
+    wire op_code_is_addiu;
+    wire op_code_is_slti;
+    wire op_code_is_sltiu;
+    wire op_code_is_andi;
+    wire op_code_is_lui;
+    wire op_code_is_ori;
+    wire op_code_is_xori;
+    wire op_code_is_lb;
+    wire op_code_is_lh;
+    wire op_code_is_lbu;
+    wire op_code_is_lhu;
+    wire op_code_is_lw;
+    wire op_code_is_lwl;
+    wire op_code_is_lwr;
+    wire op_code_is_jal;
+    wire op_code_is_beq;
+    wire op_code_is_bne;
+    wire op_code_is_bgtz;
+    wire op_code_is_blez;
+    wire op_code_is_j;
+    wire op_code_is_sb;
+    wire op_code_is_sh;
+    wire op_code_is_sw;
+    wire op_code_is_swl;
+    wire op_code_is_swr;
 
+    assign {
+        op_code_is_special,
+        op_code_is_cop0,
+        op_code_is_regimm,
+        op_code_is_addi,
+        op_code_is_addiu,
+        op_code_is_slti,
+        op_code_is_sltiu,
+        op_code_is_andi,
+        op_code_is_lui,
+        op_code_is_ori,
+        op_code_is_xori,
+        op_code_is_lb,
+        op_code_is_lh,
+        op_code_is_lbu,
+        op_code_is_lhu,
+        op_code_is_lw,
+        op_code_is_lwl,
+        op_code_is_lwr,
+        op_code_is_jal,
+        op_code_is_beq,
+        op_code_is_bne,
+        op_code_is_bgtz,
+        op_code_is_blez,
+        op_code_is_j,
+        op_code_is_sb,
+        op_code_is_sh,
+        op_code_is_sw,
+        op_code_is_swl,
+        op_code_is_swr
+    }   = id1_op_codes;
+
+    wire func_code_is_add;
+    wire func_code_is_addu;
+    wire func_code_is_sub;
+    wire func_code_is_subu;
+    wire func_code_is_slt;
+    wire func_code_is_sltu;
+    wire func_code_is_and;
+    wire func_code_is_nor;
+    wire func_code_is_or;
+    wire func_code_is_xor;
+    wire func_code_is_sllv;
+    wire func_code_is_sll;
+    wire func_code_is_srav;
+    wire func_code_is_sra;
+    wire func_code_is_srlv;
+    wire func_code_is_srl;
+    wire func_code_is_jalr;
+    wire func_code_is_mfhi;
+    wire func_code_is_mflo;
+    wire func_code_is_div;
+    wire func_code_is_divu;
+    wire func_code_is_mult;
+    wire func_code_is_multu;
+    wire func_code_is_jr;
+    wire func_code_is_mthi;
+    wire func_code_is_mtlo;
+    wire func_code_is_break;
+    wire func_code_is_syscall;
+    wire func_code_is_eret;
+
+    assign {
+        func_code_is_add,
+        func_code_is_addu,
+        func_code_is_sub,
+        func_code_is_subu,
+        func_code_is_slt,
+        func_code_is_sltu,
+        func_code_is_and,
+        func_code_is_nor,
+        func_code_is_or,
+        func_code_is_xor,
+        func_code_is_sllv,
+        func_code_is_sll,
+        func_code_is_srav,
+        func_code_is_sra,
+        func_code_is_srlv,
+        func_code_is_srl,
+        func_code_is_jalr,
+        func_code_is_mfhi,
+        func_code_is_mflo,
+        func_code_is_div,
+        func_code_is_divu,
+        func_code_is_mult,
+        func_code_is_multu,
+        func_code_is_jr,
+        func_code_is_mthi,
+        func_code_is_mtlo,
+        func_code_is_break,
+        func_code_is_syscall,
+        func_code_is_eret
+    }   = id1_func_codes;
 
     // internal signals
     wire sign_ext;
@@ -87,22 +207,22 @@ module idu_2 (
     assign reg_r_addr_2 = id1_rt;
 
     assign sign_ext = 
-            (id1_op_code == `ADDI_OP_CODE   )   |
-            (id1_op_code == `ADDIU_OP_CODE  )   |
-            (id1_op_code == `SLTI_OP_CODE   )   |
-            (id1_op_code == `SLTIU_OP_CODE  )   |
-            (id1_op_code == `LB_OP_CODE     )   |
-            (id1_op_code == `LBU_OP_CODE    )   |
-            (id1_op_code == `LH_OP_CODE     )   |
-            (id1_op_code == `LHU_OP_CODE    )   |
-            (id1_op_code == `LW_OP_CODE     )   |
-            (id1_op_code == `LWL_OP_CODE    )   |
-            (id1_op_code == `LWR_OP_CODE    )   |
-            (id1_op_code == `SB_OP_CODE     )   |
-            (id1_op_code == `SH_OP_CODE     )   |
-            (id1_op_code == `SW_OP_CODE     )   |
-            (id1_op_code == `SWL_OP_CODE    )   |
-            (id1_op_code == `SWR_OP_CODE    )   ;
+            (op_code_is_addi   )   |
+            (op_code_is_addiu  )   |
+            (op_code_is_sltiu  )   |
+            (op_code_is_sltiu  )   |
+            (op_code_is_lb     )   |
+            (op_code_is_lbu    )   |
+            (op_code_is_lh     )   |
+            (op_code_is_lbu    )   |
+            (op_code_is_lw     )   |
+            (op_code_is_lwl    )   |
+            (op_code_is_lwr    )   |
+            (op_code_is_sb     )   |
+            (op_code_is_sh     )   |
+            (op_code_is_sw     )   |
+            (op_code_is_swl    )   |
+            (op_code_is_swr    )   ;
 
     // output signals
 
@@ -126,48 +246,48 @@ module idu_2 (
     // forward !
     assign id2_rs_data      =
             ({32{
-                forward_rs == `FORWARD_NOP
+                !(forward_rs ^ `FORWARD_NOP)
             }} & reg_r_data_1   )   |
             ({32{
-                forward_rs == `FORWARD_EXC_ALU_RES
+                !(forward_rs ^ `FORWARD_EXC_ALU_RES)
             }} & exc_alu_res    )   |
             ({32{
-                forward_rs == `FORWARD_EXP_ALU_RES
+                !(forward_rs ^ `FORWARD_EXP_ALU_RES)
             }} & exp_alu_res    )   |
             ({32{
-                forward_rs == `FORWARD_MEMC_ALU_RES
+                !(forward_rs ^ `FORWARD_MEMC_ALU_RES)
             }} & memc_alu_res   )   |
             ({32{
-                forward_rs == `FORWARD_MEMC_MEM_DATA
+                !(forward_rs ^ `FORWARD_MEMC_MEM_DATA)
             }} & memc_r_data    )   |
             ({32{
-                forward_rs == `FORWARD_MEMP_ALU_RES
+                !(forward_rs ^ `FORWARD_MEMP_ALU_RES)
             }} & memp_alu_res   )   |
             ({32{
-                forward_rs == `FORWARD_MEMP_MEM_DATA
+                !(forward_rs ^ `FORWARD_MEMP_MEM_DATA)
             }} & memp_r_data    )   ;
     
     assign id2_rt_data      =
             ({32{
-                forward_rt == `FORWARD_NOP
+                !(forward_rt ^ `FORWARD_NOP)
             }} & reg_r_data_2   )   |
             ({32{
-                forward_rt == `FORWARD_EXC_ALU_RES
+                !(forward_rt ^ `FORWARD_EXC_ALU_RES)
             }} & exc_alu_res    )   |
             ({32{
-                forward_rt == `FORWARD_EXP_ALU_RES
+                !(forward_rt ^ `FORWARD_EXP_ALU_RES)
             }} & exp_alu_res    )   |
             ({32{
-                forward_rt == `FORWARD_MEMC_ALU_RES
+                !(forward_rt ^ `FORWARD_MEMC_ALU_RES)
             }} & memc_alu_res   )   |
             ({32{
-                forward_rt == `FORWARD_MEMC_MEM_DATA
+                !(forward_rt ^ `FORWARD_MEMC_MEM_DATA)
             }} & memc_r_data    )   |
             ({32{
-                forward_rt == `FORWARD_MEMP_ALU_RES
+                !(forward_rt ^ `FORWARD_MEMP_ALU_RES)
             }} & memp_alu_res   )   |
             ({32{
-                forward_rt == `FORWARD_MEMP_MEM_DATA
+                !(forward_rt ^ `FORWARD_MEMP_MEM_DATA)
             }} & memp_r_data    )   ;
 
     wire beq_check      = $signed(id2_rs_data) == $signed(id2_rt_data);
@@ -179,14 +299,14 @@ module idu_2 (
 
     assign id2_take_branch  =
             id2_is_branch & (
-                (id1_op_code == `BEQ_OP_CODE                                    ) & (beq_check  )    |
-                (id1_op_code == `BNE_OP_CODE                                    ) & (bne_check  )    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BGEZ_RT_CODE    ) & (bgez_check )    |
-                (id1_op_code == `BGTZ_OP_CODE                                   ) & (bgtz_check )    |
-                (id1_op_code == `BLEZ_OP_CODE                                   ) & (blez_check )    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BLTZ_RT_CODE    ) & (bltz_check )    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BGEZAL_RT_CODE  ) & (bgez_check )    |
-                (id1_op_code == `REGIMM_OP_CODE & id1_rt    == `BLTZAL_RT_CODE  ) & (bltz_check )    
+                (op_code_is_beq                                     ) & (beq_check  )    |
+                (op_code_is_bne                                     ) & (bne_check  )    |
+                (op_code_is_regimm & !(id1_rt   ^ `BGEZ_RT_CODE )   ) & (bgez_check )    |
+                (op_code_is_bgtz                                    ) & (bgtz_check )    |
+                (op_code_is_blez                                    ) & (blez_check )    |
+                (op_code_is_regimm & !(id1_rt   ^ `BLTZ_RT_CODE  )  ) & (bltz_check )    |
+                (op_code_is_regimm & !(id1_rt   ^ `BGEZAL_RT_CODE)  ) & (bgez_check )    |
+                (op_code_is_regimm & !(id1_rt   ^ `BLTZAL_RT_CODE)  ) & (bltz_check )    
             );
     
     assign id2_take_j_imme  =
@@ -203,13 +323,13 @@ module idu_2 (
             id2_take_jr | id2_take_j_imme | id2_take_branch;
 
     always @(*) begin
-        if (id1_op_code == `SPECIAL_OP_CODE & (
-            id1_funct   == `SLL_FUNCT   |
-            id1_funct   == `SRA_FUNCT   |
-            id1_funct   == `SRL_FUNCT   |
-            id1_funct   == `SLLV_FUNCT  |
-            id1_funct   == `SRAV_FUNCT  |
-            id1_funct   == `SRLV_FUNCT  
+        if (op_code_is_special & (
+            func_code_is_sll   |
+            func_code_is_sra   |
+            func_code_is_srl   |
+            func_code_is_sllv  |
+            func_code_is_srav  |
+            func_code_is_srlv  
         )) begin
             id2_src_a_sel = `SRC_A_SEL_RT;
         end else begin
@@ -218,57 +338,57 @@ module idu_2 (
     end
 
     always @(*) begin
-        if ((id1_op_code == `SPECIAL_OP_CODE) & (
-            id1_funct   == `ADD_FUNCT       |
-            id1_funct   == `ADDU_FUNCT      |
-            id1_funct   == `SUB_FUNCT       |
-            id1_funct   == `SUBU_FUNCT      |
-            id1_funct   == `SLT_FUNCT       |
-            id1_funct   == `SLTU_FUNCT      |
-            id1_funct   == `DIV_FUNCT       |
-            id1_funct   == `DIVU_FUNCT      |
-            id1_funct   == `MULT_FUNCT      |
-            id1_funct   == `MULTU_FUNCT     |
-            id1_funct   == `AND_FUNCT       |
-            id1_funct   == `NOR_FUNCT       |
-            id1_funct   == `OR_FUNCT        |
-            id1_funct   == `XOR_FUNCT       
+        if ((op_code_is_special) & (
+            func_code_is_add       |
+            func_code_is_addu      |
+            func_code_is_sub       |
+            func_code_is_subu      |
+            func_code_is_slt       |
+            func_code_is_sltu      |
+            func_code_is_div       |
+            func_code_is_divu      |
+            func_code_is_mult      |
+            func_code_is_multu     |
+            func_code_is_and       |
+            func_code_is_nor       |
+            func_code_is_or        |
+            func_code_is_xor
         )) begin
             id2_src_b_sel = `SRC_B_SEL_RT;
         end else if (
-            id1_op_code == `ADDI_OP_CODE    |
-            id1_op_code == `ADDIU_OP_CODE   |
-            id1_op_code == `SLTI_OP_CODE    |
-            id1_op_code == `SLTIU_OP_CODE   |
-            id1_op_code == `ANDI_OP_CODE    |
-            id1_op_code == `LUI_OP_CODE     |
-            id1_op_code == `ORI_OP_CODE     |
-            id1_op_code == `XORI_OP_CODE    |
+            op_code_is_addi     |
+            op_code_is_addiu    |
+            op_code_is_slti     |
+            op_code_is_sltiu    |
+            op_code_is_andi     |
+            op_code_is_lui      |
+            op_code_is_ori      |
+            op_code_is_xori     |
 
-            id1_op_code == `LB_OP_CODE      |
-            id1_op_code == `LBU_OP_CODE     |
-            id1_op_code == `LH_OP_CODE      |
-            id1_op_code == `LHU_OP_CODE     |
-            id1_op_code == `LW_OP_CODE      |
-            id1_op_code == `LWL_OP_CODE     |
-            id1_op_code == `LWR_OP_CODE     |
-            id1_op_code == `SB_OP_CODE      |
-            id1_op_code == `SH_OP_CODE      |
-            id1_op_code == `SW_OP_CODE      |
-            id1_op_code == `SWL_OP_CODE     |
-            id1_op_code == `SWR_OP_CODE
+            op_code_is_lbu      |
+            op_code_is_lb       |
+            op_code_is_lh       |
+            op_code_is_lhu      |
+            op_code_is_lw       |
+            op_code_is_sb       |
+            op_code_is_sh       |
+            op_code_is_sw       |
+            op_code_is_swl      |
+            op_code_is_swr      |
+            op_code_is_lwl      |
+            op_code_is_lwr
         ) begin
             id2_src_b_sel = `SRC_B_SEL_IMME;
-        end else if (id1_op_code == `SPECIAL_OP_CODE & (
-            id1_funct == `SLLV_FUNCT      |
-            id1_funct == `SRAV_FUNCT      |
-            id1_funct == `SRLV_FUNCT      
+        end else if (op_code_is_special & (
+            func_code_is_sllv      |
+            func_code_is_srav      |
+            func_code_is_srlv      
         )) begin
             id2_src_b_sel = `SRC_B_SEL_RS;
-        end else if (id1_op_code == `SPECIAL_OP_CODE & (
-            id1_funct == `SLL_FUNCT       |
-            id1_funct == `SRA_FUNCT       |
-            id1_funct == `SRL_FUNCT       
+        end else if (op_code_is_special & (
+            func_code_is_sll       |
+            func_code_is_sra       |
+            func_code_is_srl
         )) begin
             id2_src_b_sel = `SRC_B_SEL_SA;
         end else begin
@@ -278,115 +398,115 @@ module idu_2 (
 
     assign id2_alu_sel = 
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `ADD_FUNCT     |
-                id1_funct == `ADDU_FUNCT
+                (op_code_is_special) & (
+                func_code_is_add     |
+                func_code_is_addu
                 )   |
-                (id1_op_code == `ADDI_OP_CODE   )   |
-                (id1_op_code == `ADDIU_OP_CODE  )   |
-                (id1_op_code == `LB_OP_CODE     )   |
-                (id1_op_code == `LBU_OP_CODE    )   |
-                (id1_op_code == `LH_OP_CODE     )   |
-                (id1_op_code == `LHU_OP_CODE    )   |
-                (id1_op_code == `LW_OP_CODE     )   |
-                (id1_op_code == `LWL_OP_CODE    )   |
-                (id1_op_code == `LWR_OP_CODE    )   |
-                (id1_op_code == `SB_OP_CODE     )   |
-                (id1_op_code == `SH_OP_CODE     )   |
-                (id1_op_code == `SW_OP_CODE     )   |
-                (id1_op_code == `SWL_OP_CODE    )   |
-                (id1_op_code == `SWR_OP_CODE    )
-            }} & (`ALU_SEL_ADD))   |
+                (op_code_is_addi    )   |
+                (op_code_is_addiu   )   |
+                (op_code_is_lb      )   |
+                (op_code_is_lbu     )   |
+                (op_code_is_lh      )   |
+                (op_code_is_lhu     )   |
+                (op_code_is_lw      )   |
+                (op_code_is_lwl     )   |
+                (op_code_is_lwr     )   |
+                (op_code_is_sb      )   |
+                (op_code_is_sh      )   |
+                (op_code_is_sw      )   |
+                (op_code_is_swl     )   |
+                (op_code_is_swr     )
+            }} & (`ALU_SEL_ADD))    |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `SUB_FUNCT     |
-                id1_funct == `SUBU_FUNCT
+                (op_code_is_special) & (
+                func_code_is_sub     |
+                func_code_is_subu
             )}} & (`ALU_SEL_SUB))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `SLT_FUNCT) |
-                (id1_op_code == `SLTI_OP_CODE)
+                (op_code_is_special) & (func_code_is_slt) |
+                (op_code_is_slti)
             }} & (`ALU_SEL_SLT))    |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `SLTU_FUNCT)|
-                (id1_op_code == `SLTIU_OP_CODE)
+                (op_code_is_special) & (func_code_is_sltu)|
+                (op_code_is_sltiu)
             }} & (`ALU_SEL_SLTU))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `DIV_FUNCT)
+                (op_code_is_special) & (func_code_is_div)
             }} & (`ALU_SEL_DIV))    |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `DIVU_FUNCT)
+                (op_code_is_special) & (func_code_is_divu)
             }} & (`ALU_SEL_DIVU))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `MULT_FUNCT)
+                (op_code_is_special) & (func_code_is_mult)
             }} & (`ALU_SEL_MULT))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `MULTU_FUNCT)
+                (op_code_is_special) & (func_code_is_multu)
             }} & (`ALU_SEL_MULTU))  |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `AND_FUNCT) |
-                (id1_op_code == `ANDI_OP_CODE)
+                (op_code_is_special) & (func_code_is_and) |
+                (op_code_is_andi)
             }} & (`ALU_SEL_AND))    |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `NOR_FUNCT)
+                (op_code_is_special) & (func_code_is_nor)
             }} & (`ALU_SEL_NOR))    |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (id1_funct == `OR_FUNCT)  |
-                (id1_op_code == `ORI_OP_CODE)
+                (op_code_is_special) & (func_code_is_or)  |
+                (op_code_is_ori)
             }} & (`ALU_SEL_OR))     |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `SLL_FUNCT |
-                id1_funct == `SLLV_FUNCT
+                (op_code_is_special) & (
+                func_code_is_sll |
+                func_code_is_sllv
             )}} & (`ALU_SEL_SLL))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `SRAV_FUNCT|
-                id1_funct == `SRA_FUNCT
+                (op_code_is_special) & (
+                func_code_is_srav|
+                func_code_is_sra
             )}} & (`ALU_SEL_SRA))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `SRLV_FUNCT|
-                id1_funct == `SRL_FUNCT
+                (op_code_is_special) & (
+                func_code_is_srlv|
+                func_code_is_srl
             )}} & (`ALU_SEL_SRL))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `XOR_FUNCT
+                (op_code_is_special) & (
+                func_code_is_xor
                 )   |
-                (id1_op_code == `XORI_OP_CODE)
+                (op_code_is_xori)
             }} & (`ALU_SEL_XOR))    |
             ({6{
-                (id1_op_code == `LUI_OP_CODE)
+                (op_code_is_lui)
             }} & (`ALU_SEL_LUI))    |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `MTHI_FUNCT
+                (op_code_is_special) & (
+                func_code_is_mthi
                 )
             }} & (`ALU_SEL_MTHI))   |
             ({6{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `MTLO_FUNCT
+                (op_code_is_special) & (
+                func_code_is_mtlo
                 )
             }} & (`ALU_SEL_MTLO))   ;
 
     assign id2_alu_res_sel  =
             ({3{
-                (id1_op_code == `COP0_OP_CODE   ) & (
+                (op_code_is_cop0   ) & (
                 id1_rs == `MFC0_RS_CODE
             )}} & (`ALU_RES_SEL_CP0))   |
             ({3{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `MFHI_FUNCT
+                (op_code_is_special) & (
+                func_code_is_mfhi
             )}} & (`ALU_RES_SEL_HI))    |
             ({3{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `MFLO_FUNCT
+                (op_code_is_special) & (
+                func_code_is_mflo
             )}} & (`ALU_RES_SEL_LO))    |
             ({3{
-                (id1_op_code == `SPECIAL_OP_CODE) & (
-                id1_funct == `JALR_FUNCT
+                (op_code_is_special) & (
+                func_code_is_jalr
                 )   |
-                (id1_op_code == `JAL_OP_CODE)   |
-                (id1_op_code == `REGIMM_OP_CODE) & (
+                (op_code_is_jal)   |
+                (op_code_is_regimm) & (
                 id1_rt == `BLTZAL_RT_CODE |
                 id1_rt == `BGEZAL_RT_CODE
                 )
@@ -396,51 +516,51 @@ module idu_2 (
 
     assign id2_w_hilo_ena   =
             ({2{
-                (id1_op_code == `SPECIAL_OP_CODE & (
-                    id1_funct == `DIV_FUNCT     |
-                    id1_funct == `DIVU_FUNCT    |
-                    id1_funct == `MULT_FUNCT    |
-                    id1_funct == `MULTU_FUNCT
+                (op_code_is_special & (
+                    func_code_is_div     |
+                    func_code_is_divu    |
+                    func_code_is_mult    |
+                    func_code_is_multu
                 )
             )}} & 2'b11) |
             ({2{
-                (id1_op_code == `SPECIAL_OP_CODE & (
-                    id1_funct == `MTHI_FUNCT
+                (op_code_is_special & (
+                    func_code_is_mthi
                 )
             )}} & 2'b10) |
             ({2{
-                (id1_op_code == `SPECIAL_OP_CODE & (
-                    id1_funct == `MTLO_FUNCT
+                (op_code_is_special & (
+                    func_code_is_mtlo
                 )
             )}}) & 2'b01;
     
     assign id2_w_cp0_ena    =
-            (id1_op_code == `COP0_OP_CODE & id1_rs == `MTC0_RS_CODE);
+            (op_code_is_cop0 & !(id1_rs ^ `MTC0_RS_CODE));
 
     assign id2_ls_ena       =
             id2_ls_sel != `LS_SEL_NOP;
 
     assign id2_ls_sel       =   
-            ({4{id1_op_code == `LB_OP_CODE  }}) & (`LS_SEL_LB   )   |
-            ({4{id1_op_code == `LBU_OP_CODE }}) & (`LS_SEL_LBU  )   |
-            ({4{id1_op_code == `LH_OP_CODE  }}) & (`LS_SEL_LH   )   |
-            ({4{id1_op_code == `LHU_OP_CODE }}) & (`LS_SEL_LHU  )   |
-            ({4{id1_op_code == `LW_OP_CODE  }}) & (`LS_SEL_LW   )   |
-            ({4{id1_op_code == `SB_OP_CODE  }}) & (`LS_SEL_SB   )   |
-            ({4{id1_op_code == `SH_OP_CODE  }}) & (`LS_SEL_SH   )   |
-            ({4{id1_op_code == `SW_OP_CODE  }}) & (`LS_SEL_SW   )   |
-            ({4{id1_op_code == `SWL_OP_CODE }}) & (`LS_SEL_SWL  )   |
-            ({4{id1_op_code == `SWR_OP_CODE }}) & (`LS_SEL_SWR  )   |
-            ({4{id1_op_code == `LWL_OP_CODE }}) & (`LS_SEL_LWL  )   |
-            ({4{id1_op_code == `LWR_OP_CODE }}) & (`LS_SEL_LWR  )   ;
+            ({4{op_code_is_lb  }}) & (`LS_SEL_LB   )   |
+            ({4{op_code_is_lbu }}) & (`LS_SEL_LBU  )   |
+            ({4{op_code_is_lh  }}) & (`LS_SEL_LH   )   |
+            ({4{op_code_is_lhu }}) & (`LS_SEL_LHU  )   |
+            ({4{op_code_is_lw  }}) & (`LS_SEL_LW   )   |
+            ({4{op_code_is_sb  }}) & (`LS_SEL_SB   )   |
+            ({4{op_code_is_sh  }}) & (`LS_SEL_SH   )   |
+            ({4{op_code_is_sw  }}) & (`LS_SEL_SW   )   |
+            ({4{op_code_is_swl }}) & (`LS_SEL_SWL  )   |
+            ({4{op_code_is_swr }}) & (`LS_SEL_SWR  )   |
+            ({4{op_code_is_lwl }}) & (`LS_SEL_LWL  )   |
+            ({4{op_code_is_lwr }}) & (`LS_SEL_LWR  )   ;
 
     assign id2_wb_reg_sel   =   
-            (id1_op_code == `LB_OP_CODE )   |
-            (id1_op_code == `LBU_OP_CODE)   |
-            (id1_op_code == `LH_OP_CODE )   |
-            (id1_op_code == `LHU_OP_CODE)   |
-            (id1_op_code == `LW_OP_CODE )   |
-            (id1_op_code == `LWR_OP_CODE)   |
-            (id1_op_code == `LWL_OP_CODE)   ;
+            (op_code_is_lb )   |
+            (op_code_is_lbu)   |
+            (op_code_is_lh )   |
+            (op_code_is_lhu)   |
+            (op_code_is_lw )   |
+            (op_code_is_lwr)   |
+            (op_code_is_lwl)   ;
     
 endmodule

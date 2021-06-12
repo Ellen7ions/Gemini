@@ -79,69 +79,69 @@ module ex (
 
     assign fw_hi        =
             ({32{
-                forward_hi == `FORWARD_MEMP_HI
+                !(forward_hi ^ `FORWARD_MEMP_HI)
             }} & memp_hi_res)   |
             ({32{
-                forward_hi == `FORWARD_MEMC_HI
+                !(forward_hi ^ `FORWARD_MEMC_HI)
             }} & memc_hi_res)   |
             ({32{
-                forward_hi == `FORWARD_HILI_NOP
+                !(forward_hi ^ `FORWARD_HILI_NOP)
             }} & hilo_hi    )   ;
     
     assign fw_lo        =
             ({32{
-                forward_lo == `FORWARD_MEMP_LO
+                !(forward_lo ^ `FORWARD_MEMP_LO)
             }} & memp_lo_res)   |
             ({32{
-                forward_lo == `FORWARD_MEMC_LO
+                !(forward_lo ^ `FORWARD_MEMC_LO)
             }} & memc_lo_res)   |
             ({32{
-                forward_lo == `FORWARD_HILI_NOP
+                !(forward_lo ^ `FORWARD_HILI_NOP)
             }} & hilo_lo    )   ;
 
     assign src_a        =
             ({32{
-                id2_src_a_sel == `SRC_A_SEL_NOP | id2_src_a_sel == `SRC_A_SEL_ZERO
+                !(id2_src_a_sel ^ `SRC_A_SEL_NOP) | !(id2_src_a_sel ^ `SRC_A_SEL_ZERO)
             }} & 32'h0          )   |
             ({32{
-                id2_src_a_sel == `SRC_A_SEL_RS
+                !(id2_src_a_sel ^ `SRC_A_SEL_RS)
             }} & id2_rs_data    )   |
             ({32{
-                id2_src_a_sel == `SRC_A_SEL_RT
+                !(id2_src_a_sel ^ `SRC_A_SEL_RT)
             }} & id2_rt_data    )   ;
 
     assign src_b        =
             ({32{
-                id2_src_b_sel == `SRC_B_SEL_NOP | id2_src_b_sel == `SRC_B_SEL_ZERO
+                !(id2_src_b_sel ^ `SRC_B_SEL_NOP) | !(id2_src_b_sel ^ `SRC_B_SEL_ZERO)
             }} & 32'h0          )   |
             ({32{
-                id2_src_b_sel == `SRC_B_SEL_RT
+                !(id2_src_b_sel ^ `SRC_B_SEL_RT)
             }} & id2_rt_data    )   |
             ({32{
-                id2_src_b_sel == `SRC_B_SEL_IMME
+                !(id2_src_b_sel ^ `SRC_B_SEL_IMME)
             }} & id2_ext_imme   )   |
             ({32{
-                id2_src_b_sel == `SRC_B_SEL_RS
+                !(id2_src_b_sel ^ `SRC_B_SEL_RS)
             }} & id2_rs_data    )   |
             ({32{
-                id2_src_b_sel == `SRC_B_SEL_SA
+                !(id2_src_b_sel ^ `SRC_B_SEL_SA)
             }} & id2_sa         )   ;
 
     assign ex_alu_res   =
             ({32{
-                id2_alu_res_sel == `ALU_RES_SEL_ALU
+                !(id2_alu_res_sel ^ `ALU_RES_SEL_ALU)
             }} & alu_res        )   |
             ({32{
-                id2_alu_res_sel == `ALU_RES_SEL_HI
+                !(id2_alu_res_sel ^ `ALU_RES_SEL_HI)
             }} & fw_hi          )   |
             ({32{
-                id2_alu_res_sel == `ALU_RES_SEL_LO
+                !(id2_alu_res_sel ^ `ALU_RES_SEL_LO)
             }} & fw_lo          )   |
             ({32{
-                id2_alu_res_sel == `ALU_RES_SEL_PC_8
+                !(id2_alu_res_sel ^ `ALU_RES_SEL_PC_8)
             }} & (id2_pc + 32'h8))  |
             ({32{
-                id2_alu_res_sel == `ALU_RES_SEL_CP0
+                !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0)
             }} & ex_cp0_r_data);
     
     assign ex_cp0_r_addr    = id2_rd;
