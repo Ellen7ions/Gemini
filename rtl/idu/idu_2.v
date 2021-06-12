@@ -209,11 +209,12 @@ module idu_2 (
     assign sign_ext = 
             (op_code_is_addi   )   |
             (op_code_is_addiu  )   |
-            (op_code_is_sltiu  )   |
+            (op_code_is_slti   )   |
             (op_code_is_sltiu  )   |
             (op_code_is_lb     )   |
             (op_code_is_lbu    )   |
             (op_code_is_lh     )   |
+            (op_code_is_lhu    )   |
             (op_code_is_lbu    )   |
             (op_code_is_lw     )   |
             (op_code_is_lwl    )   |

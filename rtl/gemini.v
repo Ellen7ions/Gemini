@@ -98,12 +98,10 @@ module gemini (
     wire [28:0]     id1c_func_codes_o;
     wire [31:0]     id1c_pc_o;
     wire [31:0]     id1c_inst_o;
-    wire [5 :0]     id1c_op_code_o;
     wire [4 :0]     id1c_rs_o;
     wire [4 :0]     id1c_rt_o;
     wire [4 :0]     id1c_rd_o;
     wire [4 :0]     id1c_sa_o;
-    wire [5 :0]     id1c_funct_o;
     wire            id1c_w_reg_ena_o;
     wire [4 :0]     id1c_w_reg_dst_o;
     wire [15:0]     id1c_imme_o;
@@ -117,12 +115,10 @@ module gemini (
     wire [31:0]     id1c_inst_i;
     wire [28:0]     id1c_op_codes_i;
     wire [28:0]     id1c_func_codes_i;
-    wire [5 :0]     id1c_op_code_i;
     wire [4 :0]     id1c_rs_i;
     wire [4 :0]     id1c_rt_i;
     wire [4 :0]     id1c_rd_i;
     wire [4 :0]     id1c_sa_i;
-    wire [5 :0]     id1c_funct_i;
     wire            id1c_w_reg_ena_i;
     wire [4 :0]     id1c_w_reg_dst_i;
     wire [15:0]     id1c_imme_i;
@@ -137,12 +133,10 @@ module gemini (
     wire [28:0]     id1p_op_codes_o;
     wire [28:0]     id1p_func_codes_o;
     wire [31:0]     id1p_inst_o;
-    wire [5 :0]     id1p_op_code_o;
     wire [4 :0]     id1p_rs_o;
     wire [4 :0]     id1p_rt_o;
     wire [4 :0]     id1p_rd_o;
     wire [4 :0]     id1p_sa_o;
-    wire [5 :0]     id1p_funct_o;
     wire            id1p_w_reg_ena_o;
     wire [4 :0]     id1p_w_reg_dst_o;
     wire [15:0]     id1p_imme_o;
@@ -156,12 +150,10 @@ module gemini (
     wire [28:0]     id1p_op_codes_i;
     wire [28:0]     id1p_func_codes_i;
     wire [31:0]     id1p_inst_i;
-    wire [5 :0]     id1p_op_code_i;
     wire [4 :0]     id1p_rs_i;
     wire [4 :0]     id1p_rt_i;
     wire [4 :0]     id1p_rd_i;
     wire [4 :0]     id1p_sa_i;
-    wire [5 :0]     id1p_funct_i;
     wire            id1p_w_reg_ena_i;
     wire [4 :0]     id1p_w_reg_dst_i;
     wire [15:0]     id1p_imme_i;
@@ -433,12 +425,10 @@ module gemini (
         .id1_func_codes_o   (id1p_func_codes_o  ),
         .id1_pc_o           (id1p_pc_o          ),
         .id1_inst_o         (id1p_inst_o        ),
-        .id1_op_code_o      (id1p_op_code_o     ),
         .id1_rs_o           (id1p_rs_o          ),
         .id1_rt_o           (id1p_rt_o          ),
         .id1_rd_o           (id1p_rd_o          ),
         .id1_sa_o           (id1p_sa_o          ),
-        .id1_funct_o        (id1p_funct_o       ),
         .id1_w_reg_ena_o    (id1p_w_reg_ena_o   ),
         .id1_w_reg_dst_o    (id1p_w_reg_dst_o   ),
         .id1_imme_o         (id1p_imme_o        ),
@@ -452,12 +442,10 @@ module gemini (
         .id1_func_codes_i   (id1p_func_codes_i  ),
         .id1_pc_i           (id1p_pc_i          ),
         .id1_inst_i         (id1p_inst_i        ),
-        .id1_op_code_i      (id1p_op_code_i     ),
         .id1_rs_i           (id1p_rs_i          ),
         .id1_rt_i           (id1p_rt_i          ),
         .id1_rd_i           (id1p_rd_i          ),
         .id1_sa_i           (id1p_sa_i          ),
-        .id1_funct_i        (id1p_funct_i       ),
         .id1_w_reg_ena_i    (id1p_w_reg_ena_i   ),
         .id1_w_reg_dst_i    (id1p_w_reg_dst_i   ),
         .id1_imme_i         (id1p_imme_i        ),
@@ -758,14 +746,14 @@ module gemini (
         .p_data_2           (p_data_2           ),
 
         .id1_valid_1        (id1c_valid_o       ),
+        .id1_op_codes_1     (id1c_op_codes_o    ),
+        .id1_func_codes_1   (id1c_func_codes_o  ),
         .id1_pc_1           (id1c_pc_o          ),
         .id1_inst_1         (id1c_inst_o        ),
-        .id1_op_code_1      (id1c_op_code_o     ),
         .id1_rs_1           (id1c_rs_o          ),
         .id1_rt_1           (id1c_rt_o          ),
         .id1_rd_1           (id1c_rd_o          ),
         .id1_sa_1           (id1c_sa_o          ),
-        .id1_funct_1        (id1c_funct_o       ),
         .id1_w_reg_ena_1    (id1c_w_reg_ena_o   ),
         .id1_w_reg_dst_1    (id1c_w_reg_dst_o   ),
         .id1_imme_1         (id1c_imme_o        ),
@@ -776,14 +764,14 @@ module gemini (
         .id1_is_ls_1        (id1c_is_ls_o       ),
 
         .id1_valid_2        (id1p_valid_o       ),
+        .id1_op_codes_2     (id1p_op_codes_o    ),
+        .id1_func_codes_2   (id1p_func_codes_o  ),
         .id1_pc_2           (id1p_pc_o          ),
         .id1_inst_2         (id1p_inst_o        ),
-        .id1_op_code_2      (id1p_op_code_o     ),
         .id1_rs_2           (id1p_rs_o          ),
         .id1_rt_2           (id1p_rt_o          ),
         .id1_rd_2           (id1p_rd_o          ),
         .id1_sa_2           (id1p_sa_o          ),
-        .id1_funct_2        (id1p_funct_o       ),
         .id1_w_reg_ena_2    (id1p_w_reg_ena_o   ),
         .id1_w_reg_dst_2    (id1p_w_reg_dst_o   ),
         .id1_imme_2         (id1p_imme_o        ),

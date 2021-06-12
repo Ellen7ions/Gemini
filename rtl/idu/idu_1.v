@@ -6,12 +6,10 @@ module idu_1 (
     input   wire [31:0]     inst,
     output  wire [28:0]     id1_op_codes,
     output  wire [28:0]     id1_func_codes,
-    output  wire [5 :0]     id1_op_code,
     output  wire [4 :0]     id1_rs,
     output  wire [4 :0]     id1_rt,
     output  wire [4 :0]     id1_rd,
     output  wire [4 :0]     id1_sa,
-    output  wire [5 :0]     id1_funct,
     output  wire            id1_w_reg_ena,
     output  wire [4 :0]     id1_w_reg_dst,
     output  wire [15:0]     id1_imme,
@@ -23,7 +21,8 @@ module idu_1 (
 
     output  wire            id1_is_hilo
 );
-
+    wire [5 :0] id1_op_code;
+    wire [5 :0] id1_funct;
     assign id1_op_code   = inst[31:26];
     assign id1_rs        = inst[25:21];
     assign id1_rt        = inst[20:16];
