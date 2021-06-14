@@ -6,3 +6,8 @@ Gemini is prominent in the winter skies of the northern Hemisphere and is visibl
 
 If you find Castor and Pollux, you find me.
 
+### Milestone
+
+#### 6-14
+
+I can't believe it can run at **100mhz** !
