@@ -26,6 +26,7 @@ module multiplier (
     reg [1:0] cur_state;
     reg [1:0] next_state;
     reg [2:0] counter;
+    reg [2:0] next_counter;
 
     always @(posedge clk) begin
         if (rst) begin
@@ -39,7 +40,7 @@ module multiplier (
         if (rst) begin
             counter <= 3'h0;
         end else begin
-            counter <= cur_state == MUL_RUNNING ? counter - 3'h1 : counter;
+            counter <= next_counter;
         end
     end
 
@@ -51,6 +52,7 @@ module multiplier (
             a_reg = 32'h0;
             b_reg = 32'h0;
             res_ready = 1'b0;
+            next_counter = 3'h0;
         end else begin
            case(cur_state)
            MUL_FREE:    begin
@@ -66,7 +68,7 @@ module multiplier (
                        b_reg = src_b;
                    end
                    next_state = MUL_RUNNING;
-                   counter = 3'h3;
+                   next_counter = 3'h3;
                end else begin
                    stall_all = 1'b0;
                    next_state = MUL_FREE;
@@ -82,6 +84,7 @@ module multiplier (
                    stall_all = 1'b1;
                    next_state = MUL_RUNNING;
                    res_ready = 1'b0;
+                   next_counter = counter - 3'h1;
                end
            end
 
