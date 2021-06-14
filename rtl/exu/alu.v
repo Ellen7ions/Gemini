@@ -26,6 +26,7 @@ module alu (
     reg  div_sign;
     wire [31:0] s, r;
     wire res_ready;
+    wire div_stall_req;
 
     divider div (
         .clk        (clk),
@@ -37,8 +38,29 @@ module alu (
         .s          (s),
         .r          (r),
         .res_ready  (res_ready),
-        .stall_all  (alu_stall_req)
+        .stall_all  (div_stall_req)
     );
+
+    reg  mul_en;
+    reg  mul_sign;
+    wire [31:0] m_s, m_r;
+    wire mul_res_ready;
+    wire mul_stall_req;
+
+    multiplier mul (
+        .clk        (clk),
+        .rst        (rst),
+        .src_a      (src_a),
+        .src_b      (src_b),
+        .en         (mul_en),
+        .mul_sign   (mul_sign),
+        .s          (m_s),
+        .r          (m_r),
+        .res_ready  (mul_res_ready),
+        .stall_all  (mul_stall_req)
+    );
+
+    assign alu_stall_req = mul_stall_req | div_stall_req;
 
     wire        is_slt      = $signed(src_a) < $signed(src_b);
     wire        is_sltu     = src_a < src_b;
@@ -52,6 +74,8 @@ module alu (
         alu_lo_res  = 32'h0;
         div_en      = 1'b0;
         div_sign    = 1'b0;
+        mul_en      = 1'b0;
+        mul_sign    = 1'b0;
 
         case (alu_sel)
         `ALU_SEL_NOP    : begin
@@ -82,12 +106,16 @@ module alu (
             alu_lo_res  = res_ready ? s : 32'h0;
         end
         `ALU_SEL_MULT   : begin
-            alu_hi_res = s_prod[63:32];
-            alu_lo_res = s_prod[31: 0];
+            mul_en      = 1'b1;
+            mul_sign    = 1'b1;
+            alu_hi_res  = mul_res_ready ? m_r : 32'h0;
+            alu_lo_res  = mul_res_ready ? m_s : 32'h0;
         end
         `ALU_SEL_MULTU  : begin
-            alu_hi_res = u_prod[63:32];
-            alu_lo_res = u_prod[31: 0];
+            mul_en      = 1'b1;
+            mul_sign    = 1'b0;
+            alu_hi_res  = mul_res_ready ? m_r : 32'h0;
+            alu_lo_res  = mul_res_ready ? m_s : 32'h0;
         end
         `ALU_SEL_AND    : begin
             ext_alu_res = {1'b0, src_a & src_b};
