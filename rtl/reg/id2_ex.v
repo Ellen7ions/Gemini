@@ -10,6 +10,7 @@ module id2_ex (
     input   wire        id2_is_j_imme_o,
     input   wire        id2_is_jr_o,
     input   wire        id2_is_ls_o,
+    input   wire [3 :0] id2_branch_sel_o,
     input   wire [4 :0] id2_rs_o,
     input   wire [4 :0] id2_rt_o,
     input   wire [4 :0] id2_rd_o,
@@ -36,6 +37,7 @@ module id2_ex (
     output  reg         id2_is_j_imme_i,
     output  reg         id2_is_jr_i,
     output  reg         id2_is_ls_i,
+    output  reg  [3 :0] id2_branch_sel_i,
     output  reg  [4 :0] id2_rs_i,
     output  reg  [4 :0] id2_rt_i,
     output  reg  [4 :0] id2_rd_i,
@@ -85,6 +87,7 @@ module id2_ex (
             id2_ls_ena_i        <= 1'h0;
             id2_ls_sel_i        <= 4'h0;
             id2_wb_reg_sel_i    <= 1'h0;
+            id2_branch_sel_i    <= 4'h0;
         end else if (!flush & !stall) begin
             id2_is_branch_i     <= id2_is_branch_o;
             id2_is_j_imme_i     <= id2_is_j_imme_o;
@@ -111,6 +114,7 @@ module id2_ex (
             id2_ls_ena_i        <= id2_ls_ena_o;
             id2_ls_sel_i        <= id2_ls_sel_o;
             id2_wb_reg_sel_i    <= id2_wb_reg_sel_o;
+            id2_branch_sel_i    <= id2_branch_sel_o;
         end
     end
 endmodule

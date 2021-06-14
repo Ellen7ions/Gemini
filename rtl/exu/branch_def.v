@@ -1,0 +1,9 @@
+`define BRANCH_SEL_NOP      4'h0
+`define BRANCH_SEL_BEQ      4'h1
+`define BRANCH_SEL_BNE      4'h2
+`define BRANCH_SEL_BGEZ     4'h3
+`define BRANCH_SEL_BGTZ     4'h4
+`define BRANCH_SEL_BLEZ     4'h5
+`define BRANCH_SEL_BLTZ     4'h6
+`define BRANCH_SEL_BGEZAL   4'ha
+`define BRANCH_SEL_BLTZAL   4'hb

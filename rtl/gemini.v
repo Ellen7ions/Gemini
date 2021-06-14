@@ -78,7 +78,8 @@ module gemini (
     wire            forwardc_flush_req;
     wire            forwardp_stall_req;
     wire            forwardp_flush_req;
-    wire            id2c_flush_req;
+    // wire            id2c_flush_req;
+    wire            b_ctrl_flush_req;
     wire            exc_stall_req;
     wire            exp_stall_req;
 
@@ -168,6 +169,7 @@ module gemini (
     wire            id2c_is_j_imme_o;
     wire            id2c_is_jr_o;
     wire            id2c_is_ls_o;
+    wire [3 :0]     id2c_branch_sel_o;
     wire [4 :0]     id2c_rs_o;
     wire [4 :0]     id2c_rt_o;
     wire [4 :0]     id2c_rd_o;
@@ -193,6 +195,7 @@ module gemini (
     wire            id2c_is_j_imme_i;
     wire            id2c_is_jr_i;
     wire            id2c_is_ls_i;
+    wire [3 :0]     id2c_branch_sel_i;
     wire [4 :0]     id2c_rs_i;
     wire [4 :0]     id2c_rt_i;
     wire [4 :0]     id2c_rd_i;
@@ -264,9 +267,14 @@ module gemini (
     wire            id2p_ls_ena_i;
     wire [3 :0]     id2p_ls_sel_i;
     wire            id2p_wb_reg_sel_i;
-    wire            id2c_take_branch;
-    wire            id2c_take_j_imme;
-    wire            id2c_take_jr;
+    // wire            id2c_take_branch;
+    // wire            id2c_take_j_imme;
+    // wire            id2c_take_jr;
+
+    // b_ctrl
+    wire            take_branch;
+    wire            take_j_imme;
+    wire            take_jr;
 
     // ex => mem
     wire            exc_cp0_w_ena;
@@ -465,6 +473,7 @@ module gemini (
         .id2_is_j_imme_o    (id2c_is_j_imme_o   ),
         .id2_is_jr_o        (id2c_is_jr_o       ),
         .id2_is_ls_o        (id2c_is_ls_o       ),
+        .id2_branch_sel_o   (id2c_branch_sel_o  ),
         .id2_rs_o           (id2c_rs_o          ),
         .id2_rt_o           (id2c_rt_o          ),
         .id2_rd_o           (id2c_rd_o          ),
@@ -491,6 +500,7 @@ module gemini (
         .id2_is_j_imme_i    (id2c_is_j_imme_i   ),
         .id2_is_jr_i        (id2c_is_jr_i       ),
         .id2_is_ls_i        (id2c_is_ls_i       ),
+        .id2_branch_sel_i   (id2c_branch_sel_i  ),
         .id2_rs_i           (id2c_rs_i          ),
         .id2_rt_i           (id2c_rt_i          ),
         .id2_rd_i           (id2c_rd_i          ),
@@ -683,13 +693,13 @@ module gemini (
     // 
 
     npc npc_cp (
-        .id_take_j_imme     (id2c_take_j_imme   ),
-        .id_j_imme          (id2c_j_imme_o      ),
-        .id_take_branch     (id2c_take_branch   ),
-        .id_branch_offset   (id2c_imme_o        ),
-        .id_take_jr         (id2c_take_jr       ),
-        .id_rs_data         (id2c_rs_data_o     ),
-        .id_pc              (id2c_pc_o          ),
+        .id_take_j_imme     (take_j_imme        ),
+        .id_j_imme          (id2c_j_imme_i      ),
+        .id_take_branch     (take_branch        ),
+        .id_branch_offset   (id2c_imme_i        ),
+        .id_take_jr         (take_jr            ),
+        .id_rs_data         (id2c_rs_data_i     ),
+        .id_pc              (id2c_pc_i          ),
         .pc                 (pc_cur_pc          ),
         .inst_rdata_1_ok    (inst_rdata_1_ok    ),
         .inst_rdata_2_ok    (inst_rdata_2_ok    ),
@@ -873,6 +883,7 @@ module gemini (
         .id2_is_j_imme      (id2c_is_j_imme_o   ),
         .id2_is_jr          (id2c_is_jr_o       ),
         .id2_is_ls          (id2c_is_ls_o       ),
+        .id2_branch_sel     (id2c_branch_sel_o  ),
 
         .id2_pc             (id2c_pc_o          ),
         .id2_rs             (id2c_rs_o          ),    
@@ -887,10 +898,10 @@ module gemini (
         .id2_j_imme         (id2c_j_imme_o      ),
         .id2_ext_imme       (id2c_ext_imme_o    ),
 
-        .id2_take_branch    (id2c_take_branch   ),
-        .id2_take_j_imme    (id2c_take_j_imme   ),
-        .id2_take_jr        (id2c_take_jr       ),
-        .id2_flush_req      (id2c_flush_req     ),  // attention !
+        // .id2_take_branch    (id2c_take_branch   ),
+        // .id2_take_j_imme    (id2c_take_j_imme   ),
+        // .id2_take_jr        (id2c_take_jr       ),
+        // .id2_flush_req      (id2c_flush_req     ),  // attention !
 
         .id2_src_a_sel      (id2c_src_a_sel_o   ),
         .id2_src_b_sel      (id2c_src_b_sel_o   ),
@@ -939,6 +950,7 @@ module gemini (
         .id2_is_j_imme      (id2p_is_j_imme_o   ),
         .id2_is_jr          (id2p_is_jr_o       ),
         .id2_is_ls          (id2p_is_ls_o       ),
+        .id2_branch_sel     (                   ),
 
         .id2_pc             (id2p_pc_o          ),
         .id2_rs             (id2p_rs_o          ),    
@@ -953,10 +965,10 @@ module gemini (
         .id2_j_imme         (id2p_j_imme_o      ),
         .id2_ext_imme       (id2p_ext_imme_o    ),
 
-        .id2_take_branch    (                   ),
-        .id2_take_j_imme    (                   ),
-        .id2_take_jr        (                   ),
-        .id2_flush_req      (                   ),
+        // .id2_take_branch    (                   ),
+        // .id2_take_j_imme    (                   ),
+        // .id2_take_jr        (                   ),
+        // .id2_flush_req      (                   ),
 
         .id2_src_a_sel      (id2p_src_a_sel_o   ),
         .id2_src_b_sel      (id2p_src_b_sel_o   ),
@@ -993,6 +1005,20 @@ module gemini (
         .w_ena_2            (wbp_w_reg_ena_o    ),
         .w_addr_2           (wbp_w_reg_addr_o   ),
         .w_data_2           (wbp_w_reg_data_o   )
+    );
+
+    branch_ctrl b_ctrl (
+        .id2_branch_sel     (id2c_branch_sel_i  ),
+        .id2_is_branch      (id2c_is_branch_i   ),
+        .id2_is_j_imme      (id2c_is_j_imme_i   ),
+        .id2_is_jr          (id2c_is_jr_i       ),
+        .id2_rs_data        (id2c_rs_data_i     ),
+        .id2_rt_data        (id2c_rt_data_i     ),
+
+        .take_branch        (take_branch        ),
+        .take_j_imme        (take_j_imme        ),
+        .take_jr            (take_jr            ),
+        .flush_req          (b_ctrl_flush_req   )
     );
 
     ex exc (
@@ -1254,9 +1280,10 @@ module gemini (
         .forwardc_flush_req  (forwardc_flush_req),
         .forwardp_stall_req  (forwardp_stall_req),
         .forwardp_flush_req  (forwardp_flush_req),
-        .id2c_flush_req      (id2c_flush_req    ),
+        .b_ctrl_flush_req    (b_ctrl_flush_req  ),
         .exc_stall_req       (exc_stall_req     ),
         .exp_stall_req       (exp_stall_req     ),
+
         .pc_stall            (pc_stall          ),
         .pc_flush            (pc_flush          ),
         .fifo_flush          (fifo_flush        ),

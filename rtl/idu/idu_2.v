@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "id_def.v"
+`include "../exu/branch_def.v"
 `include "../utils/forward_def.v"
 
 module idu_2 (
@@ -42,6 +43,7 @@ module idu_2 (
     output wire             id2_is_j_imme,
     output wire             id2_is_jr,
     output wire             id2_is_ls,
+    output wire [3 :0]      id2_branch_sel,
 
     // addr signals
     output wire [4 :0]      id2_rs,
@@ -59,10 +61,10 @@ module idu_2 (
     output wire [31:0]      id2_pc,
     
     // control signals
-    output wire             id2_take_branch,
-    output wire             id2_take_j_imme,
-    output wire             id2_take_jr,
-    output wire             id2_flush_req,
+    // output wire             id2_take_branch,
+    // output wire             id2_take_j_imme,
+    // output wire             id2_take_jr,
+    // output wire             id2_flush_req,
 
     output reg  [2 :0]      id2_src_a_sel,
     output reg  [2 :0]      id2_src_b_sel,
@@ -290,38 +292,32 @@ module idu_2 (
             ({32{
                 !(forward_rt ^ `FORWARD_MEMP_MEM_DATA)
             }} & memp_r_data    )   ;
-
-    wire beq_check      = $signed(id2_rs_data) == $signed(id2_rt_data);
-    wire bne_check      = $signed(id2_rs_data) != $signed(id2_rt_data);
-    wire bgez_check     = $signed(id2_rs_data) >= $signed(32'h0      );
-    wire bgtz_check     = $signed(id2_rs_data) >  $signed(32'h0      );
-    wire blez_check     = $signed(id2_rs_data) <= $signed(32'h0      );
-    wire bltz_check     = $signed(id2_rs_data) <  $signed(32'h0      );
-
-    assign id2_take_branch  =
-            id2_is_branch & (
-                (op_code_is_beq                                     ) & (beq_check  )    |
-                (op_code_is_bne                                     ) & (bne_check  )    |
-                (op_code_is_regimm & !(id1_rt   ^ `BGEZ_RT_CODE )   ) & (bgez_check )    |
-                (op_code_is_bgtz                                    ) & (bgtz_check )    |
-                (op_code_is_blez                                    ) & (blez_check )    |
-                (op_code_is_regimm & !(id1_rt   ^ `BLTZ_RT_CODE  )  ) & (bltz_check )    |
-                (op_code_is_regimm & !(id1_rt   ^ `BGEZAL_RT_CODE)  ) & (bgez_check )    |
-                (op_code_is_regimm & !(id1_rt   ^ `BLTZAL_RT_CODE)  ) & (bltz_check )    
-            );
-    
-    assign id2_take_j_imme  =
-            id2_is_j_imme & (
-                1'b1
-            );
-    
-    assign id2_take_jr      =
-            id2_is_jr & (
-                1'b1
-            );
-
-    assign id2_flush_req    =
-            id2_take_jr | id2_take_j_imme | id2_take_branch;
+            
+    assign id2_branch_sel = 
+            {4{
+                op_code_is_beq
+            }} & (`BRANCH_SEL_BEQ   )   |
+            {4{
+                op_code_is_bne
+            }} & (`BRANCH_SEL_BNE   )   |
+            {4{
+                op_code_is_regimm & !(id1_rt   ^ `BGEZ_RT_CODE )
+            }} & (`BRANCH_SEL_BGEZ  )   |
+            {4{
+                op_code_is_bgtz
+            }} & (`BRANCH_SEL_BGTZ  )   |
+            {4{
+                op_code_is_blez
+            }} & (`BRANCH_SEL_BLEZ  )   |
+            {4{
+                op_code_is_regimm & !(id1_rt   ^ `BLTZ_RT_CODE  )
+            }} & (`BRANCH_SEL_BLTZ  )   |
+            {4{
+                op_code_is_regimm & !(id1_rt   ^ `BGEZAL_RT_CODE)
+            }} & (`BRANCH_SEL_BGEZAL)   |
+            {4{
+                op_code_is_regimm & !(id1_rt   ^ `BLTZAL_RT_CODE)
+            }} & (`BRANCH_SEL_BLTZAL)   ;
 
     always @(*) begin
         if (op_code_is_special & (
