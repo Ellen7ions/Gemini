@@ -46,7 +46,7 @@ module exception_ctrl (
     output  reg             w_cp0_exl,
     output  reg  [31:0]     w_cp0_epc,
     output  reg             w_cp0_badvaddr_ena,
-    output  reg             w_cp0_badvaddr,
+    output  reg  [31:0]     w_cp0_badvaddr,
 
     output  reg             cp0_cls_exl,
 

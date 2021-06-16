@@ -3,7 +3,7 @@
 module gemini (
     input   wire        clk,
     input   wire        rst,
-    input   wire [5 :0] interupt,
+    input   wire [5 :0] interrupt,
     output  wire        inst_ena,
     output  wire [31:0] inst_addr_next_pc,
     output  wire [31:0] inst_addr_pc,
@@ -114,6 +114,7 @@ module gemini (
     wire            id1c_in_delay_slot_o;
     wire            id1c_is_inst_adel_o;
 
+    wire            id1c_valid_i;
     wire [31:0]     id1c_pc_i;
     wire [31:0]     id1c_inst_i;
     wire [28:0]     id1c_op_codes_i;
@@ -153,6 +154,7 @@ module gemini (
     wire            id1p_in_delay_slot_o;
     wire            id1p_is_inst_adel_o;
 
+    wire            id1p_valid_i;
     wire [31:0]     id1p_pc_i;
     wire [28:0]     id1p_op_codes_i;
     wire [28:0]     id1p_func_codes_i;
@@ -525,6 +527,7 @@ module gemini (
         .id1_in_delay_slot_o(id1c_in_delay_slot_o),
         .id1_is_inst_adel_o (id1c_is_inst_adel_o),
 
+        .id1_valid_i        (id1c_valid_i       ),
         .id1_op_codes_i     (id1c_op_codes_i    ),
         .id1_func_codes_i   (id1c_func_codes_i  ),
         .id1_pc_i           (id1c_pc_i          ),
@@ -572,6 +575,7 @@ module gemini (
         .id1_in_delay_slot_o(id1p_in_delay_slot_o),
         .id1_is_inst_adel_o (id1p_is_inst_adel_o),
 
+        .id1_valid_i        (id1p_valid_i       ),
         .id1_op_codes_i     (id1p_op_codes_i    ),
         .id1_func_codes_i   (id1p_func_codes_i  ),
         .id1_pc_i           (id1p_pc_i          ),
@@ -1077,6 +1081,7 @@ module gemini (
     );
 
     idu_2 idu2_c (
+        .id1_valid          (id1c_valid_i       ),
         .id1_op_codes       (id1c_op_codes_i    ),
         .id1_func_codes     (id1c_func_codes_i  ),
         .id1_pc             (id1c_pc_i          ),
@@ -1156,6 +1161,7 @@ module gemini (
     );
 
     idu_2 idu2_p (
+        .id1_valid          (id1p_valid_i       ),
         .id1_op_codes       (id1p_op_codes_i    ),
         .id1_func_codes     (id1p_func_codes_i  ),
         .id1_pc             (id1p_pc_i          ),

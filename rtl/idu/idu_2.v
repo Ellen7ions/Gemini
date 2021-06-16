@@ -5,6 +5,8 @@
 `include "../utils/forward_def.v"
 
 module idu_2 (
+    input  wire             id1_valid,
+
     input  wire [28:0]      id1_op_codes,
     input  wire [28:0]      id1_func_codes,
     input  wire [31:0]      id1_pc,
@@ -247,18 +249,20 @@ module idu_2 (
     assign id2_is_break     = op_code_is_special    & func_code_is_break    ;
     assign id2_is_inst_adel = id1_inst_adel;
     assign id2_is_ri        = 
-            (|id1_op_codes    == 1'b0)    |
-            (|id1_func_codes  == 1'b0)    |
-            (
-                op_code_is_cop0     & (
-                    id1_rs != `MTC0_RS_CODE &
-                    id1_rs != `MFC0_RS_CODE
-                )   |
-                op_code_is_regimm   & (
-                    id1_rt != `BGEZ_RT_CODE     &    
-                    id1_rt != `BLTZ_RT_CODE     &
-                    id1_rt != `BGEZAL_RT_CODE   &
-                    id1_rt != `BLTZAL_RT_CODE   
+            id1_valid & (
+                (|id1_op_codes    == 1'b0)    |
+                (|id1_func_codes  == 1'b0)    |
+                (
+                    op_code_is_cop0     & (
+                        id1_rs != `MTC0_RS_CODE &
+                        id1_rs != `MFC0_RS_CODE
+                    )   |
+                    op_code_is_regimm   & (
+                        id1_rt != `BGEZ_RT_CODE     &    
+                        id1_rt != `BLTZ_RT_CODE     &
+                        id1_rt != `BGEZAL_RT_CODE   &
+                        id1_rt != `BLTZAL_RT_CODE   
+                    )
                 )
             );
 
