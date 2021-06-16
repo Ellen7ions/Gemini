@@ -55,6 +55,26 @@ module exception_ctrl (
     wire            exception_has_1;
     wire            exception_has_2;
 
+    assign exception_has_1  =
+            exception_is_eret_1         |     
+            exception_is_syscall_1      |    
+            exception_is_break_1        |    
+            exception_is_inst_adel_1    |        
+            exception_is_data_adel_1    |        
+            exception_is_data_ades_1    |        
+            exception_is_overflow_1     |    
+            exception_is_ri_1           ;
+    
+    assign exception_has_2  =
+            exception_is_eret_2         |     
+            exception_is_syscall_2      |    
+            exception_is_break_2        |    
+            exception_is_inst_adel_2    |        
+            exception_is_data_adel_2    |        
+            exception_is_data_ades_2    |        
+            exception_is_overflow_2     |    
+            exception_is_ri_2           ;
+
     always @(*) begin
         cp0_cls_exl       = 1'b0;
 
