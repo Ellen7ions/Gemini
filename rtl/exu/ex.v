@@ -7,11 +7,14 @@ module ex (
     input   wire            clk,
     input   wire            rst,
     
-    // // id signals
-    // input   wire            id2_is_branch,
-    // input   wire            id2_is_j_imme,
-    // input   wire            id2_is_jr,
-    // input   wire            id2_is_ls,
+    // exception signals
+    input   wire            id2_in_delay_slot,
+    input   wire            id2_is_eret,
+    input   wire            id2_is_syscall,
+    input   wire            id2_is_break,
+    input   wire            id2_is_inst_adel,
+    input   wire            id2_is_ri,
+    input   wire            id2_is_check_ov,
 
     // addr signals
     input   wire [4 :0]     id2_rd,
@@ -36,9 +39,6 @@ module ex (
     input   wire [31:0]     memp_hi_res,
     input   wire [31:0]     memp_lo_res,
     // cp0
-    output  wire            ex_cp0_w_ena,
-    output  wire [4 :0]     ex_cp0_w_addr,
-    output  wire [31:0]     ex_cp0_w_data,
     output  wire [4 :0]     ex_cp0_r_addr,
     input   wire [31:0]     ex_cp0_r_data,
 
@@ -50,6 +50,7 @@ module ex (
     input   wire            id2_w_reg_ena,
     input   wire [1 :0]     id2_w_hilo_ena,
     input   wire            id2_w_cp0_ena,
+    input   wire [7 :0]     id2_w_cp0_addr,
     input   wire            id2_ls_ena,
     input   wire [3 :0]     id2_ls_sel,
     input   wire            id2_wb_reg_sel,
@@ -62,20 +63,48 @@ module ex (
     output  wire [31:0]     ex_hi_res,
     output  wire [31:0]     ex_lo_res,
 
+    // back from mem
+    input   wire            to_ex_is_data_adel,
+    input   wire            to_ex_is_data_ades,
+
     // pass down
+    output  wire            ex_in_delay_slot,
+    output  wire            ex_is_eret,
+    output  wire            ex_is_syscall,
+    output  wire            ex_is_break,
+    output  wire            ex_is_inst_adel,
+    output  wire            ex_is_data_adel,
+    output  wire            ex_is_data_ades,
+    output  wire            ex_is_overflow,
+    output  wire            ex_is_ri,
+
     output  wire [31:0]     ex_pc,
     output  wire [31:0]     ex_rt_data,
     output  wire            ex_w_reg_ena,
     output  wire [4 :0]     ex_w_reg_dst,
     output  wire            ex_ls_ena,
     output  wire [3 :0]     ex_ls_sel,
-    output  wire            ex_wb_reg_sel
+    output  wire            ex_wb_reg_sel,
+    output  wire            ex_w_cp0_ena,
+    output  wire [7 :0]     ex_w_cp0_addr,
+    output  wire [31:0]     ex_w_cp0_data
 );
 
     wire [31: 0] src_a, src_b, alu_res;
     wire [31: 0] alu_hi_res, alu_lo_res;
+    wire         alu_overflow;  
 
     wire [31: 0] fw_hi, fw_lo;
+
+    assign ex_in_delay_slot = id2_in_delay_slot;
+    assign ex_is_eret       = id2_is_eret;
+    assign ex_is_syscall    = id2_is_syscall;
+    assign ex_is_break      = id2_is_break;
+    assign ex_is_inst_adel  = id2_is_inst_adel;
+    assign ex_is_data_adel  = to_ex_is_data_adel;
+    assign ex_is_data_ades  = to_ex_is_data_ades;
+    assign ex_is_ri         = id2_is_ri;
+    assign ex_is_overflow   = id2_is_check_ov & alu_overflow;
 
     assign fw_hi        =
             ({32{
@@ -144,10 +173,7 @@ module ex (
                 !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0)
             }} & ex_cp0_r_data);
     
-    assign ex_cp0_r_addr    = id2_rd;
-    assign ex_cp0_w_ena     = id2_w_cp0_ena;
-    assign ex_cp0_w_addr    = id2_rd;
-    assign ex_cp0_w_data    = id2_rt_data;
+    assign ex_cp0_r_addr    = id2_w_cp0_addr;
 
     assign ex_w_hilo_ena    = id2_w_hilo_ena;
     assign ex_hi_res        = alu_hi_res;
@@ -162,6 +188,10 @@ module ex (
 
     assign ex_pc            = id2_pc;
 
+    assign ex_w_cp0_ena     = id2_w_cp0_ena;
+    assign ex_w_cp0_addr    = id2_w_cp0_addr;
+    assign ex_w_cp0_data    = id2_rt_data;
+
     alu alu_kernel (
         .clk            (clk            ),
         .rst            (rst            ),
@@ -171,6 +201,7 @@ module ex (
         .alu_res        (alu_res        ),
         .alu_hi_res     (alu_hi_res     ),
         .alu_lo_res     (alu_lo_res     ),
+        .alu_overflow   (alu_overflow   ),
         .alu_stall_req  (ex_stall_req   )
     );
 

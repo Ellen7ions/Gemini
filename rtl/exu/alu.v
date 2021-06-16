@@ -11,6 +11,7 @@ module alu (
     output  wire [31:0] alu_res,
     output  reg  [31:0] alu_hi_res,
     output  reg  [31:0] alu_lo_res,
+    output  wire        alu_overflow,
     output  wire        alu_stall_req
 );
     wire [32:0] ext_src_a, ext_src_b;
@@ -18,9 +19,9 @@ module alu (
     assign ext_src_b = {1'b0, src_b};
     reg  [32:0] ext_alu_res;
 
-    wire [63:0] s_prod, u_prod;
-    assign s_prod = $signed(src_a) * $signed(src_b);
-    assign u_prod = src_a * src_b;
+    assign alu_overflow = 
+             src_a[31] &  src_b[31] & ~ext_alu_res[31] |
+            ~src_a[31] & ~src_b[31] &  ext_alu_res[31] ;
 
     reg  div_en;
     reg  div_sign;

@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+`include "id_def.v"
+
 module issue (
     input   wire        clk,
     input   wire        rst,
@@ -32,6 +34,8 @@ module issue (
     output  wire        id1_is_j_imme_1,
     output  wire        id1_is_jr_1,
     output  wire        id1_is_ls_1,
+    output  wire        id1_in_delay_slot_1,
+    output  wire        id1_is_inst_adel_1,
 
     // to idup
     output  wire        id1_valid_2,
@@ -50,7 +54,9 @@ module issue (
     output  wire        id1_is_branch_2,
     output  wire        id1_is_j_imme_2,
     output  wire        id1_is_jr_2,
-    output  wire        id1_is_ls_2
+    output  wire        id1_is_ls_2,
+    output  wire        id1_in_delay_slot_2,
+    output  wire        id1_is_inst_adel_2
 );
 
     // Test the performance of dual issue
@@ -113,13 +119,17 @@ module issue (
         end
     end
 
-    assign id1_valid_1  = p_data_1;
-    assign id1_pc_1     = fifo_r_data_1[63:32];
-    assign id1_inst_1   = fifo_r_data_1[31: 0];
+    assign id1_valid_1              = p_data_1;
+    assign id1_pc_1                 = fifo_r_data_1[63:32];
+    assign id1_inst_1               = fifo_r_data_1[31: 0];
+    assign id1_in_delay_slot_1      = 1'b0;
+    assign id1_is_inst_adel_1       = id1_pc_1[1:0] != 2'b00;
 
-    assign id1_valid_2  = p_data_2;
-    assign id1_pc_2     = fifo_r_data_2[63:32];
-    assign id1_inst_2   = fifo_r_data_2[31: 0];
+    assign id1_valid_2              = p_data_2;
+    assign id1_pc_2                 = fifo_r_data_2[63:32];
+    assign id1_inst_2               = fifo_r_data_2[31: 0];
+    assign id1_is_in_delay_slot_2   = inst_jmp_1;
+    assign id1_inst_adel_2          = id1_pc_2[1:0] != 2'b00;
 
     idu_1 idc (
         .inst           (id1_inst_1),

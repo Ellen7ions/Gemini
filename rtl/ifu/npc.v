@@ -10,6 +10,9 @@ module npc (
     input   wire        id_take_jr,
     input   wire [31:0] id_rs_data,
 
+    input   wire        exception_pc_ena,
+    input   wire        exception_pc,
+
     input   wire [31:0] id_pc,
     
     input   wire [31:0] pc,
@@ -19,7 +22,7 @@ module npc (
     output  wire [31:0] next_pc
 );
 
-  assign next_pc = 
+  assign next_pc = exception_pc_ena ? exception_pc :
             {32{id_take_j_imme  }} & {id_pc[31:28], id_j_imme, 2'b00} |
             {32{id_take_branch  }} & {id_pc + 32'h4 + {{14{id_branch_offset[15]}}, id_branch_offset[15:0], 2'b00}} |
             {32{id_take_jr      }} & {id_rs_data} |

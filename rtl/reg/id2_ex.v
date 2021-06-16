@@ -6,6 +6,14 @@ module id2_ex (
     input   wire        flush,
     input   wire        stall,
     
+    input   wire        id2_in_delay_slot_o,
+    input   wire        id2_is_eret_o,
+    input   wire        id2_is_syscall_o,
+    input   wire        id2_is_break_o,
+    input   wire        id2_is_inst_adel_o,
+    input   wire        id2_is_ri_o,
+    input   wire        id2_is_check_ov_o,
+
     input   wire        id2_is_branch_o,
     input   wire        id2_is_j_imme_o,
     input   wire        id2_is_jr_o,
@@ -29,9 +37,18 @@ module id2_ex (
     input   wire        id2_w_reg_ena_o,
     input   wire [1 :0] id2_w_hilo_ena_o,
     input   wire        id2_w_cp0_ena_o,
+    input   wire [7 :0] id2_w_cp0_addr_o,
     input   wire        id2_ls_ena_o,
     input   wire [3 :0] id2_ls_sel_o,
     input   wire        id2_wb_reg_sel_o,
+
+    output  reg         id2_in_delay_slot_i,
+    output  reg         id2_is_eret_i,
+    output  reg         id2_is_syscall_i,
+    output  reg         id2_is_break_i,
+    output  reg         id2_is_inst_adel_i,
+    output  reg         id2_is_ri_i,
+    output  reg         id2_is_check_ov_i,
 
     output  reg         id2_is_branch_i,
     output  reg         id2_is_j_imme_i,
@@ -56,6 +73,7 @@ module id2_ex (
     output  reg         id2_w_reg_ena_i,
     output  reg  [1 :0] id2_w_hilo_ena_i,
     output  reg         id2_w_cp0_ena_i,
+    output  reg  [7 :0] id2_w_cp0_addr_i,
     output  reg         id2_ls_ena_i,
     output  reg  [3 :0] id2_ls_sel_i,
     output  reg         id2_wb_reg_sel_i
@@ -88,6 +106,14 @@ module id2_ex (
             id2_ls_sel_i        <= 4'h0;
             id2_wb_reg_sel_i    <= 1'h0;
             id2_branch_sel_i    <= 4'h0;
+            id2_w_cp0_addr_i    <= 8'd0;
+            id2_in_delay_slot_i <= 1'h0;
+            id2_is_eret_i       <= 1'h0;
+            id2_is_syscall_i    <= 1'h0;
+            id2_is_break_i      <= 1'h0;
+            id2_is_inst_adel_i  <= 1'h0;
+            id2_is_ri_i         <= 1'h0;
+            id2_is_check_ov_i   <= 1'h0;
         end else if (!flush & !stall) begin
             id2_is_branch_i     <= id2_is_branch_o;
             id2_is_j_imme_i     <= id2_is_j_imme_o;
@@ -115,6 +141,14 @@ module id2_ex (
             id2_ls_sel_i        <= id2_ls_sel_o;
             id2_wb_reg_sel_i    <= id2_wb_reg_sel_o;
             id2_branch_sel_i    <= id2_branch_sel_o;
+            id2_w_cp0_addr_i    <= id2_w_cp0_addr_o;
+            id2_in_delay_slot_i <= id2_in_delay_slot_o;
+            id2_is_eret_i       <= id2_is_eret_o;
+            id2_is_syscall_i    <= id2_is_syscall_o;
+            id2_is_break_i      <= id2_is_break_o;
+            id2_is_inst_adel_i  <= id2_is_inst_adel_o;
+            id2_is_ri_i         <= id2_is_ri_o;
+            id2_is_check_ov_i   <= id2_is_check_ov_o;
         end
     end
 endmodule

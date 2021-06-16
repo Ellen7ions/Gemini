@@ -20,6 +20,8 @@ module idu_2 (
     input  wire             id1_is_j_imme,
     input  wire             id1_is_jr,
     input  wire             id1_is_ls,
+    input  wire             id1_in_delay_slot,
+    input  wire             id1_inst_adel,
 
     input  wire [2 :0]      forward_rs,
     input  wire [2 :0]      forward_rt,
@@ -37,6 +39,15 @@ module idu_2 (
     input  wire [31:0]      reg_r_data_2,
 
     // ====================== //
+
+    // exception signals
+    output wire             id2_in_delay_slot,
+    output wire             id2_is_eret,
+    output wire             id2_is_syscall,
+    output wire             id2_is_break,
+    output wire             id2_is_inst_adel,
+    output wire             id2_is_ri,
+    output wire             id2_is_check_ov,
 
     // id signals
     output wire             id2_is_branch,
@@ -73,6 +84,7 @@ module idu_2 (
     output wire             id2_w_reg_ena,
     output wire [1 :0]      id2_w_hilo_ena,
     output wire             id2_w_cp0_ena,
+    output wire [7 :0]      id2_w_cp0_addr,
     output wire             id2_ls_ena,
     output wire [3 :0]      id2_ls_sel,
     output wire             id2_wb_reg_sel
@@ -228,6 +240,28 @@ module idu_2 (
             (op_code_is_swr    )   ;
 
     // output signals
+
+    assign id2_in_delay_slot= id1_in_delay_slot;
+    assign id2_is_eret      = op_code_is_cop0       & func_code_is_eret     ;
+    assign id2_is_syscall   = op_code_is_special    & func_code_is_syscall  ;
+    assign id2_is_break     = op_code_is_special    & func_code_is_break    ;
+    assign id2_is_inst_adel = id1_inst_adel;
+    assign id2_is_ri        = 
+            (|id1_op_codes    == 1'b0)    |
+            (|id1_func_codes  == 1'b0)    |
+            !(
+                op_code_is_cop0     & !(id1_rs ^ `MFC0_RS_CODE    )   |
+                op_code_is_cop0     & !(id1_rs ^ `MFC0_RS_CODE    )   |
+                op_code_is_regimm   & !(id1_rt ^ `BGEZ_RT_CODE    )   |
+                op_code_is_regimm   & !(id1_rt ^ `BLTZ_RT_CODE    )   |
+                op_code_is_regimm   & !(id1_rt ^ `BGEZAL_RT_CODE  )   |
+                op_code_is_regimm   & !(id1_rt ^ `BLTZAL_RT_CODE  )   
+            );
+
+    assign id2_is_check_ov  = 
+            op_code_is_special  & func_code_is_add  |
+            op_code_is_special  & func_code_is_sub  |
+            op_code_is_addi; 
 
     assign id2_is_branch    = id1_is_branch;    
     assign id2_is_j_imme    = id1_is_j_imme;    
@@ -488,7 +522,7 @@ module idu_2 (
     assign id2_alu_res_sel  =
             ({3{
                 (op_code_is_cop0   ) & (
-                id1_rs == `MFC0_RS_CODE
+                !(id1_rs ^ `MFC0_RS_CODE)
             )}} & (`ALU_RES_SEL_CP0))   |
             ({3{
                 (op_code_is_special) & (
@@ -533,6 +567,8 @@ module idu_2 (
     
     assign id2_w_cp0_ena    =
             (op_code_is_cop0 & !(id1_rs ^ `MTC0_RS_CODE));
+    assign id2_w_cp0_addr   =
+            {id1_rd, id1_imme[2:0]};
 
     assign id2_ls_ena       =
             id2_ls_sel != `LS_SEL_NOP;
