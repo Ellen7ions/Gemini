@@ -54,49 +54,49 @@ module multiplier (
             res_ready = 1'b0;
             next_counter = 3'h0;
         end else begin
-           case(cur_state)
-           MUL_FREE:    begin
-               if (en) begin
-                   stall_all = 1'b1;
-                   if (mul_sign) begin
-                       sign = src_a[31] ^ src_b[31];
-                       a_reg = src_a[31] ? ~src_a + 32'h1 : src_a;
-                       b_reg = src_b[31] ? ~src_b + 32'h1 : src_b;
-                   end else begin
-                       sign  = 1'b0;
-                       a_reg = src_a;
-                       b_reg = src_b;
-                   end
-                   next_state = MUL_RUNNING;
-                   next_counter = 3'h3;
-               end else begin
-                   stall_all = 1'b0;
-                   next_state = MUL_FREE;
-               end
-           end
+            case(cur_state)
+            MUL_FREE:    begin
+                if (en) begin
+                    stall_all = 1'b1;
+                    if (mul_sign) begin
+                        sign = src_a[31] ^ src_b[31];
+                        a_reg = src_a[31] ? ~src_a + 32'h1 : src_a;
+                        b_reg = src_b[31] ? ~src_b + 32'h1 : src_b;
+                    end else begin
+                        sign  = 1'b0;
+                        a_reg = src_a;
+                        b_reg = src_b;
+                    end
+                    next_state = MUL_RUNNING;
+                    next_counter = 3'h3;
+                end else begin
+                    stall_all = 1'b0;
+                    next_state = MUL_FREE;
+                end
+            end
 
-           MUL_RUNNING: begin
-               if (counter == 3'h0) begin
-                   stall_all = 1'b0;
-                   next_state = MUL_FREE;
-                   res_ready = 1'b1;
-               end else begin
-                   stall_all = 1'b1;
-                   next_state = MUL_RUNNING;
-                   res_ready = 1'b0;
-                   next_counter = counter - 3'h1;
-               end
-           end
+            MUL_RUNNING: begin
+                if (counter == 3'h0) begin
+                    stall_all = 1'b0;
+                    next_state = MUL_FREE;
+                    res_ready = 1'b1;
+                end else begin
+                    stall_all = 1'b1;
+                    next_state = MUL_RUNNING;
+                    res_ready = 1'b0;
+                    next_counter = counter - 3'h1;
+                end
+            end
 
-           default:     begin
-                stall_all = 1'b0;
-                sign = 1'b0;
-                next_state = MUL_FREE;
-                a_reg = 32'h0;
-                b_reg = 32'h0;
-                res_ready = 1'b0;
-           end
-           endcase 
+            default:     begin
+                 stall_all = 1'b0;
+                 sign = 1'b0;
+                 next_state = MUL_FREE;
+                 a_reg = 32'h0;
+                 b_reg = 32'h0;
+                 res_ready = 1'b0;
+            end
+            endcase 
         end
     end
 

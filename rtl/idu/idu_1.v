@@ -18,6 +18,7 @@ module idu_1 (
     output  wire            id1_is_j_imme,
     output  wire            id1_is_jr,
     output  wire            id1_is_ls,
+    output  wire            id1_is_cop0,
 
     output  wire            id1_is_hilo
 );
@@ -237,6 +238,11 @@ module idu_1 (
             op_code_is_swr  |
             op_code_is_lwl  |
             op_code_is_lwr  ;
+
+    assign id1_is_cop0      =
+            op_code_is_cop0                             |
+            op_code_is_special & func_code_is_break     |
+            op_code_is_special & func_code_is_syscall   ;
 
     assign id1_is_hilo      =
             (op_code_is_special & (
