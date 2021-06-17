@@ -39,7 +39,7 @@ module ex (
     input   wire [31:0]     memp_hi_res,
     input   wire [31:0]     memp_lo_res,
     // cp0
-    output  wire [4 :0]     ex_cp0_r_addr,
+    output  wire [7 :0]     ex_cp0_r_addr,
     input   wire [31:0]     ex_cp0_r_data,
 
     // control signals
@@ -64,6 +64,8 @@ module ex (
     output  wire [31:0]     ex_lo_res,
 
     // back from mem
+    // if you want to LS, u can't have any exceptions from ex and mem.
+    output  wire            ex_has_exception,
     input   wire            to_ex_is_data_adel,
     input   wire            to_ex_is_data_ades,
 
@@ -105,6 +107,17 @@ module ex (
     assign ex_is_data_ades  = to_ex_is_data_ades;
     assign ex_is_ri         = id2_is_ri;
     assign ex_is_overflow   = id2_is_check_ov & alu_overflow;
+
+    assign ex_has_exception =
+            ex_in_delay_slot    |
+            ex_is_eret          |
+            ex_is_syscall       |
+            ex_is_break         |
+            ex_is_inst_adel     |
+            ex_is_data_adel     |
+            ex_is_data_ades     |
+            ex_is_ri            |
+            ex_is_overflow      ;
 
     assign fw_hi        =
             ({32{

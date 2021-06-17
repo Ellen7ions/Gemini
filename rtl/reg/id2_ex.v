@@ -115,6 +115,10 @@ module id2_ex (
             id2_is_ri_i         <= 1'h0;
             id2_is_check_ov_i   <= 1'h0;
         end else if (!flush & !stall) begin
+
+            if (id2_w_cp0_ena_o)
+                $display("%h\n", id2_pc_o);
+
             id2_is_branch_i     <= id2_is_branch_o;
             id2_is_j_imme_i     <= id2_is_j_imme_o;
             id2_is_jr_i         <= id2_is_jr_o;

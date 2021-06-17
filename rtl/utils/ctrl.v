@@ -59,7 +59,7 @@ module ctrl (
             d_cache_stall_req | exc_stall_req | exp_stall_req;
     
     assign mem_wb_flush =
-            exception_flush;
+            1'b0;
     
     assign mem_wb_stall =
             d_cache_stall_req | exc_stall_req | exp_stall_req;

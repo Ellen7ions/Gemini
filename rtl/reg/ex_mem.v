@@ -27,7 +27,7 @@ module ex_mem (
     input   wire [3 :0]     ex_ls_sel_o,
     input   wire            ex_wb_reg_sel_o,
     input   wire [31:0]     ex_rt_data_o,
-    input   wire [7 :0]     ex_w_cp0_ena_o,
+    input   wire            ex_w_cp0_ena_o,
     input   wire [7 :0]     ex_w_cp0_addr_o,
     input   wire [31:0]     ex_w_cp0_data_o,
     output  reg  [31:0]     ex_pc_i,
@@ -52,7 +52,7 @@ module ex_mem (
     output  reg  [3 :0]     ex_ls_sel_i,
     output  reg             ex_wb_reg_sel_i,
     output  reg  [31:0]     ex_rt_data_i,
-    output  reg  [7 :0]     ex_w_cp0_ena_i,
+    output  reg             ex_w_cp0_ena_i,
     output  reg  [7 :0]     ex_w_cp0_addr_i,
     output  reg  [31:0]     ex_w_cp0_data_i
 );

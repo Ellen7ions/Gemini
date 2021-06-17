@@ -319,8 +319,10 @@ module gemini (
     // ex => mem
     wire            to_exc_is_data_adel;
     wire            to_exc_is_data_ades;
+    wire            exc_has_exception;
     wire            to_exp_is_data_adel;
     wire            to_exp_is_data_ades;
+    wire            exp_has_exception;
 
     wire            exc_in_delay_slot_o;
     wire            exc_is_eret_o;
@@ -332,9 +334,9 @@ module gemini (
     wire            exc_is_overflow_o;
     wire            exc_is_ri_o;
     wire            exc_cp0_w_ena;
-    wire [4 :0]     exc_cp0_w_addr;
+    wire [7 :0]     exc_cp0_w_addr;
     wire [31:0]     exc_cp0_w_data;
-    wire [4 :0]     exc_cp0_r_addr;
+    wire [7 :0]     exc_cp0_r_addr;
     wire [31:0]     exc_cp0_r_data;
 
     wire [31:0]     exc_alu_res_o;
@@ -1154,7 +1156,7 @@ module gemini (
         .id2_w_reg_ena      (id2c_w_reg_ena_o   ),
         .id2_w_hilo_ena     (id2c_w_hilo_ena_o  ),
         .id2_w_cp0_ena      (id2c_w_cp0_ena_o   ),
-        .id2_w_cp0_addr     (id2c_w_cp0_ena_o   ),
+        .id2_w_cp0_addr     (id2c_w_cp0_addr_o  ),
         .id2_ls_ena         (id2c_ls_ena_o      ),
         .id2_ls_sel         (id2c_ls_sel_o      ),
         .id2_wb_reg_sel     (id2c_wb_reg_sel_o  )
@@ -1326,6 +1328,7 @@ module gemini (
         .ex_lo_res          (exc_lo_res_o       ),
 
         // back from mem
+        .ex_has_exception   (exc_has_exception  ),
         .to_ex_is_data_adel (to_exc_is_data_adel),
         .to_ex_is_data_ades (to_exc_is_data_ades),
         
@@ -1398,6 +1401,7 @@ module gemini (
         .ex_lo_res          (exp_lo_res_o       ),
         
         // back from mem
+        .ex_has_exception   (exp_has_exception  ),
         .to_ex_is_data_adel (to_exp_is_data_adel),
         .to_ex_is_data_ades (to_exp_is_data_ades),
         
@@ -1429,6 +1433,7 @@ module gemini (
         .ex_rt_data         (exc_rt_data_o      ),
         .ex_ls_ena          (exc_ls_ena_o       ),
         .ex_ls_sel          (exc_ls_sel_o       ),
+        .ex_has_exception   (exc_has_exception  ),
         .to_ex_is_data_adel (to_exc_is_data_adel),
         .to_ex_is_data_ades (to_exc_is_data_ades),
 
@@ -1496,6 +1501,7 @@ module gemini (
         .ex_rt_data         (exp_rt_data_o      ),
         .ex_ls_ena          (exp_ls_ena_o       ),
         .ex_ls_sel          (exp_ls_sel_o       ),
+        .ex_has_exception   (exp_has_exception  ),
         .to_ex_is_data_adel (to_exp_is_data_adel),
         .to_ex_is_data_ades (to_exp_is_data_ades),
 

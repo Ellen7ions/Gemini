@@ -76,10 +76,12 @@ module issue (
     wire id1_is_hilo_1, id1_is_hilo_2;
     wire inst_jmp_1, inst_jmp_2;
     wire raw_conflict;
+    wire id1_is_cop0_1, id1_is_cop0_2;
     assign inst_jmp_1 =
             id1_is_branch_1 | id1_is_j_imme_1 | id1_is_jr_1;
     assign inst_jmp_2 =
             id1_is_branch_2 | id1_is_j_imme_2 | id1_is_jr_2;
+            
     assign raw_conflict = 
             (id1_w_reg_ena_1  & ((id1_w_reg_dst_1 == id1_rs_2) & (id1_rs_2 != 5'h0))) |
             (id1_w_reg_ena_1  & ((id1_w_reg_dst_1 == id1_rt_2) & (id1_rt_2 != 5'h0)));
@@ -102,6 +104,12 @@ module issue (
                 end else if (fifo_r_data_2_ok & raw_conflict) begin
                     p_data_1 = 1'b1;
                     p_data_2 = 1'b0; 
+                end else if (id1_is_cop0_2) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b0;
+                end else if (id1_is_cop0_1) begin
+                    p_data_1 = 1'b1;
+                    p_data_2 = 1'b0;
                 end else if (id1_is_ls_1) begin
                     p_data_1 = 1'b1;
                     p_data_2 = 1'b0;
@@ -128,8 +136,8 @@ module issue (
     assign id1_valid_2              = p_data_2;
     assign id1_pc_2                 = fifo_r_data_2[63:32];
     assign id1_inst_2               = fifo_r_data_2[31: 0];
-    assign id1_is_in_delay_slot_2   = inst_jmp_1;
-    assign id1_inst_adel_2          = id1_pc_2[1:0] != 2'b00;
+    assign id1_in_delay_slot_2      = inst_jmp_1;
+    assign id1_is_inst_adel_2       = id1_pc_2[1:0] != 2'b00;
 
     idu_1 idc (
         .inst           (id1_inst_1),
@@ -147,7 +155,8 @@ module issue (
         .id1_is_j_imme  (id1_is_j_imme_1),
         .id1_is_jr      (id1_is_jr_1),
         .id1_is_ls      (id1_is_ls_1),
-        .id1_is_hilo    (id1_is_hilo_1)
+        .id1_is_hilo    (id1_is_hilo_1),
+        .id1_is_cop0    (id1_is_cop0_1)
     );
 
     idu_1 idp (
@@ -166,7 +175,8 @@ module issue (
         .id1_is_j_imme  (id1_is_j_imme_2),
         .id1_is_jr      (id1_is_jr_2),
         .id1_is_ls      (id1_is_ls_2),
-        .id1_is_hilo    (id1_is_hilo_2)
+        .id1_is_hilo    (id1_is_hilo_2),
+        .id1_is_cop0    (id1_is_cop0_2)
     );
 
 endmodule

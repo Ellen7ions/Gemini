@@ -11,17 +11,13 @@ module alu (
     output  wire [31:0] alu_res,
     output  reg  [31:0] alu_hi_res,
     output  reg  [31:0] alu_lo_res,
-    output  wire        alu_overflow,
+    output  reg         alu_overflow,
     output  wire        alu_stall_req
 );
     wire [32:0] ext_src_a, ext_src_b;
     assign ext_src_a = {1'b0, src_a};
     assign ext_src_b = {1'b0, src_b};
     reg  [32:0] ext_alu_res;
-
-    assign alu_overflow = 
-             src_a[31] &  src_b[31] & ~ext_alu_res[31] |
-            ~src_a[31] & ~src_b[31] &  ext_alu_res[31] ;
 
     reg  div_en;
     reg  div_sign;
@@ -77,6 +73,7 @@ module alu (
         div_sign    = 1'b0;
         mul_en      = 1'b0;
         mul_sign    = 1'b0;
+        alu_overflow= 1'b0;
 
         case (alu_sel)
         `ALU_SEL_NOP    : begin
@@ -84,9 +81,11 @@ module alu (
         end
         `ALU_SEL_ADD    : begin
             ext_alu_res = ext_src_a + ext_src_b;
+            alu_overflow= ((src_a[31] ~^ src_b[31]) & (src_a[31] ^ ext_alu_res[31]));
         end
         `ALU_SEL_SUB    : begin
             ext_alu_res = ext_src_a - ext_src_b;
+            alu_overflow= ((src_a[31]  ^ src_b[31]) & (src_a[31] ^ ext_alu_res[31]));
         end
         `ALU_SEL_SLT    : begin
             ext_alu_res = {31'h0, is_slt};

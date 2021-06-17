@@ -33,10 +33,10 @@ module exception_ctrl (
 
     // from cp0
     input   wire            exception_is_interrupt,
-    input   wire            r_cp0_epc,
+    input   wire [31:0]     r_cp0_epc,
     // update pc
     output  reg             exception_pc_ena,
-    output  reg             exception_pc,
+    output  reg  [31:0]     exception_pc,
 
     // to cp0
     // update cp0

@@ -39,14 +39,15 @@ module cp0 (
     reg [31:0]  Status;
     reg [31:0]  Cause;
 
-    assign epc          = EPC;
+    assign epc                      = EPC;
+    assign exception_is_interrupt   = Status[0] & ~Status[1] & |(Status[15:8] & Cause[15:8]);
 
     always @(posedge clk) begin
         Count       <= Count + 32'h1;
-        Cause[7 :2] <= {Cause[30] | interrupt[5], interrupt[4: 0]};
+        Cause[15:8] <= {Cause[30] | interrupt[5], interrupt[4: 0]};
 
         if (rst) begin
-            Status  <= {9'd0, 1'd1, 1'd0, 8'd0, 1'd0, 1'd0, 1'd0};
+            Status  <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
             Cause   <= 32'd0;
         end else begin
             if (Compare != 32'h0 && Count == Compare)

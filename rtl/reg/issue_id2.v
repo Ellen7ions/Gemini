@@ -68,7 +68,7 @@ module issue_id2 (
             id1_func_codes_i    <=  29'h0;
             id1_in_delay_slot_i <=  1'h0;
             id1_is_inst_adel_i  <=  1'h0;
-            id1_valid_i         <=  1'b1;
+            id1_valid_i         <=  1'b0;
         end else if (!flush & !stall) begin
             id1_pc_i            <=  id1_pc_o;
             id1_inst_i          <=  id1_inst_o;   

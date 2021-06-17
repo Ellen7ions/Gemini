@@ -11,7 +11,7 @@ module npc (
     input   wire [31:0] id_rs_data,
 
     input   wire        exception_pc_ena,
-    input   wire        exception_pc,
+    input   wire [31:0] exception_pc,
 
     input   wire [31:0] id_pc,
     

@@ -216,6 +216,21 @@ module idu_2 (
         func_code_is_eret
     }   = id1_func_codes;
 
+    wire inst_is_special    = 
+            op_code_is_special  & (|id1_func_codes);
+    wire inst_is_regimm     = 
+            op_code_is_regimm   & (
+                ~(id1_rt ^ `BGEZ_RT_CODE   ) |    
+                ~(id1_rt ^ `BLTZ_RT_CODE   ) |
+                ~(id1_rt ^ `BGEZAL_RT_CODE ) |
+                ~(id1_rt ^ `BLTZAL_RT_CODE )  
+            );
+    wire inst_is_cop0       =
+            op_code_is_cop0     & (
+                ~(id1_rs ^ `MTC0_RS_CODE) |
+                ~(id1_rs ^ `MFC0_RS_CODE)
+            );
+
     // internal signals
     wire sign_ext;
 
@@ -250,20 +265,7 @@ module idu_2 (
     assign id2_is_inst_adel = id1_inst_adel;
     assign id2_is_ri        = 
             id1_valid & (
-                (|id1_op_codes    == 1'b0)    |
-                (|id1_func_codes  == 1'b0)    |
-                (
-                    op_code_is_cop0     & (
-                        id1_rs != `MTC0_RS_CODE &
-                        id1_rs != `MFC0_RS_CODE
-                    )   |
-                    op_code_is_regimm   & (
-                        id1_rt != `BGEZ_RT_CODE     &    
-                        id1_rt != `BLTZ_RT_CODE     &
-                        id1_rt != `BGEZAL_RT_CODE   &
-                        id1_rt != `BLTZAL_RT_CODE   
-                    )
-                )
+                ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes)
             );
 
     assign id2_is_check_ov  = 
