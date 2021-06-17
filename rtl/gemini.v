@@ -320,9 +320,13 @@ module gemini (
     wire            to_exc_is_data_adel;
     wire            to_exc_is_data_ades;
     wire            exc_has_exception;
+    wire            memc_has_exception_i;
+    wire            memc_has_exception_o;
     wire            to_exp_is_data_adel;
     wire            to_exp_is_data_ades;
     wire            exp_has_exception;
+    wire            memp_has_exception_i;
+    wire            memp_has_exception_o;
 
     wire            exc_in_delay_slot_o;
     wire            exc_is_eret_o;
@@ -873,6 +877,7 @@ module gemini (
         .rst                (rst                ),
         .flush              (mem_wb_flush       ),
         .stall              (mem_wb_stall       ),
+        .mem_has_exception_o(memc_has_exception_o),
         .mem_pc_o           (memc_pc_o          ),
         .mem_alu_res_o      (memc_alu_res_o     ),
         .mem_w_reg_ena_o    (memc_w_reg_ena_o   ),
@@ -882,6 +887,7 @@ module gemini (
         .mem_w_hilo_ena_o   (memc_w_hilo_ena_o  ),    
         .mem_hi_res_o       (memc_hi_res_o      ),
         .mem_lo_res_o       (memc_lo_res_o      ),
+        .mem_has_exception_i(memc_has_exception_i),
         .mem_pc_i           (memc_pc_i          ),
         .mem_alu_res_i      (memc_alu_res_i     ),
         .mem_w_reg_ena_i    (memc_w_reg_ena_i   ),
@@ -898,6 +904,7 @@ module gemini (
         .rst                (rst                ),
         .flush              (mem_wb_flush       ),
         .stall              (mem_wb_stall       ),
+        .mem_has_exception_o(memp_has_exception_o),
         .mem_pc_o           (memp_pc_o          ),
         .mem_alu_res_o      (memp_alu_res_o     ),        
         .mem_w_reg_ena_o    (memp_w_reg_ena_o   ),            
@@ -906,7 +913,8 @@ module gemini (
         .mem_wb_reg_sel_o   (memp_wb_reg_sel_o  ),
         .mem_w_hilo_ena_o   (memp_w_hilo_ena_o  ),    
         .mem_hi_res_o       (memp_hi_res_o      ),
-        .mem_lo_res_o       (memp_lo_res_o      ),        
+        .mem_lo_res_o       (memp_lo_res_o      ),
+        .mem_has_exception_i(memp_has_exception_i),        
         .mem_pc_i           (memp_pc_i          ),
         .mem_alu_res_i      (memp_alu_res_i     ),
         .mem_w_reg_ena_i    (memp_w_reg_ena_i   ),
@@ -1474,15 +1482,7 @@ module gemini (
         .mem_w_cp0_addr     (memc_w_cp0_addr_o  ),
         .mem_w_cp0_data     (memc_w_cp0_data_o  ),
 
-        .mem_in_delay_slot  (memc_in_delay_slot_o),
-        .mem_is_eret        (memc_is_eret_o      ),
-        .mem_is_syscall     (memc_is_syscall_o   ),
-        .mem_is_break       (memc_is_break_o     ),
-        .mem_is_inst_adel   (memc_is_inst_adel_o ),
-        .mem_is_data_adel   (memc_is_data_adel_o ),
-        .mem_is_data_ades   (memc_is_data_ades_o ),
-        .mem_is_overflow    (memc_is_overflow_o  ),
-        .mem_is_ri          (memc_is_ri_o        ),
+        .mem_has_exception  (memc_has_exception_o),
 
         .mem_w_hilo_ena     (memc_w_hilo_ena_o  ),
         .mem_hi_res         (memc_hi_res_o      ),
@@ -1542,15 +1542,7 @@ module gemini (
         .mem_w_cp0_addr     (                   ),
         .mem_w_cp0_data     (                   ),
 
-        .mem_in_delay_slot  (memp_in_delay_slot_o),
-        .mem_is_eret        (memp_is_eret_o      ),
-        .mem_is_syscall     (memp_is_syscall_o   ),
-        .mem_is_break       (memp_is_break_o     ),
-        .mem_is_inst_adel   (memp_is_inst_adel_o ),
-        .mem_is_data_adel   (memp_is_data_adel_o ),
-        .mem_is_data_ades   (memp_is_data_ades_o ),
-        .mem_is_overflow    (memp_is_overflow_o  ),
-        .mem_is_ri          (memp_is_ri_o        ),
+        .mem_has_exception  (memp_has_exception_o),
 
         .mem_w_hilo_ena     (memp_w_hilo_ena_o  ),
         .mem_hi_res         (memp_hi_res_o      ),
@@ -1637,6 +1629,7 @@ module gemini (
 
     wbu wbc (
         .stall              (wb_stall           ),
+        .mem_has_exception  (memc_has_exception_i),
         .mem_pc             (memc_pc_i          ),
         .mem_alu_res        (memc_alu_res_i     ),
         .mem_w_reg_ena      (memc_w_reg_ena_i   ),
@@ -1651,6 +1644,7 @@ module gemini (
 
     wbu wbp (
         .stall              (wb_stall           ),
+        .mem_has_exception  (memp_has_exception_i),
         .mem_pc             (memp_pc_i          ),
         .mem_alu_res        (memp_alu_res_i     ),
         .mem_w_reg_ena      (memp_w_reg_ena_i   ),

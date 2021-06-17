@@ -50,15 +50,7 @@ module lsu (
     output  wire [7 :0] mem_w_cp0_addr,
     output  wire [31:0] mem_w_cp0_data,
 
-    output  wire        mem_in_delay_slot,
-    output  wire        mem_is_eret,
-    output  wire        mem_is_syscall,
-    output  wire        mem_is_break,
-    output  wire        mem_is_inst_adel,
-    output  wire        mem_is_data_adel,
-    output  wire        mem_is_data_ades,
-    output  wire        mem_is_overflow,
-    output  wire        mem_is_ri,
+    output  wire        mem_has_exception,
 
     output  wire [1 :0] mem_w_hilo_ena,
     output  wire [31:0] mem_hi_res,
@@ -84,15 +76,15 @@ module lsu (
     assign mem_w_cp0_addr    = ex_mem_w_cp0_addr;
     assign mem_w_cp0_data    = ex_mem_w_cp0_data;
 
-    assign mem_in_delay_slot = ex_mem_in_delay_slot ;
-    assign mem_is_eret       = ex_mem_is_eret       ;
-    assign mem_is_syscall    = ex_mem_is_syscall    ;
-    assign mem_is_break      = ex_mem_is_break      ;
-    assign mem_is_inst_adel  = ex_mem_is_inst_adel  ;
-    assign mem_is_data_adel  = ex_mem_is_data_adel  ;
-    assign mem_is_data_ades  = ex_mem_is_data_ades  ;
-    assign mem_is_overflow   = ex_mem_is_overflow   ;
-    assign mem_is_ri         = ex_mem_is_ri         ;
+    assign mem_has_exception = 
+            ex_mem_is_eret       |
+            ex_mem_is_syscall    |
+            ex_mem_is_break      |
+            ex_mem_is_inst_adel  |
+            ex_mem_is_data_adel  |
+            ex_mem_is_data_ades  |
+            ex_mem_is_overflow   |
+            ex_mem_is_ri         ;
 
     assign to_ex_is_data_adel   =
             ex_ls_ena & (

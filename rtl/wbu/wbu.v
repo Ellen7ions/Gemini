@@ -2,6 +2,7 @@
 
 module wbu (
     input   wire        stall,
+    input   wire        mem_has_exception,
     input   wire [31:0] mem_pc,
     input   wire [31:0] mem_alu_res,
     input   wire        mem_w_reg_ena,
@@ -14,7 +15,11 @@ module wbu (
     output  wire [31:0] wb_w_reg_data
 );
     assign wb_pc            = mem_pc;
-    assign wb_w_reg_ena     = !stall & (mem_w_reg_dst == 5'h0 ? 1'b0 : mem_w_reg_ena);
+    assign wb_w_reg_ena     = 
+            ~mem_has_exception  &
+            ~stall              &
+            mem_w_reg_ena       &
+            (|mem_w_reg_dst);
     assign wb_w_reg_addr    = mem_w_reg_dst;
     assign wb_w_reg_data    = 
             ({32{~mem_wb_sel}} & mem_alu_res) | 
