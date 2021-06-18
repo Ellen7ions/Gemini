@@ -27,7 +27,7 @@ module cp0 (
     input   wire        w_cp0_exl,
     input   wire [31:0] w_cp0_epc,
     input   wire        w_cp0_badvaddr_ena,
-    input   wire        w_cp0_badvaddr
+    input   wire [31:0] w_cp0_badvaddr
 );
 
     // no rst

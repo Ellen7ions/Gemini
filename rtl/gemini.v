@@ -1598,6 +1598,7 @@ module gemini (
         .clk                        (clk                    ),
         .rst                        (rst                    ),
         .pc_1                       (exc_pc_i               ),
+        .mem_badvaddr_1             (exc_alu_res_i          ),
         .in_delay_slot_1            (exc_in_delay_slot_i    ),
         .exception_is_eret_1        (exc_is_eret_i          ),
         .exception_is_syscall_1     (exc_is_syscall_i       ),
@@ -1609,6 +1610,7 @@ module gemini (
         .exception_is_ri_1          (exc_is_ri_i            ),
 
         .pc_2                       (exp_pc_i               ),
+        .mem_badvaddr_2             (exp_alu_res_i          ),
         .in_delay_slot_2            (exp_in_delay_slot_i    ),
         .exception_is_eret_2        (exp_is_eret_i          ),
         .exception_is_syscall_2     (exp_is_syscall_i       ),
@@ -1715,8 +1717,12 @@ module gemini (
     assign debug_wb_rf_wdata_2  = wbp_w_reg_data_o;
 
     wire [1 :0] w_hilo_ena_cp;
-    assign w_hilo_ena_cp[1]     = memc_w_hilo_ena_i[1] | memp_w_hilo_ena_i[1];
-    assign w_hilo_ena_cp[0]     = memc_w_hilo_ena_i[0] | memp_w_hilo_ena_i[0];
+    assign w_hilo_ena_cp[1]     = 
+         memc_w_hilo_ena_i[1] & (~memc_has_exception_i) | 
+        (memp_w_hilo_ena_i[1] & (~memp_has_exception_i) & (~memc_has_exception_i));
+    assign w_hilo_ena_cp[0]     = 
+         memc_w_hilo_ena_i[0] & (~memc_has_exception_i) | 
+        (memp_w_hilo_ena_i[0] & (~memp_has_exception_i) & (~memc_has_exception_i));
     wire [31:0] w_hi_res_cp     =
             {32{ memc_w_hilo_ena_i[1] & ~memp_w_hilo_ena_i[1]}} & memc_hi_res_i |
             {32{~memc_w_hilo_ena_i[1] &  memp_w_hilo_ena_i[1]}} & memp_hi_res_i ;

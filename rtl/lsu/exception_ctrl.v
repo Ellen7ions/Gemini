@@ -8,6 +8,7 @@ module exception_ctrl (
 
     // from pipeline
     input   wire [31:0]     pc_1,
+    input   wire [31:0]     mem_badvaddr_1,
     input   wire            in_delay_slot_1,
 
     input   wire            exception_is_eret_1,
@@ -20,6 +21,7 @@ module exception_ctrl (
     input   wire            exception_is_ri_1,
 
     input   wire [31:0]     pc_2,
+    input   wire [31:0]     mem_badvaddr_2,
     input   wire            in_delay_slot_2,
 
     input   wire            exception_is_eret_2,
@@ -122,13 +124,13 @@ module exception_ctrl (
                     cp0_cls_exl         = 1'b1;
                     exception_pc        = r_cp0_epc;
                 end else if (exception_is_data_adel_1) begin
-                    w_cp0_exccode   = 5'h05;
+                    w_cp0_exccode   = 5'h04;
                     w_cp0_badvaddr_ena = 1'b1;
-                    w_cp0_badvaddr  = pc_1;
+                    w_cp0_badvaddr  = mem_badvaddr_1;
                 end else if (exception_is_data_ades_1) begin
                     w_cp0_exccode   = 5'h05;
                     w_cp0_badvaddr_ena = 1'b1;
-                    w_cp0_badvaddr  = pc_1;
+                    w_cp0_badvaddr  = mem_badvaddr_1;
                 end
             end else if (exception_has_2) begin
                 exception_pc_ena    = 1'b1;
@@ -154,13 +156,13 @@ module exception_ctrl (
                     cp0_cls_exl         = 1'b1;
                     exception_pc        = r_cp0_epc;
                 end else if (exception_is_data_adel_2) begin
-                    w_cp0_exccode       = 5'h05;
+                    w_cp0_exccode       = 5'h04;
                     w_cp0_badvaddr_ena  = 1'b1;
-                    w_cp0_badvaddr      = pc_2;
+                    w_cp0_badvaddr      = mem_badvaddr_2;
                 end else if (exception_is_data_ades_2) begin
                     w_cp0_exccode       = 5'h05;
                     w_cp0_badvaddr_ena  = 1'b1;
-                    w_cp0_badvaddr      = pc_2;
+                    w_cp0_badvaddr      = mem_badvaddr_2;
                 end
             end else begin
                 flush_pipline = 1'b0;
