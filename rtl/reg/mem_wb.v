@@ -4,6 +4,7 @@ module mem_wb (
     input   wire        clk,
     input   wire        rst,
     input   wire        flush,
+    input   wire        exception_flush,
     input   wire        stall,
     input   wire        mem_has_exception_o,
     input   wire [31:0] mem_pc_o,
@@ -31,7 +32,7 @@ module mem_wb (
 );
 
     always @(posedge clk) begin
-        if (rst || (flush & !stall)) begin
+        if (rst || (flush & !stall) || exception_flush) begin
             mem_alu_res_i       <= 32'h0                ;
             mem_w_reg_ena_i     <= 1'h0                 ;
             mem_w_reg_dst_i     <= 5'h0                 ;

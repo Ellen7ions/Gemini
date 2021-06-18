@@ -4,6 +4,7 @@ module ex_mem (
     input   wire            clk,
     input   wire            rst,
     input   wire            flush,
+    input   wire            exception_flush,
     input   wire            stall,
     input   wire [31:0]     ex_pc_o,
     input   wire [31:0]     ex_alu_res_o,
@@ -58,7 +59,7 @@ module ex_mem (
 );
 
     always @(posedge clk) begin
-        if (rst || (flush & !stall)) begin
+        if (rst || (flush & !stall) || exception_flush) begin
             ex_alu_res_i        <= 32'h0            ;
             ex_w_hilo_ena_i     <= 2'h0             ;
             ex_hi_res_i         <= 32'h0            ;

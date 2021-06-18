@@ -4,6 +4,7 @@ module issue_id2 (
     input   wire        clk,
     input   wire        rst,
     input   wire        flush,
+    input   wire        exception_flush,
     input   wire        stall,
 
     input   wire        id1_valid_o,
@@ -49,7 +50,7 @@ module issue_id2 (
 );
 
     always @(posedge clk) begin
-        if (rst || (flush & !stall) || (!id1_valid_o & !stall)) begin
+        if (rst || (flush & !stall) || (!id1_valid_o & !stall) || exception_flush) begin
             id1_pc_i            <=  32'h0;
             id1_inst_i          <=  32'h0;
             id1_rs_i            <=  5'h0;

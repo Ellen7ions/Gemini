@@ -39,6 +39,7 @@ module ex (
     input   wire [31:0]     memp_hi_res,
     input   wire [31:0]     memp_lo_res,
     // cp0
+    output  wire            ex_cp0_r_ena,
     output  wire [7 :0]     ex_cp0_r_addr,
     input   wire [31:0]     ex_cp0_r_data,
 
@@ -187,6 +188,7 @@ module ex (
             }} & ex_cp0_r_data);
     
     assign ex_cp0_r_addr    = id2_w_cp0_addr;
+    assign ex_cp0_r_ena     = !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0);
 
     assign ex_w_hilo_ena    = id2_w_hilo_ena;
     assign ex_hi_res        = alu_hi_res;

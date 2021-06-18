@@ -18,18 +18,26 @@ module ctrl (
     output  wire    fifo_flush,
     output  wire    issue_stall,
     output  wire    ii_id2_flush,
+    output  wire    ii_id2_exception_flush,
     output  wire    ii_id2_stall,
     output  wire    id2_ex_flush,
+    output  wire    id2_ex_exception_flush,
     output  wire    id2_ex_stall,
     output  wire    ex_mem_flush,
+    output  wire    ex_mem_exception_flush,
     output  wire    ex_mem_stall,
     output  wire    mem_wb_flush,
+    output  wire    mem_wb_exception_flush,
     output  wire    mem_wb_stall,
     output  wire    wb_stall
 );
+    assign ii_id2_exception_flush = exception_flush;
+    assign id2_ex_exception_flush = exception_flush;
+    assign ex_mem_exception_flush = exception_flush;
+    assign mem_wb_exception_flush = 1'b0;
 
     assign pc_stall     =
-            i_cache_stall_req | fifo_stall_req | exc_stall_req | exp_stall_req | forwardc_stall_req | forwardp_stall_req;
+            i_cache_stall_req | fifo_stall_req;
     
     assign pc_flush     = 
             1'b0;
@@ -62,8 +70,8 @@ module ctrl (
             1'b0;
     
     assign mem_wb_stall =
-            d_cache_stall_req | exc_stall_req | exp_stall_req;
+            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush);
 
     assign wb_stall     =
-            d_cache_stall_req | exc_stall_req | exp_stall_req;
+            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush);
 endmodule

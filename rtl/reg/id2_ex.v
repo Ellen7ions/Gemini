@@ -4,6 +4,7 @@ module id2_ex (
     input   wire        clk,
     input   wire        rst,
     input   wire        flush,
+    input   wire        exception_flush,
     input   wire        stall,
     
     input   wire        id2_in_delay_slot_o,
@@ -79,7 +80,7 @@ module id2_ex (
     output  reg         id2_wb_reg_sel_i
 );
     always @(posedge clk) begin
-        if (rst || (flush & !stall)) begin
+        if (rst || (flush & !stall) || exception_flush) begin
             id2_is_branch_i     <= 1'h0;
             id2_is_j_imme_i     <= 1'h0;
             id2_is_jr_i         <= 1'h0;

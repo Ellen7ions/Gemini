@@ -6,6 +6,7 @@ module cp0 (
     input   wire [5 :0] interrupt,
     
     // read cp0 from software
+    input   wire        r_ena,
     input   wire [7 :0] r_addr,
     output  reg  [31:0] r_data,
     
@@ -98,34 +99,38 @@ module cp0 (
         if (rst) begin
             r_data = 32'd0;
         end else begin
-            if (r_addr == w_addr) begin
-                r_data = w_data;
+            if (r_ena) begin
+                if (w_ena & r_addr == w_addr) begin
+                    r_data = w_data;
+                end else begin
+                    case (r_addr)
+                    {5'd8, 3'd0}: begin
+                        r_data      = BadVAddr;
+                    end
+
+                    {5'd9, 3'd0}: begin
+                        r_data      = Count;
+                    end
+
+                    {5'd12, 3'd0}: begin
+                        r_data      = Status;
+                    end
+
+                    {5'd13, 3'd0}: begin
+                        r_data      = Cause;
+                    end
+
+                    {5'd14, 3'd0}: begin
+                        r_data      = EPC; 
+                    end
+
+                    default: begin
+                        r_data      = 32'd0;
+                    end
+                    endcase 
+                end
             end else begin
-                case (r_addr)
-                {5'd8, 3'd0}: begin
-                    r_data      = BadVAddr;
-                end
-
-                {5'd9, 3'd0}: begin
-                    r_data      = Count;
-                end
-
-                {5'd12, 3'd0}: begin
-                    r_data      = Status;
-                end
-
-                {5'd13, 3'd0}: begin
-                    r_data      = Cause;
-                end
-
-                {5'd14, 3'd0}: begin
-                    r_data      = EPC; 
-                end
-
-                default: begin
-                    r_data      = 32'd0;
-                end
-                endcase 
+                r_data = 32'd0;
             end
         end
     end
