@@ -43,11 +43,16 @@ module cp0 (
     assign epc                      = EPC;
     assign exception_is_interrupt   = Status[0] & ~Status[1] & |(Status[15:8] & Cause[15:8]);
 
+    reg tick;
+
     always @(posedge clk) begin
-        Count       <= Count + 32'h1;
+        tick        <= ~tick;
+        if (tick)
+            Count   <= Count + 32'h1;
         Cause[15:8] <= {Cause[30] | interrupt[5], interrupt[4: 0]};
 
         if (rst) begin
+            tick    <= 1'b0;
             Status  <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
             Cause   <= 32'd0;
         end else begin
@@ -71,6 +76,11 @@ module cp0 (
                 case (w_addr)
                 {5'd9, 3'd0}: begin
                     Count           <= w_data;    
+                end
+
+                {5'd11, 3'd0}: begin
+                    Compare         <= w_data;
+                    Cause[30]       <= 1'b0;
                 end
 
                 {5'd12, 3'd0}: begin
@@ -106,6 +116,10 @@ module cp0 (
                     case (r_addr)
                     {5'd8, 3'd0}: begin
                         r_data      = BadVAddr;
+                    end
+
+                    {5'd11, 3'd0}: begin
+                        r_data      = Compare;
                     end
 
                     {5'd9, 3'd0}: begin
