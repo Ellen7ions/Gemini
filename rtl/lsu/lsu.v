@@ -9,6 +9,7 @@ module lsu (
     input   wire        ex_ls_ena,
     input   wire [3 :0] ex_ls_sel,
     input   wire        ex_has_exception,
+    input   wire        memc_has_exception,
     output  wire        to_ex_is_data_adel,
     output  wire        to_ex_is_data_ades,
 
@@ -102,17 +103,7 @@ module lsu (
             );
 
     assign data_ram_en  =
-            ex_ls_ena & ~ex_has_exception & ~(
-                ex_mem_is_eret      |
-                ex_mem_is_syscall   |
-                ex_mem_is_break     |
-                ex_mem_is_inst_adel |
-                ex_mem_is_data_adel |
-                ex_mem_is_data_ades |
-                ex_mem_is_overflow  |
-                ex_mem_is_ri        |
-                ex_mem_is_int
-            );
+            ex_ls_ena & ~ex_has_exception & ~mem_has_exception & ~memc_has_exception;
 
     assign data_ram_wen =
             {4{ex_ls_ena}} & (

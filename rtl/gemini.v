@@ -1497,8 +1497,8 @@ module gemini (
         .ex_rt_data         (exc_rt_data_o      ),
         .ex_ls_ena          (exc_ls_ena_o       ),
         .ex_ls_sel          (exc_ls_sel_o       ),
-        .ex_has_exception   (exc_has_exception  
-                            |exp_has_exception  ),
+        .ex_has_exception   (exc_has_exception  ),
+        .memc_has_exception (memp_has_exception_o),
         .to_ex_is_data_adel (to_exc_is_data_adel),
         .to_ex_is_data_ades (to_exc_is_data_ades),
 
@@ -1561,6 +1561,7 @@ module gemini (
         .ex_ls_sel          (exp_ls_sel_o       ),
         .ex_has_exception   (exc_has_exception  
                             |exp_has_exception  ),
+        .memc_has_exception (memc_has_exception_o),
         .to_ex_is_data_adel (to_exp_is_data_adel),
         .to_ex_is_data_ades (to_exp_is_data_ades),
 
