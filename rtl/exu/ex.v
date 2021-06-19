@@ -14,6 +14,7 @@ module ex (
     input   wire            id2_is_break,
     input   wire            id2_is_inst_adel,
     input   wire            id2_is_ri,
+    input   wire            id2_is_int,
     input   wire            id2_is_check_ov,
 
     // addr signals
@@ -80,6 +81,7 @@ module ex (
     output  wire            ex_is_data_ades,
     output  wire            ex_is_overflow,
     output  wire            ex_is_ri,
+    output  wire            ex_is_int,
 
     output  wire [31:0]     ex_pc,
     output  wire [31:0]     ex_rt_data,
@@ -108,6 +110,7 @@ module ex (
     assign ex_is_data_ades  = to_ex_is_data_ades;
     assign ex_is_ri         = id2_is_ri;
     assign ex_is_overflow   = id2_is_check_ov & alu_overflow;
+    assign ex_is_int        = id2_is_int;
 
     assign ex_has_exception =
             ex_in_delay_slot    |
@@ -118,7 +121,8 @@ module ex (
             ex_is_data_adel     |
             ex_is_data_ades     |
             ex_is_ri            |
-            ex_is_overflow      ;
+            ex_is_overflow      |
+            ex_is_int           ;
 
     assign fw_hi        =
             ({32{

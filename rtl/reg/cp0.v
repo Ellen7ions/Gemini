@@ -17,7 +17,7 @@ module cp0 (
 
     // show
     output  wire [31:0] epc,
-    output  wire        exception_is_interrupt,
+    output  wire        cp0_has_int,
 
     input   wire        cp0_cls_exl,
 
@@ -32,7 +32,7 @@ module cp0 (
 
     // no rst
     reg [31:0]  BadVAddr;    // can't be written from software
-    reg [31:0]  Count;
+    reg [32:0]  Count;
     reg [31:0]  Compare;
     reg [31:0]  EPC;
     
@@ -40,23 +40,18 @@ module cp0 (
     reg [31:0]  Status;
     reg [31:0]  Cause;
 
-    assign epc                      = EPC;
-    assign exception_is_interrupt   = Status[0] & ~Status[1] & |(Status[15:8] & Cause[15:8]);
-
-    reg tick;
+    assign epc          = EPC;
+    assign cp0_has_int  = ((Cause[15:8] & Status[15:8]) != 8'h0) & Status[0] & ~Status[1];
 
     always @(posedge clk) begin
-        tick        <= ~tick;
-        if (tick)
-            Count   <= Count + 32'h1;
-        Cause[15:8] <= {Cause[30] | interrupt[5], interrupt[4: 0]};
+        Count   <= Count + 32'h1;
+        Cause[15:10]<= {Cause[30] | interrupt[5], interrupt[4: 0]};
 
         if (rst) begin
-            tick    <= 1'b0;
             Status  <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
             Cause   <= 32'd0;
         end else begin
-            if (Compare != 32'h0 && Count == Compare)
+            if (Compare != 32'h0 && Count[32:1] == Compare)
                 Cause[30]   <= 1'b1;
 
             if (cp0_cls_exl) begin
@@ -75,7 +70,7 @@ module cp0 (
             if (w_ena) begin
                 case (w_addr)
                 {5'd9, 3'd0}: begin
-                    Count           <= w_data;    
+                    Count           <= {w_data, 1'b0};    
                 end
 
                 {5'd11, 3'd0}: begin

@@ -19,6 +19,7 @@ module exception_ctrl (
     input   wire            exception_is_data_ades_1,
     input   wire            exception_is_overflow_1,
     input   wire            exception_is_ri_1,
+    input   wire            exception_is_int_1,
 
     input   wire [31:0]     pc_2,
     input   wire [31:0]     mem_badvaddr_2,
@@ -32,9 +33,9 @@ module exception_ctrl (
     input   wire            exception_is_data_ades_2,
     input   wire            exception_is_overflow_2,
     input   wire            exception_is_ri_2,
+    input   wire            exception_is_int_2,
 
     // from cp0
-    input   wire            exception_is_interrupt,
     input   wire [31:0]     r_cp0_epc,
     // update pc
     output  reg             exception_pc_ena,
@@ -56,6 +57,8 @@ module exception_ctrl (
 );
     wire            exception_has_1;
     wire            exception_has_2;
+    wire            exception_is_interrupt;
+    assign exception_is_interrupt = exception_is_int_1;
 
     assign exception_has_1  =
             exception_is_eret_1         |     

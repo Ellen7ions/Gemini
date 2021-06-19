@@ -6,6 +6,7 @@
 
 module idu_2 (
     input  wire             id1_valid,
+    input  wire             cp0_has_int,
 
     input  wire [28:0]      id1_op_codes,
     input  wire [28:0]      id1_func_codes,
@@ -49,6 +50,7 @@ module idu_2 (
     output wire             id2_is_break,
     output wire             id2_is_inst_adel,
     output wire             id2_is_ri,
+    output wire             id2_is_int,
     output wire             id2_is_check_ov,
 
     // id signals
@@ -267,6 +269,7 @@ module idu_2 (
             id1_valid & (
                 ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes)
             );
+    assign id2_is_int       = cp0_has_int & id1_valid;
 
     assign id2_is_check_ov  = 
             op_code_is_special  & func_code_is_add  |

@@ -13,6 +13,7 @@ module id2_ex (
     input   wire        id2_is_break_o,
     input   wire        id2_is_inst_adel_o,
     input   wire        id2_is_ri_o,
+    input   wire        id2_is_int_o,
     input   wire        id2_is_check_ov_o,
 
     input   wire        id2_is_branch_o,
@@ -49,6 +50,7 @@ module id2_ex (
     output  reg         id2_is_break_i,
     output  reg         id2_is_inst_adel_i,
     output  reg         id2_is_ri_i,
+    output  reg         id2_is_int_i,
     output  reg         id2_is_check_ov_i,
 
     output  reg         id2_is_branch_i,
@@ -115,11 +117,8 @@ module id2_ex (
             id2_is_inst_adel_i  <= 1'h0;
             id2_is_ri_i         <= 1'h0;
             id2_is_check_ov_i   <= 1'h0;
+            id2_is_int_i        <= 1'h0;
         end else if (!flush & !stall) begin
-
-            if (id2_w_cp0_ena_o)
-                $display("%h\n", id2_pc_o);
-
             id2_is_branch_i     <= id2_is_branch_o;
             id2_is_j_imme_i     <= id2_is_j_imme_o;
             id2_is_jr_i         <= id2_is_jr_o;
@@ -154,6 +153,7 @@ module id2_ex (
             id2_is_inst_adel_i  <= id2_is_inst_adel_o;
             id2_is_ri_i         <= id2_is_ri_o;
             id2_is_check_ov_i   <= id2_is_check_ov_o;
+            id2_is_int_i        <= id2_is_int_o;
         end
     end
 endmodule
