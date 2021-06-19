@@ -17,7 +17,7 @@ module alu (
     wire [32:0] ext_src_a, ext_src_b;
     assign ext_src_a = {1'b0, src_a};
     assign ext_src_b = {1'b0, src_b};
-    reg  [32:0] ext_alu_res;
+    reg  [31:0] ext_alu_res;
 
     reg  div_en;
     reg  div_sign;
@@ -66,7 +66,7 @@ module alu (
     wire [31:0] srl_val     = src_a >> src_b[4:0];
 
     always @(*) begin
-        ext_alu_res = 33'h0;
+        ext_alu_res = 32'h0;
         alu_hi_res  = 32'h0;
         alu_lo_res  = 32'h0;
         div_en      = 1'b0;
@@ -88,10 +88,10 @@ module alu (
             alu_overflow= ((src_a[31]  ^ src_b[31]) & (src_a[31] ^ ext_alu_res[31]));
         end
         `ALU_SEL_SLT    : begin
-            ext_alu_res = {31'h0, is_slt};
+            ext_alu_res = is_slt;
         end
         `ALU_SEL_SLTU   : begin
-            ext_alu_res = {31'h0, is_sltu};
+            ext_alu_res = is_sltu;
         end
         `ALU_SEL_DIV    : begin
             div_en      = 1'b1;
@@ -118,28 +118,28 @@ module alu (
             alu_lo_res  = mul_res_ready ? m_s : 32'h0;
         end
         `ALU_SEL_AND    : begin
-            ext_alu_res = {1'b0, src_a & src_b};
+            ext_alu_res = src_a & src_b;
         end
         `ALU_SEL_NOR    : begin
-            ext_alu_res = {1'b0, ~(src_a | src_b)};
+            ext_alu_res = ~(src_a | src_b);
         end
         `ALU_SEL_OR     : begin
-            ext_alu_res = {1'b0, src_a | src_b};
+            ext_alu_res = src_a | src_b;
         end
         `ALU_SEL_XOR    : begin
-            ext_alu_res = {1'b0, src_a ^ src_b};
+            ext_alu_res = src_a ^ src_b;
         end
         `ALU_SEL_SLL    : begin
-            ext_alu_res = {1'b0, sll_val};
+            ext_alu_res = sll_val;
         end
         `ALU_SEL_SRA    : begin
-            ext_alu_res = {1'b0, sra_val};
+            ext_alu_res = sra_val;
         end
         `ALU_SEL_SRL    : begin
-            ext_alu_res = {1'b0, srl_val};
+            ext_alu_res = srl_val;
         end
         `ALU_SEL_LUI    : begin
-            ext_alu_res = {src_b, 16'h0};
+            ext_alu_res = {src_b[15:0], 16'h0};
         end
         `ALU_SEL_MTHI   : begin
             alu_hi_res  = src_a;
@@ -150,7 +150,7 @@ module alu (
             alu_lo_res  = src_a;
         end
         default: begin
-            ext_alu_res = 33'h0;
+            ext_alu_res = 32'h0;
             alu_hi_res  = 32'h0;
             alu_lo_res  = 32'h0;
         end
