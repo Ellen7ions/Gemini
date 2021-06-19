@@ -160,7 +160,7 @@ module lsu (
                 }} & 4'b1111
             );
     
-    assign data_ram_addr = {32{data_ram_en}} & ex_alu_res;
+    assign data_ram_addr = ex_alu_res;
 
     assign data_ram_wdata = 
             ({32{
