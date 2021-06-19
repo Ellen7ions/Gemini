@@ -91,36 +91,22 @@ module issue (
             p_data_1 = 1'b0;
             p_data_2 = 1'b0;
         end else begin
-            if (!fifo_r_data_1_ok) begin
+            if (!fifo_r_data_1_ok | !fifo_r_data_2_ok) begin
                 p_data_1 = 1'b0;
                 p_data_2 = 1'b0;
             end else begin
-                if (inst_jmp_1 & !fifo_r_data_2_ok) begin
-                    p_data_1 = 1'b1;
+                p_data_1 = 1'b1;
+                if (raw_conflict) begin
                     p_data_2 = 1'b0;
-                end else if (inst_jmp_1 & fifo_r_data_2_ok) begin
-                    p_data_1 = 1'b1;
-                    p_data_2 = 1'b1;
-                end else if (fifo_r_data_2_ok & raw_conflict) begin
-                    p_data_1 = 1'b1;
-                    p_data_2 = 1'b0; 
-                end else if (id1_is_cop0_2) begin
-                    p_data_1 = 1'b1;
+                end else if (inst_jmp_1 | inst_jmp_2) begin
+                    p_data_2 = ~inst_jmp_2;
+                end else if (id1_is_hilo_1 | id1_is_hilo_2) begin
+                    p_data_2 = id1_is_hilo_1 ^ id1_is_hilo_2;
+                end else if (id1_is_cop0_1 | id1_is_cop0_2) begin
                     p_data_2 = 1'b0;
-                end else if (id1_is_cop0_1) begin
-                    p_data_1 = 1'b1;
-                    p_data_2 = 1'b0;
-                end else if (id1_is_ls_1) begin
-                    p_data_1 = 1'b1;
-                    p_data_2 = 1'b0;
-                end else if (!inst_jmp_1 & inst_jmp_2) begin
-                    p_data_1 = 1'b1;
-                    p_data_2 = 1'b0;
-                end else if (id1_is_hilo_1) begin
-                    p_data_1 = 1'b1;
-                    p_data_2 = 1'b0;
+                end else if (id1_is_ls_1 | id1_is_ls_2) begin
+                    p_data_2 = id1_is_ls_1 ^ id1_is_ls_2;
                 end else begin
-                    p_data_1 = 1'b1;
                     p_data_2 = 1'b1;
                 end
             end
