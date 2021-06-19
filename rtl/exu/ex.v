@@ -61,6 +61,7 @@ module ex (
     // ex output
     output  wire            ex_stall_req,
     output  wire [31:0]     ex_alu_res,
+    output  wire [31:0]     ex_ls_addr,
     output  wire [1 :0]     ex_w_hilo_ena,  // ?
     output  wire [31:0]     ex_hi_res,
     output  wire [31:0]     ex_lo_res,
@@ -190,6 +191,9 @@ module ex (
             ({32{
                 !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0)
             }} & ex_cp0_r_data);
+    
+    assign ex_ls_addr   =
+            {32{id2_ls_ena}} & (src_a + src_b);
     
     assign ex_cp0_r_addr    = id2_w_cp0_addr;
     assign ex_cp0_r_ena     = !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0);

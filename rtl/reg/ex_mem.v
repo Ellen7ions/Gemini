@@ -8,6 +8,7 @@ module ex_mem (
     input   wire            stall,
     input   wire [31:0]     ex_pc_o,
     input   wire [31:0]     ex_alu_res_o,
+    input   wire [31:0]     ex_ls_addr_o,
     input   wire [1 :0]     ex_w_hilo_ena_o,
     input   wire [31:0]     ex_hi_res_o,
     input   wire [31:0]     ex_lo_res_o,
@@ -34,6 +35,7 @@ module ex_mem (
     input   wire [31:0]     ex_w_cp0_data_o,
     output  reg  [31:0]     ex_pc_i,
     output  reg  [31:0]     ex_alu_res_i,
+    output  reg  [31:0]     ex_ls_addr_i,
     output  reg  [1 :0]     ex_w_hilo_ena_i,
     output  reg  [31:0]     ex_hi_res_i,
     output  reg  [31:0]     ex_lo_res_i,
@@ -86,6 +88,7 @@ module ex_mem (
             ex_is_data_adel_i   <= 1'b0             ;
             ex_is_data_ades_i   <= 1'b0             ;
             ex_is_int_i         <= 1'h0             ;
+            ex_ls_addr_i        <= 32'h0            ;
         end else if (!flush & !stall) begin
             ex_alu_res_i        <= ex_alu_res_o         ;
             ex_w_hilo_ena_i     <= ex_w_hilo_ena_o      ;
@@ -111,6 +114,7 @@ module ex_mem (
             ex_is_data_adel_i   <= ex_is_data_adel_o    ;
             ex_is_data_ades_i   <= ex_is_data_ades_o    ;
             ex_is_int_i         <= ex_is_int_o          ;
+            ex_ls_addr_i        <= ex_ls_addr_o         ;
         end
     end
     

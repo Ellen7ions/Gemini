@@ -37,15 +37,9 @@ module branch_ctrl (
                 (!(id2_branch_sel ^ `BRANCH_SEL_BLTZAL  )) & (bltz_check )    
             );
     
-    assign take_j_imme  =
-            id2_is_j_imme & (
-                1'b1
-            );
+    assign take_j_imme  = id2_is_j_imme;
     
-    assign take_jr      =
-            id2_is_jr & (
-                1'b1
-            );
+    assign take_jr      = id2_is_jr;
 
     assign flush_req    =
             take_jr | take_j_imme | take_branch;
