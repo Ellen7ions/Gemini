@@ -8,6 +8,10 @@ If you find Castor and Pollux, you find me.
 
 ### Milestone
 
+#### 6-20
+
+Finished exceptions and interruption. it can run at **90mhz** !
+
 #### 6-14
 
 I can't believe it can run at **100mhz** !
