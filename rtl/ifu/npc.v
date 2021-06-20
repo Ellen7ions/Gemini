@@ -14,6 +14,7 @@ module npc (
     input   wire [31:0] exception_pc,
 
     input   wire [31:0] id_pc,
+    input   wire [31:0] id_branch_target,
     
     input   wire [31:0] pc,
     input   wire        inst_rdata_1_ok,
@@ -23,11 +24,14 @@ module npc (
 );
 
   assign next_pc = exception_pc_ena ? exception_pc :
-            {32{id_take_j_imme  }} & {id_pc[31:28], id_j_imme, 2'b00} |
-            {32{id_take_branch  }} & {id_pc + 32'h4 + {{14{id_branch_offset[15]}}, id_branch_offset[15:0], 2'b00}} |
-            {32{id_take_jr      }} & {id_rs_data} |
-            {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) & ~inst_rdata_1_ok & ~inst_rdata_2_ok}} & {pc} |
-            {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) &  inst_rdata_1_ok & ~inst_rdata_2_ok}} & {pc + 32'h4} |
-            {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) &  inst_rdata_1_ok &  inst_rdata_2_ok}} & {pc + 32'h8};
+            {32{ exception_pc_ena}} & exception_pc_ena |
+            {32{~exception_pc_ena}} & {
+              {32{id_take_j_imme  }} & {id_pc[31:28], id_j_imme, 2'b00} |
+              {32{id_take_branch  }} & {id_branch_target} |
+              {32{id_take_jr      }} & {id_rs_data} |
+              {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) & ~inst_rdata_1_ok & ~inst_rdata_2_ok}} & {pc} |
+              {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) &  inst_rdata_1_ok & ~inst_rdata_2_ok}} & {pc + 32'h4} |
+              {32{(~id_take_j_imme)  & (~id_take_branch) & (~id_take_jr) &  inst_rdata_1_ok &  inst_rdata_2_ok}} & {pc + 32'h8}
+            };
 
 endmodule

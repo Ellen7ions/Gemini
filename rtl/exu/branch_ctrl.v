@@ -18,12 +18,19 @@ module branch_ctrl (
     output  wire        take_jr,
     output  wire        flush_req
 );
-    wire beq_check      = $signed(id2_rs_data) == $signed(id2_rt_data);
-    wire bne_check      = $signed(id2_rs_data) != $signed(id2_rt_data);
-    wire bgez_check     = $signed(id2_rs_data) >= $signed(32'h0      );
-    wire bgtz_check     = $signed(id2_rs_data) >  $signed(32'h0      );
-    wire blez_check     = $signed(id2_rs_data) <= $signed(32'h0      );
-    wire bltz_check     = $signed(id2_rs_data) <  $signed(32'h0      );
+    // wire beq_check      = $signed(id2_rs_data) == $signed(id2_rt_data);
+    // wire bne_check      = $signed(id2_rs_data) != $signed(id2_rt_data);
+    // wire bgez_check     = $signed(id2_rs_data) >= $signed(32'h0      );
+    // wire bgtz_check     = $signed(id2_rs_data) >  $signed(32'h0      );
+    // wire blez_check     = $signed(id2_rs_data) <= $signed(32'h0      );
+    // wire bltz_check     = $signed(id2_rs_data) <  $signed(32'h0      );
+
+    wire beq_check      = !(id2_rs_data ^ id2_rt_data);
+    wire bne_check      = |(id2_rs_data ^ id2_rt_data);
+    wire bgez_check     = ~id2_rs_data[31];
+    wire bgtz_check     = ~id2_rs_data[31] & |(id2_rs_data[30:0]);
+    wire blez_check     = id2_rs_data[31] | !(|id2_rs_data);
+    wire bltz_check     = id2_rs_data[31];
 
     assign take_branch  =
             id2_is_branch & (

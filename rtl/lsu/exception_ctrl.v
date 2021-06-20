@@ -81,12 +81,12 @@ module exception_ctrl (
             exception_is_ri_2           ;
 
     always @(*) begin
-        cp0_cls_exl       = 1'b0;
+        cp0_cls_exl         = 1'b0;
 
-        exception_pc_ena    = 1'b0;
-        exception_pc        = 32'h0;
+        exception_pc_ena    = 1'b1;
+        exception_pc        = 32'hbfc0_0380;
 
-        w_cp0_update_ena    = 1'b0;
+        w_cp0_update_ena    = 1'b1;
         w_cp0_exccode       = 5'h00;
         w_cp0_bd            = 1'b0;
         w_cp0_exl           = 1'b0;
@@ -95,18 +95,12 @@ module exception_ctrl (
         w_cp0_badvaddr      = 32'h0;
         flush_pipline       = 1'b1;
         if (exception_is_interrupt) begin
-            exception_pc_ena        = 1'b1;
-            exception_pc            = 32'hbfc0_0380;
-            w_cp0_update_ena        = 1'b1;
             w_cp0_exccode           = 5'h00;
             w_cp0_bd                = in_delay_slot_1;
             w_cp0_exl               = 1'b1;
             w_cp0_epc               = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
         end else begin
             if (exception_has_1) begin
-                exception_pc_ena    = 1'b1;
-                exception_pc        = 32'hbfc0_0380;
-                w_cp0_update_ena    = 1'b1;
                 w_cp0_bd            = in_delay_slot_1;
                 w_cp0_exl           = 1'b1;
                 w_cp0_epc           = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
@@ -136,9 +130,6 @@ module exception_ctrl (
                     w_cp0_badvaddr  = mem_badvaddr_1;
                 end
             end else if (exception_has_2) begin
-                exception_pc_ena    = 1'b1;
-                exception_pc        = 32'hbfc0_0380;
-                w_cp0_update_ena    = 1'b1;
                 w_cp0_bd            = in_delay_slot_2;
                 w_cp0_exl           = 1'b1;
                 w_cp0_epc           = in_delay_slot_2 ? pc_2 - 32'h4 : pc_2;
@@ -168,7 +159,9 @@ module exception_ctrl (
                     w_cp0_badvaddr      = mem_badvaddr_2;
                 end
             end else begin
-                flush_pipline = 1'b0;
+                flush_pipline       = 1'b0;
+                exception_pc_ena    = 1'b0;
+                w_cp0_update_ena    = 1'b0;
             end
         end
     end

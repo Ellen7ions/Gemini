@@ -58,6 +58,7 @@ module idu_2 (
     output wire             id2_is_j_imme,
     output wire             id2_is_jr,
     output wire             id2_is_ls,
+    output wire [31:0]      id2_branch_target,
     output wire [3 :0]      id2_branch_sel,
 
     // addr signals
@@ -365,6 +366,8 @@ module idu_2 (
             {4{
                 op_code_is_regimm & !(id1_rt   ^ `BLTZAL_RT_CODE)
             }} & (`BRANCH_SEL_BLTZAL)   ;
+
+    assign id2_branch_target    = id1_pc + 32'h4 + {{14{id1_imme[15]}}, id1_imme[15:0], 2'b00};
 
     always @(*) begin
         if (op_code_is_special & (

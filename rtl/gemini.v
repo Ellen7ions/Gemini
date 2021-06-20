@@ -201,6 +201,7 @@ module gemini (
     wire            id2c_is_j_imme_o;
     wire            id2c_is_jr_o;
     wire            id2c_is_ls_o;
+    wire [31:0]     id2c_branch_target_o;
     wire [3 :0]     id2c_branch_sel_o;
     wire [4 :0]     id2c_rs_o;
     wire [4 :0]     id2c_rt_o;
@@ -235,6 +236,7 @@ module gemini (
     wire            id2c_is_j_imme_i;
     wire            id2c_is_jr_i;
     wire            id2c_is_ls_i;
+    wire [31:0]     id2c_branch_target_i;
     wire [3 :0]     id2c_branch_sel_i;
     wire [4 :0]     id2c_rs_i;
     wire [4 :0]     id2c_rt_i;
@@ -656,6 +658,7 @@ module gemini (
         .id2_is_j_imme_o    (id2c_is_j_imme_o   ),
         .id2_is_jr_o        (id2c_is_jr_o       ),
         .id2_is_ls_o        (id2c_is_ls_o       ),
+        .id2_branch_target_o(id2c_branch_target_o),
         .id2_branch_sel_o   (id2c_branch_sel_o  ),
         .id2_rs_o           (id2c_rs_o          ),
         .id2_rt_o           (id2c_rt_o          ),
@@ -693,6 +696,7 @@ module gemini (
         .id2_is_j_imme_i    (id2c_is_j_imme_i   ),
         .id2_is_jr_i        (id2c_is_jr_i       ),
         .id2_is_ls_i        (id2c_is_ls_i       ),
+        .id2_branch_target_i(id2c_branch_target_i),
         .id2_branch_sel_i   (id2c_branch_sel_i  ),
         .id2_rs_i           (id2c_rs_i          ),
         .id2_rt_i           (id2c_rt_i          ),
@@ -738,6 +742,8 @@ module gemini (
         .id2_is_j_imme_o    (id2p_is_j_imme_o   ),
         .id2_is_jr_o        (id2p_is_jr_o       ),
         .id2_is_ls_o        (id2p_is_ls_o       ),
+        .id2_branch_target_o(                   ),
+        .id2_branch_sel_o   (                   ),
         .id2_rs_o           (id2p_rs_o          ),
         .id2_rt_o           (id2p_rt_o          ),
         .id2_rd_o           (id2p_rd_o          ),
@@ -774,6 +780,8 @@ module gemini (
         .id2_is_j_imme_i    (id2p_is_j_imme_i   ),
         .id2_is_jr_i        (id2p_is_jr_i       ),
         .id2_is_ls_i        (id2p_is_ls_i       ),
+        .id2_branch_target_i(                   ),
+        .id2_branch_sel_i   (                   ),
         .id2_rs_i           (id2p_rs_i          ),
         .id2_rt_i           (id2p_rt_i          ),
         .id2_rd_i           (id2p_rd_i          ),
@@ -990,6 +998,7 @@ module gemini (
         .exception_pc_ena   (exception_pc_ena   ),
         .exception_pc       (exception_pc       ),
         .id_pc              (id2c_pc_i          ),
+        .id_branch_target   (id2c_branch_target_i),
         .pc                 (pc_cur_pc          ),
         .inst_rdata_1_ok    (inst_rdata_1_ok    ),
         .inst_rdata_2_ok    (inst_rdata_2_ok    ),
@@ -1193,6 +1202,7 @@ module gemini (
         .id2_is_j_imme      (id2c_is_j_imme_o   ),
         .id2_is_jr          (id2c_is_jr_o       ),
         .id2_is_ls          (id2c_is_ls_o       ),
+        .id2_branch_target  (id2c_branch_target_o),
         .id2_branch_sel     (id2c_branch_sel_o  ),
 
         .id2_pc             (id2c_pc_o          ),
@@ -1275,6 +1285,7 @@ module gemini (
         .id2_is_j_imme      (id2p_is_j_imme_o   ),
         .id2_is_jr          (id2p_is_jr_o       ),
         .id2_is_ls          (id2p_is_ls_o       ),
+        .id2_branch_target  (                   ),
         .id2_branch_sel     (                   ),
 
         .id2_pc             (id2p_pc_o          ),
