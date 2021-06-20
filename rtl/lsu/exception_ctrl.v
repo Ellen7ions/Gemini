@@ -40,8 +40,8 @@ module exception_ctrl (
     // from cp0
     input   wire [31:0]     r_cp0_epc,
     // update pc
-    output  reg             exception_pc_ena,
-    output  reg  [31:0]     exception_pc,
+    output  wire            exception_pc_ena,
+    output  wire [31:0]     exception_pc,
 
     // to cp0
     // update cp0
@@ -66,11 +66,12 @@ module exception_ctrl (
     
     assign exception_has_2  = exception_has_exp_2;
 
+    assign exception_pc_ena = exception_has_1 | exception_has_2;
+    assign exception_pc     = 
+        (exception_is_eret_1 | exception_is_eret_2) ? r_cp0_epc : 32'hbfc0_0380;
+
     always @(*) begin
         cp0_cls_exl         = 1'b0;
-
-        exception_pc_ena    = 1'b1;
-        exception_pc        = 32'hbfc0_0380;
 
         w_cp0_update_ena    = 1'b1;
         w_cp0_exccode       = 5'h00;
@@ -104,7 +105,6 @@ module exception_ctrl (
             end else if (exception_is_eret_1) begin
                 w_cp0_update_ena    = 1'b0;
                 cp0_cls_exl         = 1'b1;
-                exception_pc        = r_cp0_epc;
             end else if (exception_is_data_adel_1) begin
                 w_cp0_exccode   = 5'h04;
                 w_cp0_badvaddr_ena = 1'b1;
@@ -133,7 +133,6 @@ module exception_ctrl (
             end else if (exception_is_eret_2) begin
                 w_cp0_update_ena    = 1'b0;
                 cp0_cls_exl         = 1'b1;
-                exception_pc        = r_cp0_epc;
             end else if (exception_is_data_adel_2) begin
                 w_cp0_exccode       = 5'h04;
                 w_cp0_badvaddr_ena  = 1'b1;
@@ -145,7 +144,6 @@ module exception_ctrl (
             end
         end else begin
             flush_pipline       = 1'b0;
-            exception_pc_ena    = 1'b0;
             w_cp0_update_ena    = 1'b0;
         end
     end
