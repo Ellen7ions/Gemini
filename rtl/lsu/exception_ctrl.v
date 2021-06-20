@@ -68,7 +68,8 @@ module exception_ctrl (
             exception_is_data_adel_1    |        
             exception_is_data_ades_1    |        
             exception_is_overflow_1     |    
-            exception_is_ri_1           ;
+            exception_is_ri_1           |
+            exception_is_int_1          ;
     
     assign exception_has_2  =
             exception_is_eret_2         |     
@@ -94,75 +95,73 @@ module exception_ctrl (
         w_cp0_badvaddr_ena  = 1'b0;
         w_cp0_badvaddr      = 32'h0;
         flush_pipline       = 1'b1;
-        if (exception_is_interrupt) begin
-            w_cp0_exccode           = 5'h00;
-            w_cp0_bd                = in_delay_slot_1;
-            w_cp0_exl               = 1'b1;
-            w_cp0_epc               = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
-        end else begin
-            if (exception_has_1) begin
-                w_cp0_bd            = in_delay_slot_1;
-                w_cp0_exl           = 1'b1;
-                w_cp0_epc           = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
-                if (exception_is_inst_adel_1) begin
-                    w_cp0_exccode   = 5'h04;
-                    w_cp0_badvaddr_ena = 1'b1;
-                    w_cp0_badvaddr  = pc_1;
-                end else if (exception_is_ri_1) begin
-                    w_cp0_exccode   = 5'h0a;
-                end else if (exception_is_overflow_1) begin
-                    w_cp0_exccode   = 5'h0c;
-                end else if (exception_is_syscall_1) begin
-                    w_cp0_exccode   = 5'h08;
-                end else if (exception_is_break_1) begin
-                    w_cp0_exccode   = 5'h09;
-                end else if (exception_is_eret_1) begin
-                    w_cp0_update_ena    = 1'b0;
-                    cp0_cls_exl         = 1'b1;
-                    exception_pc        = r_cp0_epc;
-                end else if (exception_is_data_adel_1) begin
-                    w_cp0_exccode   = 5'h04;
-                    w_cp0_badvaddr_ena = 1'b1;
-                    w_cp0_badvaddr  = mem_badvaddr_1;
-                end else if (exception_is_data_ades_1) begin
-                    w_cp0_exccode   = 5'h05;
-                    w_cp0_badvaddr_ena = 1'b1;
-                    w_cp0_badvaddr  = mem_badvaddr_1;
-                end
-            end else if (exception_has_2) begin
-                w_cp0_bd            = in_delay_slot_2;
-                w_cp0_exl           = 1'b1;
-                w_cp0_epc           = in_delay_slot_2 ? pc_2 - 32'h4 : pc_2;
-                if (exception_is_inst_adel_2) begin
-                    w_cp0_exccode   = 5'h04;
-                    w_cp0_badvaddr_ena = 1'b1;
-                    w_cp0_badvaddr  = pc_2;
-                end else if (exception_is_ri_2) begin
-                    w_cp0_exccode   = 5'h0a;
-                end else if (exception_is_overflow_2) begin
-                    w_cp0_exccode   = 5'h0c;
-                end else if (exception_is_syscall_2) begin
-                    w_cp0_exccode   = 5'h08;
-                end else if (exception_is_break_2) begin
-                    w_cp0_exccode   = 5'h09;
-                end else if (exception_is_eret_2) begin
-                    w_cp0_update_ena    = 1'b0;
-                    cp0_cls_exl         = 1'b1;
-                    exception_pc        = r_cp0_epc;
-                end else if (exception_is_data_adel_2) begin
-                    w_cp0_exccode       = 5'h04;
-                    w_cp0_badvaddr_ena  = 1'b1;
-                    w_cp0_badvaddr      = mem_badvaddr_2;
-                end else if (exception_is_data_ades_2) begin
-                    w_cp0_exccode       = 5'h05;
-                    w_cp0_badvaddr_ena  = 1'b1;
-                    w_cp0_badvaddr      = mem_badvaddr_2;
-                end
-            end else begin
-                flush_pipline       = 1'b0;
-                exception_pc_ena    = 1'b0;
+        if (exception_has_1) begin
+            w_cp0_bd            = in_delay_slot_1;
+            w_cp0_exl           = 1'b1;
+            w_cp0_epc           = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
+            if (exception_is_int_1) begin
+                w_cp0_exccode           = 5'h00;
+                w_cp0_bd                = in_delay_slot_1;
+                w_cp0_exl               = 1'b1;
+                w_cp0_epc               = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
+            end else if (exception_is_inst_adel_1) begin
+                w_cp0_exccode   = 5'h04;
+                w_cp0_badvaddr_ena = 1'b1;
+                w_cp0_badvaddr  = pc_1;
+            end else if (exception_is_ri_1) begin
+                w_cp0_exccode   = 5'h0a;
+            end else if (exception_is_overflow_1) begin
+                w_cp0_exccode   = 5'h0c;
+            end else if (exception_is_syscall_1) begin
+                w_cp0_exccode   = 5'h08;
+            end else if (exception_is_break_1) begin
+                w_cp0_exccode   = 5'h09;
+            end else if (exception_is_eret_1) begin
                 w_cp0_update_ena    = 1'b0;
+                cp0_cls_exl         = 1'b1;
+                exception_pc        = r_cp0_epc;
+            end else if (exception_is_data_adel_1) begin
+                w_cp0_exccode   = 5'h04;
+                w_cp0_badvaddr_ena = 1'b1;
+                w_cp0_badvaddr  = mem_badvaddr_1;
+            end else if (exception_is_data_ades_1) begin
+                w_cp0_exccode   = 5'h05;
+                w_cp0_badvaddr_ena = 1'b1;
+                w_cp0_badvaddr  = mem_badvaddr_1;
             end
+        end else if (exception_has_2) begin
+            w_cp0_bd            = in_delay_slot_2;
+            w_cp0_exl           = 1'b1;
+            w_cp0_epc           = in_delay_slot_2 ? pc_2 - 32'h4 : pc_2;
+            if (exception_is_inst_adel_2) begin
+                w_cp0_exccode   = 5'h04;
+                w_cp0_badvaddr_ena = 1'b1;
+                w_cp0_badvaddr  = pc_2;
+            end else if (exception_is_ri_2) begin
+                w_cp0_exccode   = 5'h0a;
+            end else if (exception_is_overflow_2) begin
+                w_cp0_exccode   = 5'h0c;
+            end else if (exception_is_syscall_2) begin
+                w_cp0_exccode   = 5'h08;
+            end else if (exception_is_break_2) begin
+                w_cp0_exccode   = 5'h09;
+            end else if (exception_is_eret_2) begin
+                w_cp0_update_ena    = 1'b0;
+                cp0_cls_exl         = 1'b1;
+                exception_pc        = r_cp0_epc;
+            end else if (exception_is_data_adel_2) begin
+                w_cp0_exccode       = 5'h04;
+                w_cp0_badvaddr_ena  = 1'b1;
+                w_cp0_badvaddr      = mem_badvaddr_2;
+            end else if (exception_is_data_ades_2) begin
+                w_cp0_exccode       = 5'h05;
+                w_cp0_badvaddr_ena  = 1'b1;
+                w_cp0_badvaddr      = mem_badvaddr_2;
+            end
+        end else begin
+            flush_pipline       = 1'b0;
+            exception_pc_ena    = 1'b0;
+            w_cp0_update_ena    = 1'b0;
         end
     end
 
