@@ -20,6 +20,7 @@ module exception_ctrl (
     input   wire            exception_is_overflow_1,
     input   wire            exception_is_ri_1,
     input   wire            exception_is_int_1,
+    input   wire            exception_has_exp_1,
 
     input   wire [31:0]     pc_2,
     input   wire [31:0]     mem_badvaddr_2,
@@ -34,6 +35,7 @@ module exception_ctrl (
     input   wire            exception_is_overflow_2,
     input   wire            exception_is_ri_2,
     input   wire            exception_is_int_2,
+    input   wire            exception_has_exp_2,
 
     // from cp0
     input   wire [31:0]     r_cp0_epc,
@@ -60,26 +62,9 @@ module exception_ctrl (
     wire            exception_is_interrupt;
     assign exception_is_interrupt = exception_is_int_1;
 
-    assign exception_has_1  =
-            exception_is_eret_1         |     
-            exception_is_syscall_1      |    
-            exception_is_break_1        |    
-            exception_is_inst_adel_1    |        
-            exception_is_data_adel_1    |        
-            exception_is_data_ades_1    |        
-            exception_is_overflow_1     |    
-            exception_is_ri_1           |
-            exception_is_int_1          ;
+    assign exception_has_1  = exception_has_exp_1;
     
-    assign exception_has_2  =
-            exception_is_eret_2         |     
-            exception_is_syscall_2      |    
-            exception_is_break_2        |    
-            exception_is_inst_adel_2    |        
-            exception_is_data_adel_2    |        
-            exception_is_data_ades_2    |        
-            exception_is_overflow_2     |    
-            exception_is_ri_2           ;
+    assign exception_has_2  = exception_has_exp_2;
 
     always @(*) begin
         cp0_cls_exl         = 1'b0;

@@ -338,12 +338,14 @@ module gemini (
     // ex => mem
     wire            to_exc_is_data_adel;
     wire            to_exc_is_data_ades;
-    wire            exc_has_exception;
+    wire            exc_has_exception_o;
+    wire            exc_has_exception_i;
     wire            memc_has_exception_i;
     wire            memc_has_exception_o;
     wire            to_exp_is_data_adel;
     wire            to_exp_is_data_ades;
-    wire            exp_has_exception;
+    wire            exp_has_exception_o;
+    wire            exp_has_exception_i;
     wire            memp_has_exception_i;
     wire            memp_has_exception_o;
 
@@ -829,6 +831,7 @@ module gemini (
         .ex_is_overflow_o   (exc_is_overflow_o  ),
         .ex_is_ri_o         (exc_is_ri_o        ),
         .ex_is_int_o        (exc_is_int_o       ),
+        .ex_has_exception_o (exc_has_exception_o),
 
         .ex_w_reg_ena_o     (exc_w_reg_ena_o    ),
         .ex_w_reg_dst_o     (exc_w_reg_dst_o    ),
@@ -856,6 +859,7 @@ module gemini (
         .ex_is_overflow_i   (exc_is_overflow_i  ),
         .ex_is_ri_i         (exc_is_ri_i        ),
         .ex_is_int_i        (exc_is_int_i       ),
+        .ex_has_exception_i (exc_has_exception_i),
 
         .ex_w_reg_ena_i     (exc_w_reg_ena_i    ),
         .ex_w_reg_dst_i     (exc_w_reg_dst_i    ),
@@ -891,6 +895,7 @@ module gemini (
         .ex_is_overflow_o   (exp_is_overflow_o  ),
         .ex_is_ri_o         (exp_is_ri_o        ),
         .ex_is_int_o        (exp_is_int_o       ),
+        .ex_has_exception_o (exp_has_exception_o),
 
         .ex_w_reg_ena_o     (exp_w_reg_ena_o    ),
         .ex_w_reg_dst_o     (exp_w_reg_dst_o    ),
@@ -918,6 +923,7 @@ module gemini (
         .ex_is_overflow_i   (exp_is_overflow_i  ),
         .ex_is_ri_i         (exp_is_ri_i        ),
         .ex_is_int_i        (exp_is_int_i       ),
+        .ex_has_exception_i (exp_has_exception_i),
 
         .ex_w_reg_ena_i     (exp_w_reg_ena_i    ),
         .ex_w_reg_dst_i     (exp_w_reg_dst_i    ),
@@ -1408,7 +1414,7 @@ module gemini (
         .ex_lo_res          (exc_lo_res_o       ),
 
         // back from mem
-        .ex_has_exception   (exc_has_exception  ),
+        .ex_has_exception   (exc_has_exception_o),
         .to_ex_is_data_adel (to_exc_is_data_adel),
         .to_ex_is_data_ades (to_exc_is_data_ades),
         
@@ -1485,7 +1491,7 @@ module gemini (
         .ex_lo_res          (exp_lo_res_o       ),
         
         // back from mem
-        .ex_has_exception   (exp_has_exception  ),
+        .ex_has_exception   (exp_has_exception_o),
         .to_ex_is_data_adel (to_exp_is_data_adel),
         .to_ex_is_data_ades (to_exp_is_data_ades),
         
@@ -1519,7 +1525,7 @@ module gemini (
         .ex_rt_data         (exc_rt_data_o      ),
         .ex_ls_ena          (exc_ls_ena_o       ),
         .ex_ls_sel          (exc_ls_sel_o       ),
-        .ex_has_exception   (exc_has_exception  ),
+        .ex_has_exception   (exc_has_exception_o ),
         .memc_has_exception (memp_has_exception_o),
         .to_ex_is_data_adel (to_exc_is_data_adel),
         .to_ex_is_data_ades (to_exc_is_data_ades),
@@ -1547,6 +1553,7 @@ module gemini (
         .ex_mem_is_overflow  (exc_is_overflow_i  ),
         .ex_mem_is_ri        (exc_is_ri_i        ),
         .ex_mem_is_int       (exc_is_int_i       ),
+        .ex_mem_has_exception(exc_has_exception_i),
 
         .ex_mem_w_hilo_ena  (exc_w_hilo_ena_i   ),
         .ex_mem_hi_res      (exc_hi_res_i       ),
@@ -1583,8 +1590,8 @@ module gemini (
         .ex_rt_data         (exp_rt_data_o      ),
         .ex_ls_ena          (exp_ls_ena_o       ),
         .ex_ls_sel          (exp_ls_sel_o       ),
-        .ex_has_exception   (exc_has_exception  
-                            |exp_has_exception  ),
+        .ex_has_exception   (exc_has_exception_o  
+                            |exp_has_exception_o),
         .memc_has_exception (memc_has_exception_o),
         .to_ex_is_data_adel (to_exp_is_data_adel),
         .to_ex_is_data_ades (to_exp_is_data_ades),
@@ -1612,6 +1619,7 @@ module gemini (
         .ex_mem_is_overflow  (exp_is_overflow_i  ),
         .ex_mem_is_ri        (exp_is_ri_i        ),
         .ex_mem_is_int       (exp_is_int_i       ),
+        .ex_mem_has_exception(exp_has_exception_i),
 
         .ex_mem_w_hilo_ena  (exp_w_hilo_ena_i   ),
         .ex_mem_hi_res      (exp_hi_res_i       ),
@@ -1663,6 +1671,7 @@ module gemini (
         .exception_is_overflow_1    (exc_is_overflow_i      ),
         .exception_is_ri_1          (exc_is_ri_i            ),
         .exception_is_int_1         (exc_is_int_i           ),
+        .exception_has_exp_1        (exc_has_exception_i    ),
 
         .pc_2                       (exp_pc_i               ),
         .mem_badvaddr_2             (exp_alu_res_i          ),
@@ -1676,6 +1685,7 @@ module gemini (
         .exception_is_overflow_2    (exp_is_overflow_i      ),
         .exception_is_ri_2          (exp_is_ri_i            ),
         .exception_is_int_2         (exp_is_int_i           ),
+        .exception_has_exp_2        (exp_has_exception_i    ),
 
         .r_cp0_epc                  (cp0_epc            ),
 

@@ -38,6 +38,7 @@ module lsu (
     input   wire        ex_mem_is_overflow,
     input   wire        ex_mem_is_ri,
     input   wire        ex_mem_is_int,
+    input   wire        ex_mem_has_exception,
     
     input   wire [1 :0] ex_mem_w_hilo_ena,
     input   wire [31:0] ex_mem_hi_res,
@@ -80,16 +81,7 @@ module lsu (
     assign mem_w_cp0_addr    = ex_mem_w_cp0_addr;
     assign mem_w_cp0_data    = ex_mem_w_cp0_data;
 
-    assign mem_has_exception = 
-            ex_mem_is_eret      |
-            ex_mem_is_syscall   |
-            ex_mem_is_break     |
-            ex_mem_is_inst_adel |
-            ex_mem_is_data_adel |
-            ex_mem_is_data_ades |
-            ex_mem_is_overflow  |
-            ex_mem_is_ri        |
-            ex_mem_is_int       ;
+    assign mem_has_exception = ex_mem_has_exception;
 
     assign to_ex_is_data_adel   =
             ex_ls_ena & (

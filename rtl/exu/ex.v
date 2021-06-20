@@ -114,7 +114,6 @@ module ex (
     assign ex_is_int        = id2_is_int;
 
     assign ex_has_exception =
-            ex_in_delay_slot    |
             ex_is_eret          |
             ex_is_syscall       |
             ex_is_break         |

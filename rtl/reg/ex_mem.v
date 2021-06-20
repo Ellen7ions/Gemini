@@ -23,6 +23,7 @@ module ex_mem (
     input   wire            ex_is_overflow_o,
     input   wire            ex_is_ri_o,
     input   wire            ex_is_int_o,
+    input   wire            ex_has_exception_o,
 
     input   wire            ex_w_reg_ena_o,
     input   wire [4 :0]     ex_w_reg_dst_o,
@@ -50,6 +51,7 @@ module ex_mem (
     output  reg             ex_is_overflow_i,
     output  reg             ex_is_ri_i,
     output  reg             ex_is_int_i,
+    output  reg             ex_has_exception_i,
 
     output  reg             ex_w_reg_ena_i,
     output  reg  [4 :0]     ex_w_reg_dst_i,
@@ -89,6 +91,7 @@ module ex_mem (
             ex_is_data_ades_i   <= 1'b0             ;
             ex_is_int_i         <= 1'h0             ;
             ex_ls_addr_i        <= 32'h0            ;
+            ex_has_exception_i  <= 1'h0             ;
         end else if (!flush & !stall) begin
             ex_alu_res_i        <= ex_alu_res_o         ;
             ex_w_hilo_ena_i     <= ex_w_hilo_ena_o      ;
@@ -115,6 +118,7 @@ module ex_mem (
             ex_is_data_ades_i   <= ex_is_data_ades_o    ;
             ex_is_int_i         <= ex_is_int_o          ;
             ex_ls_addr_i        <= ex_ls_addr_o         ;
+            ex_has_exception_i  <= ex_has_exception_o   ;
         end
     end
     

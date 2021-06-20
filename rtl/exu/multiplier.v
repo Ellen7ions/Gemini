@@ -48,7 +48,7 @@ module multiplier (
                 sign    <= src_a[31] ^ src_b[31];
                 a_reg   <= src_a[31] ? ~src_a + 32'h1 : src_a;
                 b_reg   <= src_b[31] ? ~src_b + 32'h1 : src_b;
-            end else if (mul_sign & en) begin
+            end else if (~mul_sign & en) begin
                 sign    <= 1'b0;
                 a_reg   <= src_a;
                 b_reg   <= src_b;
