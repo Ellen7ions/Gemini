@@ -1519,17 +1519,7 @@ module gemini (
     );
 
     lsu memc (
-        .ex_pc              (exc_pc_i           ),
-        .ex_alu_res         (exc_alu_res_o      ),
-        .ex_ls_addr         (exc_ls_addr_o      ),
-        .ex_rt_data         (exc_rt_data_o      ),
-        .ex_ls_ena          (exc_ls_ena_o       ),
-        .ex_ls_sel          (exc_ls_sel_o       ),
-        .ex_has_exception   (exc_has_exception_o ),
-        .memc_has_exception (memp_has_exception_o),
-        .to_ex_is_data_adel (to_exc_is_data_adel),
-        .to_ex_is_data_ades (to_exc_is_data_ades),
-
+        .ex_mem_pc          (exc_pc_i           ),
         .ex_mem_alu_res     (exc_alu_res_i      ),
         .ex_mem_ls_addr     (exc_ls_addr_i      ),
         .ex_mem_rt_data     (exc_rt_data_i      ),
@@ -1576,26 +1566,11 @@ module gemini (
         .mem_hi_res         (memc_hi_res_o      ),
         .mem_lo_res         (memc_lo_res_o      ),
 
-        .data_ram_en        (memc_data_ena      ),
-        .data_ram_wen       (memc_data_wea      ),
-        .data_ram_addr      (memc_data_waddr    ),
-        .data_ram_wdata     (memc_data_wdata    ),
         .data_ram_rdata     (memc_data_rdata    )
     );
 
     lsu memp (
-        .ex_pc              (exp_pc_i           ),
-        .ex_alu_res         (exp_alu_res_o      ),
-        .ex_ls_addr         (exp_ls_addr_o      ),
-        .ex_rt_data         (exp_rt_data_o      ),
-        .ex_ls_ena          (exp_ls_ena_o       ),
-        .ex_ls_sel          (exp_ls_sel_o       ),
-        .ex_has_exception   (exc_has_exception_o  
-                            |exp_has_exception_o),
-        .memc_has_exception (memc_has_exception_o),
-        .to_ex_is_data_adel (to_exp_is_data_adel),
-        .to_ex_is_data_ades (to_exp_is_data_ades),
-
+        .ex_mem_pc          (exp_pc_i           ),
         .ex_mem_alu_res     (exp_alu_res_i      ),
         .ex_mem_ls_addr     (exp_ls_addr_i      ),
         .ex_mem_rt_data     (exp_rt_data_i      ),
@@ -1642,19 +1617,37 @@ module gemini (
         .mem_hi_res         (memp_hi_res_o      ),
         .mem_lo_res         (memp_lo_res_o      ),
 
-        .data_ram_en        (memp_data_ena      ),
-        .data_ram_wen       (memp_data_wea      ),
-        .data_ram_addr      (memp_data_waddr    ),
-        .data_ram_wdata     (memp_data_wdata    ),
         .data_ram_rdata     (memp_data_rdata    )
     );
 
-    assign data_ena     = memc_data_ena     | memp_data_ena;
-    assign data_wea     = memc_data_wea     | memp_data_wea;
-    assign data_waddr   = memc_data_waddr   | memp_data_waddr;
-    assign data_wdata   = memc_data_wdata   | memp_data_wdata;
-    assign memc_data_rdata  = data_rdata;
-    assign memp_data_rdata  = data_rdata;
+    mem_ctrl mem_ctrl0 (
+        .exc_ls_ena                 (exc_ls_ena_o           ),         
+        .exc_ls_addr                (exc_ls_addr_o          ),                
+        .exc_rt_data                (exc_rt_data_o          ),                
+        .exc_ls_sel                 (exc_ls_sel_o           ),         
+        .exc_has_exception          (exc_has_exception_o    ),                  
+        .exc_is_data_adel           (to_exc_is_data_adel    ),                   
+        .exc_is_data_ades           (to_exc_is_data_ades    ),        
+        
+        .exp_ls_ena                 (exp_ls_ena_o           ),
+        .exp_ls_addr                (exp_ls_addr_o          ),    
+        .exp_rt_data                (exp_rt_data_o          ),    
+        .exp_ls_sel                 (exp_ls_sel_o           ),
+        .exp_has_exception          (exp_has_exception_o    ),        
+        .exp_is_data_adel           (to_exp_is_data_adel    ),        
+        .exp_is_data_ades           (to_exp_is_data_ades    ),          
+        
+        .memc_has_exception         (memc_has_exception_o   ),        
+        .memp_has_exception         (memp_has_exception_o   ),        
+        .memc_r_data                (memc_data_rdata        ),    
+        .memp_r_data                (memp_data_rdata        ),    
+        
+        .data_ram_en                (data_ena               ),    
+        .data_ram_wen               (data_wea               ),    
+        .data_ram_addr              (data_waddr             ),    
+        .data_ram_wdata             (data_wdata             ),    
+        .data_ram_rdata             (data_rdata             )             
+    );
 
     exception_ctrl e_ctrl (
         .clk                        (clk                    ),

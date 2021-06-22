@@ -25,24 +25,22 @@ module branch_ctrl (
     // wire blez_check     = $signed(id2_rs_data) <= $signed(32'h0      );
     // wire bltz_check     = $signed(id2_rs_data) <  $signed(32'h0      );
 
-    wire beq_check      = !(id2_rs_data ^ id2_rt_data);
-    wire bne_check      = |(id2_rs_data ^ id2_rt_data);
+    wire beq_check      = id2_rs_data == id2_rt_data;
+    wire bne_check      = id2_rs_data != id2_rt_data;
     wire bgez_check     = ~id2_rs_data[31];
     wire bgtz_check     = ~id2_rs_data[31] & |(id2_rs_data[30:0]);
     wire blez_check     = id2_rs_data[31] | !(|id2_rs_data);
     wire bltz_check     = id2_rs_data[31];
 
     assign take_branch  =
-            id2_is_branch & (
-                (!(id2_branch_sel ^ `BRANCH_SEL_BEQ     )) & (beq_check  )    |
-                (!(id2_branch_sel ^ `BRANCH_SEL_BNE     )) & (bne_check  )    |
-                (!(id2_branch_sel ^ `BRANCH_SEL_BGEZ    )) & (bgez_check )    |
-                (!(id2_branch_sel ^ `BRANCH_SEL_BGTZ    )) & (bgtz_check )    |
-                (!(id2_branch_sel ^ `BRANCH_SEL_BLEZ    )) & (blez_check )    |
-                (!(id2_branch_sel ^ `BRANCH_SEL_BLTZ    )) & (bltz_check )    |
-                (!(id2_branch_sel ^ `BRANCH_SEL_BGEZAL  )) & (bgez_check )    |
-                (!(id2_branch_sel ^ `BRANCH_SEL_BLTZAL  )) & (bltz_check )    
-            );
+            (!(id2_branch_sel ^ `BRANCH_SEL_BEQ     )) & (beq_check  )  & id2_is_branch  |
+            (!(id2_branch_sel ^ `BRANCH_SEL_BNE     )) & (bne_check  )  & id2_is_branch  |
+            (!(id2_branch_sel ^ `BRANCH_SEL_BGEZ    )) & (bgez_check )  & id2_is_branch  |
+            (!(id2_branch_sel ^ `BRANCH_SEL_BGTZ    )) & (bgtz_check )  & id2_is_branch  |
+            (!(id2_branch_sel ^ `BRANCH_SEL_BLEZ    )) & (blez_check )  & id2_is_branch  |
+            (!(id2_branch_sel ^ `BRANCH_SEL_BLTZ    )) & (bltz_check )  & id2_is_branch  |
+            (!(id2_branch_sel ^ `BRANCH_SEL_BGEZAL  )) & (bgez_check )  & id2_is_branch  |
+            (!(id2_branch_sel ^ `BRANCH_SEL_BLTZAL  )) & (bltz_check )  & id2_is_branch  ;
     
     assign take_j_imme  = id2_is_j_imme;
     
