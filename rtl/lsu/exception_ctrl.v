@@ -55,7 +55,7 @@ module exception_ctrl (
 
     output  reg             cp0_cls_exl,
 
-    output  reg             flush_pipline
+    output  wire            flush_pipline
 );
     wire            exception_has_1;
     wire            exception_has_2;
@@ -66,6 +66,7 @@ module exception_ctrl (
     
     assign exception_has_2  = exception_has_exp_2;
 
+    assign flush_pipline    = exception_has_1 | exception_has_2;
     assign exception_pc_ena = exception_has_1 | exception_has_2;
     assign exception_pc     = 
         (exception_is_eret_1 | exception_is_eret_2) ? r_cp0_epc : 32'hbfc0_0380;
@@ -80,7 +81,6 @@ module exception_ctrl (
         w_cp0_epc           = 32'h0;
         w_cp0_badvaddr_ena  = 1'b0;
         w_cp0_badvaddr      = 32'h0;
-        flush_pipline       = 1'b1;
         if (exception_has_1) begin
             w_cp0_bd            = in_delay_slot_1;
             w_cp0_exl           = 1'b1;
@@ -143,7 +143,6 @@ module exception_ctrl (
                 w_cp0_badvaddr      = mem_badvaddr_2;
             end
         end else begin
-            flush_pipline       = 1'b0;
             w_cp0_update_ena    = 1'b0;
         end
     end
