@@ -10,7 +10,7 @@ If you find Castor and Pollux, you find me.
 
 #### 6-22
 
-Optimize Timing, **100mhz** again ~
+Optimize Timing, **100mhz** again ~, but it's ubstable...
 
 #### 6-20
 
