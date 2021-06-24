@@ -32,7 +32,7 @@ module mmu_inst #(
     );
 
     mmu_exception mmu_exception0 (
-        .en                     (en                 ),
+        .en                     (en & ~direct_psyena),
         .ls_sel                 (1'b0               ),
         .found                  (s_found            ),
         .v                      (s_v                ),

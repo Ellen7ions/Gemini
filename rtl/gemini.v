@@ -2148,6 +2148,7 @@ module gemini (
     wbu wbc (
         .stall              (wb_stall           ),
         .mem_has_exception  (memc_has_exception_i),
+        .mem_refetch        (memc_is_refetch_i  ),
         .mem_pc             (memc_pc_i          ),
         .mem_alu_res        (memc_alu_res_i     ),
         .mem_w_reg_ena      (memc_w_reg_ena_i   ),
@@ -2164,6 +2165,7 @@ module gemini (
         .stall              (wb_stall           ),
         .mem_has_exception  (memp_has_exception_i|
                              memc_has_exception_i),
+        .mem_refetch        (memc_is_refetch_i  ),
         .mem_pc             (memp_pc_i          ),
         .mem_alu_res        (memp_alu_res_i     ),
         .mem_w_reg_ena      (memp_w_reg_ena_i   ),

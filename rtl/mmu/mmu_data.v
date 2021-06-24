@@ -81,7 +81,7 @@ module mmu_data #(
     );
 
     mmu_exception mmu_exception0 (
-        .en                     (en                 ),
+        .en                     (en & ~direct_psyena),
         .ls_sel                 (ls_sel             ),
         .found                  (s_found            ),
         .v                      (s_v                ),

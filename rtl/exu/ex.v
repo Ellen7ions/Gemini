@@ -161,12 +161,7 @@ module ex (
             ex_is_overflow      |
             ex_is_int           |
             ex_is_i_refill_tlbl |
-            ex_is_i_invalid_tlbl|
-            ex_is_d_refill_tlbl |
-            ex_is_d_invalid_tlbl|
-            ex_is_d_refill_tlbs |
-            ex_is_d_invalid_tlbs|
-            ex_is_modify        ;
+            ex_is_i_invalid_tlbl;
 
     assign fw_hi        =
             ({32{

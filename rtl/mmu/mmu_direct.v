@@ -7,7 +7,7 @@ module mmu_direct (
     output  wire [31:0] direct_psyaddr
 );
     assign direct_psyena    =
-        vaddr[31:28] == 4'h8 || vaddr[31:28] == 4'ha;
+        vaddr[31:28] == 4'h8 || vaddr[31:28] == 4'ha || vaddr[31:28] == 4'h9 || vaddr[31:28] == 4'hb;
     assign direct_psyaddr   =
         {3'b0, vaddr[28:0]};
 endmodule
