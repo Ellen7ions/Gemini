@@ -98,7 +98,7 @@ module mmu_data #(
     assign s_odd        = vaddr[12];
 
     assign psyaddr_ena  =
-        psyaddr_ena | s_found & s_v;
+        direct_psyena | s_found & s_v;
 
     assign psyaddr =
         {32{direct_psyena}} & direct_psyaddr |
