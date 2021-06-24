@@ -17,6 +17,11 @@ module cp0 (
 
     // show
     output  wire [31:0] epc,
+    output  wire [31:0] index,
+    output  wire [31:0] entryhi,
+    output  wire [31:0] entrylo0,
+    output  wire [31:0] entrylo1,
+
     output  wire        cp0_has_int,
 
     input   wire        cp0_cls_exl,
@@ -27,20 +32,31 @@ module cp0 (
     input   wire        w_cp0_exl,
     input   wire [31:0] w_cp0_epc,
     input   wire        w_cp0_badvaddr_ena,
-    input   wire [31:0] w_cp0_badvaddr
+    input   wire [31:0] w_cp0_badvaddr,
+
+    input   wire        w_cp0_mmu_ena,
+    input   wire [31:0] w_cp0_Index,
+    input   wire [31:0] w_cp0_EntryHi,
+    input   wire [31:0] w_cp0_EntryLo0,
+    input   wire [31:0] w_cp0_EntryLo1
 );
 
-    // no rst
     reg [31:0]  BadVAddr;    // can't be written from software
     reg [32:0]  Count;
     reg [31:0]  Compare;
     reg [31:0]  EPC;
-    
-    // rst
     reg [31:0]  Status;
     reg [31:0]  Cause;
+    reg [31:0]  Index;
+    reg [31:0]  EntryHi;
+    reg [31:0]  EntryLo0;
+    reg [31:0]  EntryLo1;
 
     assign epc          = EPC;
+    assign index        = Index;
+    assign entryhi      = EntryHi;
+    assign entrylo0     = EntryLo0;
+    assign entrylo1     = EntryLo1;
     assign cp0_has_int  = ((Cause[15:8] & Status[15:8]) != 8'h0) & Status[0] & ~Status[1];
 
     always @(posedge clk) begin
@@ -48,8 +64,9 @@ module cp0 (
         Cause[15:10]<= {Cause[30] | interrupt[5], interrupt[4: 0]};
 
         if (rst) begin
-            Status  <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
-            Cause   <= 32'd0;
+            Status      <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
+            Cause       <= 32'd0;
+            Index       <= 32'd0;
         end else begin
             if (Compare != 32'h0 && Count[32:1] == Compare)
                 Cause[30]   <= 1'b1;
@@ -65,6 +82,13 @@ module cp0 (
                 EPC         <= w_cp0_epc;
                 if (w_cp0_badvaddr_ena)
                     BadVAddr<= w_cp0_badvaddr;
+            end
+
+            if (w_cp0_mmu_ena) begin
+                Index       <= w_cp0_Index;
+                EntryHi     <= w_cp0_EntryHi;
+                EntryLo0    <= w_cp0_EntryLo0;
+                EntryLo1    <= w_cp0_EntryLo1;
             end
 
             if (w_ena) begin
@@ -92,6 +116,22 @@ module cp0 (
                     EPC             <= w_data;
                 end
 
+                {5'd0, 3'd0}: begin
+                    Index           <= w_data[3 :0];
+                end
+
+                {5'd2, 3'd0}: begin
+                    EntryLo0        <= w_data;
+                end
+
+                {5'd3, 3'd0}: begin
+                    EntryLo1        <= w_data;
+                end
+
+                {5'd10, 3'd0}: begin
+                    EntryHi         <= w_data;
+                end
+
                 default: begin
                     
                 end
@@ -101,46 +141,58 @@ module cp0 (
     end
 
     always @(*) begin
-        if (rst) begin
-            r_data = 32'd0;
-        end else begin
-            if (r_ena) begin
-                if (w_ena & r_addr == w_addr) begin
-                    r_data = w_data;
-                end else begin
-                    case (r_addr)
-                    {5'd8, 3'd0}: begin
-                        r_data      = BadVAddr;
-                    end
-
-                    {5'd11, 3'd0}: begin
-                        r_data      = Compare;
-                    end
-
-                    {5'd9, 3'd0}: begin
-                        r_data      = Count;
-                    end
-
-                    {5'd12, 3'd0}: begin
-                        r_data      = Status;
-                    end
-
-                    {5'd13, 3'd0}: begin
-                        r_data      = Cause;
-                    end
-
-                    {5'd14, 3'd0}: begin
-                        r_data      = EPC; 
-                    end
-
-                    default: begin
-                        r_data      = 32'd0;
-                    end
-                    endcase 
-                end
+        if (r_ena) begin
+            if (w_ena & r_addr == w_addr) begin
+                r_data = w_data;
             end else begin
-                r_data = 32'd0;
+                case (r_addr)
+                {5'd8, 3'd0}: begin
+                    r_data      = BadVAddr;
+                end
+
+                {5'd11, 3'd0}: begin
+                    r_data      = Compare;
+                end
+
+                {5'd9, 3'd0}: begin
+                    r_data      = Count;
+                end
+
+                {5'd12, 3'd0}: begin
+                    r_data      = Status;
+                end
+
+                {5'd13, 3'd0}: begin
+                    r_data      = Cause;
+                end
+
+                {5'd14, 3'd0}: begin
+                    r_data      = EPC; 
+                end
+
+                {5'd0, 3'd0}: begin
+                    r_data      = Index;
+                end
+
+                {5'd2, 3'd0}: begin
+                    r_data      = EntryLo0;
+                end
+
+                {5'd3, 3'd0}: begin
+                    r_data      = EntryLo1;
+                end
+
+                {5'd10, 3'd0}: begin
+                    r_data       = EntryHi; 
+                end
+
+                default: begin
+                    r_data      = 32'd0;
+                end
+                endcase 
             end
+        end else begin
+            r_data = 32'd0;
         end
     end
 endmodule

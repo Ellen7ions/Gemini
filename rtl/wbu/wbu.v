@@ -3,6 +3,7 @@
 module wbu (
     input   wire        stall,
     input   wire        mem_has_exception,
+    input   wire        mem_refetch,
     input   wire [31:0] mem_pc,
     input   wire [31:0] mem_alu_res,
     input   wire        mem_w_reg_ena,
@@ -16,6 +17,7 @@ module wbu (
 );
     assign wb_pc            = mem_pc;
     assign wb_w_reg_ena     = 
+            ~mem_refetch        &
             ~mem_has_exception  &
             ~stall              &
             mem_w_reg_ena       &

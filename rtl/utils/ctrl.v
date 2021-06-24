@@ -12,6 +12,9 @@ module ctrl (
     input   wire    exc_stall_req,
     input   wire    exp_stall_req,
     input   wire    exception_flush,
+    input   wire    exc_tlb_stall_req,
+    input   wire    exp_tlb_stall_req,
+    input   wire    mem_refetch,
     
     output  wire    pc_stall,
     output  wire    pc_flush,
@@ -31,9 +34,9 @@ module ctrl (
     output  wire    mem_wb_stall,
     output  wire    wb_stall
 );
-    assign ii_id2_exception_flush = exception_flush;
-    assign id2_ex_exception_flush = exception_flush;
-    assign ex_mem_exception_flush = exception_flush;
+    assign ii_id2_exception_flush = exception_flush | mem_refetch;
+    assign id2_ex_exception_flush = exception_flush | mem_refetch;
+    assign ex_mem_exception_flush = exception_flush | mem_refetch;
     assign mem_wb_exception_flush = 1'b0;
 
     assign pc_stall     =
@@ -43,25 +46,25 @@ module ctrl (
             1'b0;
     
     assign fifo_flush   =
-            b_ctrl_flush_req & (~forwardc_stall_req & ~forwardp_stall_req) | exception_flush;
+            b_ctrl_flush_req & (~forwardc_stall_req & ~forwardp_stall_req) | exception_flush | mem_refetch;
     
     assign issue_stall  =
-            d_cache_stall_req | forwardc_stall_req | forwardp_stall_req | exc_stall_req | exp_stall_req;
+            d_cache_stall_req | forwardc_stall_req | forwardp_stall_req | exc_stall_req | exp_stall_req | exc_tlb_stall_req | exp_tlb_stall_req;
     
     assign ii_id2_flush =
-            b_ctrl_flush_req | exception_flush;
+            b_ctrl_flush_req | exception_flush | mem_refetch;
     
     assign ii_id2_stall =
-            issue_stall | (pc_stall & fifo_flush) | forwardc_stall_req | forwardp_stall_req | exc_stall_req | exp_stall_req;
+            issue_stall | (pc_stall & fifo_flush) | forwardc_stall_req | forwardp_stall_req | exc_stall_req | exp_stall_req | exc_tlb_stall_req | exp_tlb_stall_req;
     
     assign id2_ex_flush =
-            b_ctrl_flush_req | forwardc_flush_req | forwardp_flush_req | exception_flush;
+            b_ctrl_flush_req | forwardc_flush_req | forwardp_flush_req | exception_flush | mem_refetch;
 
     assign id2_ex_stall =
-            d_cache_stall_req | exc_stall_req | exp_stall_req;
+            d_cache_stall_req | exc_stall_req | exp_stall_req | exc_tlb_stall_req | exp_tlb_stall_req;
     
     assign ex_mem_flush =
-            exception_flush;
+            exception_flush | exc_tlb_stall_req | exp_tlb_stall_req | mem_refetch;
 
     assign ex_mem_stall =
             d_cache_stall_req | exc_stall_req | exp_stall_req;
@@ -70,8 +73,8 @@ module ctrl (
             1'b0;
     
     assign mem_wb_stall =
-            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush);
+            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush & ~mem_refetch);
 
     assign wb_stall     =
-            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush);
+            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush & ~mem_refetch);
 endmodule

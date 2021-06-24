@@ -29,6 +29,16 @@ module lsu (
     input   wire        ex_mem_is_overflow,
     input   wire        ex_mem_is_ri,
     input   wire        ex_mem_is_int,
+    input   wire        ex_mem_is_i_refill_tlbl,
+    input   wire        ex_mem_is_i_invalid_tlbl,
+    input   wire        ex_mem_is_d_refill_tlbl,
+    input   wire        ex_mem_is_d_invalid_tlbl,
+    input   wire        ex_mem_is_d_refill_tlbs,
+    input   wire        ex_mem_is_d_invalid_tlbs,
+    input   wire        ex_mem_is_modify,
+    input   wire        ex_mem_is_refetch,
+    input   wire        ex_mem_is_tlbr,
+    input   wire        ex_mem_is_tlbwi,
     input   wire        ex_mem_has_exception,
     
     input   wire [1 :0] ex_mem_w_hilo_ena,
@@ -46,7 +56,9 @@ module lsu (
     output  wire [7 :0] mem_w_cp0_addr,
     output  wire [31:0] mem_w_cp0_data,
 
+    output  wire        mem_refetch,
     output  wire        mem_has_exception,
+    output  wire        cls_refetch,
 
     output  wire [1 :0] mem_w_hilo_ena,
     output  wire [31:0] mem_hi_res,
@@ -68,6 +80,8 @@ module lsu (
     assign mem_w_cp0_data    = ex_mem_w_cp0_data;
 
     assign mem_has_exception = ex_mem_has_exception;
+    assign mem_refetch       = ex_mem_is_refetch;
+    assign cls_refetch       = ex_mem_is_tlbr | ex_mem_is_tlbwi;
     
     always @(*) begin
         case ({ex_mem_ls_ena, ex_mem_ls_sel})

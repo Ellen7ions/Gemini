@@ -7,6 +7,7 @@ module mem_wb (
     input   wire        exception_flush,
     input   wire        stall,
     input   wire        mem_has_exception_o,
+    input   wire        mem_refetch_o,
     input   wire [31:0] mem_pc_o,
     input   wire [31:0] mem_alu_res_o,
     input   wire        mem_w_reg_ena_o,
@@ -19,6 +20,7 @@ module mem_wb (
     input   wire [31:0] mem_lo_res_o,
 
     output  reg         mem_has_exception_i,
+    output  reg         mem_refetch_i,
     output  reg  [31:0] mem_pc_i,
     output  reg  [31:0] mem_alu_res_i,
     output  reg         mem_w_reg_ena_i,
@@ -43,6 +45,7 @@ module mem_wb (
             mem_lo_res_i        <= 32'h0                ;
             mem_pc_i            <= 32'h0                ;
             mem_has_exception_i <= 1'h0                 ;
+            mem_refetch_i       <= 1'b0                 ;
         end else if (!flush & !stall) begin
             mem_alu_res_i       <= mem_alu_res_o        ;
             mem_w_reg_ena_i     <= mem_w_reg_ena_o      ;
@@ -54,6 +57,7 @@ module mem_wb (
             mem_lo_res_i        <= mem_lo_res_o         ;
             mem_pc_i            <= mem_pc_o             ;
             mem_has_exception_i <= mem_has_exception_o  ;
+            mem_refetch_i       <= mem_refetch_o        ;
         end
     end
     

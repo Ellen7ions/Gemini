@@ -16,6 +16,17 @@ module ex (
     input   wire            id2_is_ri,
     input   wire            id2_is_int,
     input   wire            id2_is_check_ov,
+    input   wire            id2_is_i_refill_tlbl,
+    input   wire            id2_is_i_invalid_tlbl,
+    input   wire            id2_is_refetch,
+    input   wire            mmu_is_d_refill_tlbl,
+    input   wire            mmu_is_d_refill_tlbs,
+    input   wire            mmu_is_d_invalid_tlbl,
+    input   wire            mmu_is_d_invalid_tlbs,
+    input   wire            mmu_is_modify,
+    input   wire            id2_is_tlbp,
+    input   wire            id2_is_tlbr,
+    input   wire            id2_is_tlbwi,
 
     // addr signals
     input   wire [4 :0]     id2_rd,
@@ -83,6 +94,18 @@ module ex (
     output  wire            ex_is_overflow,
     output  wire            ex_is_ri,
     output  wire            ex_is_int,
+    output  wire            ex_is_i_refill_tlbl,
+    output  wire            ex_is_i_invalid_tlbl,
+    output  wire            ex_is_d_refill_tlbl,
+    output  wire            ex_is_d_invalid_tlbl,
+    output  wire            ex_is_d_refill_tlbs,
+    output  wire            ex_is_d_invalid_tlbs,
+    output  wire            ex_is_modify,
+    output  wire            ex_is_refetch,
+    output  wire            ex_is_tlbp,
+    output  wire            ex_is_tlbr,
+    output  wire            ex_is_tlbwi,
+    output  wire            ex_tlb_stall_req,
 
     output  wire [31:0]     ex_pc,
     output  wire [31:0]     ex_rt_data,
@@ -113,6 +136,20 @@ module ex (
     assign ex_is_overflow   = id2_is_check_ov & alu_overflow;
     assign ex_is_int        = id2_is_int;
 
+    assign ex_is_i_refill_tlbl  = id2_is_i_refill_tlbl;
+    assign ex_is_i_invalid_tlbl = id2_is_i_invalid_tlbl;
+    assign ex_is_d_refill_tlbl  = mmu_is_d_refill_tlbl;
+    assign ex_is_d_invalid_tlbl = mmu_is_d_refill_tlbs;
+    assign ex_is_d_refill_tlbs  = mmu_is_d_invalid_tlbl;
+    assign ex_is_d_invalid_tlbs = mmu_is_d_invalid_tlbs;
+    assign ex_is_modify         = mmu_is_modify;
+    assign ex_is_refetch        = id2_is_refetch;
+
+    assign ex_is_tlbp           = id2_is_tlbp;
+    assign ex_is_tlbr           = id2_is_tlbr;
+    assign ex_is_tlbwi          = id2_is_tlbwi;
+    assign ex_tlb_stall_req     = id2_is_tlbwi | id2_is_tlbr | id2_is_tlbp;
+
     assign ex_has_exception =
             ex_is_eret          |
             ex_is_syscall       |
@@ -122,7 +159,14 @@ module ex (
             ex_is_data_ades     |
             ex_is_ri            |
             ex_is_overflow      |
-            ex_is_int           ;
+            ex_is_int           |
+            ex_is_i_refill_tlbl |
+            ex_is_i_invalid_tlbl|
+            ex_is_d_refill_tlbl |
+            ex_is_d_invalid_tlbl|
+            ex_is_d_refill_tlbs |
+            ex_is_d_invalid_tlbs|
+            ex_is_modify        ;
 
     assign fw_hi        =
             ({32{

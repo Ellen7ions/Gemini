@@ -23,8 +23,14 @@ module idu_2 (
     input  wire             id1_is_j_imme,
     input  wire             id1_is_jr,
     input  wire             id1_is_ls,
+    input  wire             id1_is_tlbp,
+    input  wire             id1_is_tlbr,
+    input  wire             id1_is_tlbwi,
     input  wire             id1_in_delay_slot,
     input  wire             id1_inst_adel,
+    input  wire             id1_is_i_refill_tlbl,
+    input  wire             id1_is_i_invalid_tlbl,
+    input  wire             id1_is_refetch,
 
     input  wire [2 :0]      forward_rs,
     input  wire [2 :0]      forward_rt,
@@ -58,8 +64,14 @@ module idu_2 (
     output wire             id2_is_j_imme,
     output wire             id2_is_jr,
     output wire             id2_is_ls,
+    output wire             id2_is_tlbp,
+    output wire             id2_is_tlbr,
+    output wire             id2_is_tlbwi,
     output wire [31:0]      id2_branch_target,
     output wire [3 :0]      id2_branch_sel,
+    output wire             id2_is_i_refill_tlbl,
+    output wire             id2_is_i_invalid_tlbl,
+    output wire             id2_is_refetch,
 
     // addr signals
     output wire [4 :0]      id2_rs,
@@ -277,10 +289,16 @@ module idu_2 (
             op_code_is_special  & func_code_is_sub  |
             op_code_is_addi; 
 
-    assign id2_is_branch    = id1_is_branch;    
-    assign id2_is_j_imme    = id1_is_j_imme;    
-    assign id2_is_jr        = id1_is_jr;
-    assign id2_is_ls        = id1_is_ls;
+    assign id2_is_branch        = id1_is_branch;    
+    assign id2_is_j_imme        = id1_is_j_imme;    
+    assign id2_is_jr            = id1_is_jr;
+    assign id2_is_ls            = id1_is_ls;
+    assign id2_is_tlbp          = id1_is_tlbp;
+    assign id2_is_tlbr          = id1_is_tlbr;
+    assign id2_is_tlbwi         = id1_is_tlbwi;
+    assign id2_is_i_refill_tlbl = id1_is_i_refill_tlbl;
+    assign id2_is_i_invalid_tlbl= id1_is_i_invalid_tlbl;
+    assign id2_is_refetch       = id1_is_refetch;
 
     assign id2_pc           = id1_pc;
     assign id2_rs           = id1_rs;            

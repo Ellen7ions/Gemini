@@ -9,6 +9,7 @@ module mem_ctrl (
     input   wire  [31:0]    exc_rt_data,
     input   wire  [3 :0]    exc_ls_sel,
     input   wire            exc_has_exception,
+    input   wire            exc_refetch,
     output  wire            exc_is_data_adel,
     output  wire            exc_is_data_ades,
 
@@ -62,8 +63,8 @@ module mem_ctrl (
         );
 
     assign data_ram_en  =
-        exc_ls_ena & ~exc_has_exception & ~memc_has_exception & ~memp_has_exception |
-        exp_ls_ena & ~exp_has_exception & ~exc_has_exception  & ~memc_has_exception & ~memp_has_exception ;
+        exc_ls_ena & ~exc_has_exception & ~memc_has_exception & ~memp_has_exception & ~exc_refetch |
+        exp_ls_ena & ~exp_has_exception & ~exc_has_exception  & ~memc_has_exception & ~memp_has_exception & ~exc_refetch ;
 
     assign data_ram_wen =
         {4{exc_ls_ena}} & (

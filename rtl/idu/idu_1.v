@@ -19,6 +19,9 @@ module idu_1 (
     output  wire            id1_is_jr,
     output  wire            id1_is_ls,
     output  wire            id1_is_cop0,
+    output  wire            id1_is_tlbp,
+    output  wire            id1_is_tlbr,
+    output  wire            id1_is_tlbwi,
 
     output  wire            id1_is_hilo
 );
@@ -255,6 +258,13 @@ module idu_1 (
                 func_code_is_mthi    |
                 func_code_is_mtlo    
             ));
+    
+    assign id1_is_tlbp  =
+        !(inst ^ {`COP0_OP_CODE, 1'b1, 19'h0, 6'b001_000});
+    assign id1_is_tlbr  =
+        !(inst ^ {`COP0_OP_CODE, 1'b1, 19'h0, 6'b000_001});
+    assign id1_is_tlbwi =
+        !(inst ^ {`COP0_OP_CODE, 1'b1, 19'h0, 6'b000_010});
 
     assign id1_w_reg_ena    = 
             !(op_code_is_special & func_code_is_div     )   &

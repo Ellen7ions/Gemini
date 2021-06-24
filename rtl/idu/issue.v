@@ -7,14 +7,17 @@ module issue (
     input   wire        rst,
     input   wire        stall,
 
-    input   wire [63:0] fifo_r_data_1,
+    input   wire [65:0] fifo_r_data_1,
     input   wire        fifo_r_data_1_ok,
-    input   wire [63:0] fifo_r_data_2,
+    input   wire [65:0] fifo_r_data_2,
     input   wire        fifo_r_data_2_ok,
 
     // pop fifo    
     output  reg         p_data_1,
     output  reg         p_data_2,
+
+    // from mem
+    input   wire        cls_refetch,
 
     // to iduc
     output  wire        id1_valid_1,
@@ -34,8 +37,14 @@ module issue (
     output  wire        id1_is_j_imme_1,
     output  wire        id1_is_jr_1,
     output  wire        id1_is_ls_1,
+    output  wire        id1_is_tlbp_1,
+    output  wire        id1_is_tlbr_1,
+    output  wire        id1_is_tlbwi_1,
     output  wire        id1_in_delay_slot_1,
     output  wire        id1_is_inst_adel_1,
+    output  wire        id1_is_i_refill_tlbl_1,
+    output  wire        id1_is_i_invalid_tlbl_1,
+    output  wire        id1_is_refetch_1,
 
     // to idup
     output  wire        id1_valid_2,
@@ -55,8 +64,14 @@ module issue (
     output  wire        id1_is_j_imme_2,
     output  wire        id1_is_jr_2,
     output  wire        id1_is_ls_2,
+    output  wire        id1_is_tlbp_2,
+    output  wire        id1_is_tlbr_2,
+    output  wire        id1_is_tlbwi_2,
     output  wire        id1_in_delay_slot_2,
-    output  wire        id1_is_inst_adel_2
+    output  wire        id1_is_inst_adel_2,
+    output  wire        id1_is_i_refill_tlbl_2,
+    output  wire        id1_is_i_invalid_tlbl_2,
+    output  wire        id1_is_refetch_2
 );
 
     // Test the performance of dual issue
@@ -72,6 +87,19 @@ module issue (
                 p_issue_counter <= p_issue_counter + 32'h1;
         end
     end
+
+    reg refetch;
+    wire update_refetch;
+    always @(posedge clk) begin
+        if (rst) begin
+            refetch <= 1'b0;
+        end else begin
+            refetch <= update_refetch;
+        end
+    end
+
+    assign update_refetch = 
+        refetch ? ~cls_refetch : id1_valid_1 & (id1_is_tlbr_1 | id1_is_tlbwi_1) | id1_valid_2 & (id1_is_tlbr_2 | id1_is_tlbwi_2);
 
     wire id1_is_hilo_1, id1_is_hilo_2;
     wire inst_jmp_1, inst_jmp_2;
@@ -118,51 +146,63 @@ module issue (
     assign id1_inst_1               = fifo_r_data_1[31: 0];
     assign id1_in_delay_slot_1      = 1'b0;
     assign id1_is_inst_adel_1       = id1_pc_1[1:0] != 2'b00;
+    assign id1_is_i_refill_tlbl_1   = fifo_r_data_1[65];
+    assign id1_is_i_invalid_tlbl_1  = fifo_r_data_1[64];
+    assign id1_is_refetch_1         = refetch;
 
     assign id1_valid_2              = p_data_2;
     assign id1_pc_2                 = fifo_r_data_2[63:32];
     assign id1_inst_2               = fifo_r_data_2[31: 0];
     assign id1_in_delay_slot_2      = inst_jmp_1;
     assign id1_is_inst_adel_2       = id1_pc_2[1:0] != 2'b00;
+    assign id1_is_i_refill_tlbl_2   = fifo_r_data_2[65];
+    assign id1_is_i_invalid_tlbl_2  = fifo_r_data_2[64];
+    assign id1_is_refetch_2         = refetch;
 
     idu_1 idc (
-        .inst           (id1_inst_1),
-        .id1_op_codes   (id1_op_codes_1),
+        .inst           (id1_inst_1     ),
+        .id1_op_codes   (id1_op_codes_1 ),
         .id1_func_codes (id1_func_codes_1),
-        .id1_rs         (id1_rs_1),
-        .id1_rt         (id1_rt_1),
-        .id1_rd         (id1_rd_1),
-        .id1_sa         (id1_sa_1),
+        .id1_rs         (id1_rs_1       ),
+        .id1_rt         (id1_rt_1       ),
+        .id1_rd         (id1_rd_1       ),
+        .id1_sa         (id1_sa_1       ),
         .id1_w_reg_ena  (id1_w_reg_ena_1),
         .id1_w_reg_dst  (id1_w_reg_dst_1),
-        .id1_imme       (id1_imme_1),
-        .id1_j_imme     (id1_j_imme_1),
+        .id1_imme       (id1_imme_1     ),
+        .id1_j_imme     (id1_j_imme_1   ),
         .id1_is_branch  (id1_is_branch_1),
         .id1_is_j_imme  (id1_is_j_imme_1),
-        .id1_is_jr      (id1_is_jr_1),
-        .id1_is_ls      (id1_is_ls_1),
-        .id1_is_hilo    (id1_is_hilo_1),
-        .id1_is_cop0    (id1_is_cop0_1)
+        .id1_is_jr      (id1_is_jr_1    ),
+        .id1_is_ls      (id1_is_ls_1    ),
+        .id1_is_hilo    (id1_is_hilo_1  ),
+        .id1_is_cop0    (id1_is_cop0_1  ),
+        .id1_is_tlbp    (id1_is_tlbp_1  ),
+        .id1_is_tlbr    (id1_is_tlbr_1  ),
+        .id1_is_tlbwi   (id1_is_tlbwi_1 )
     );
 
     idu_1 idp (
-        .inst           (id1_inst_2),
-        .id1_op_codes   (id1_op_codes_2),
+        .inst           (id1_inst_2     ),
+        .id1_op_codes   (id1_op_codes_2 ),
         .id1_func_codes (id1_func_codes_2),
-        .id1_rs         (id1_rs_2),
-        .id1_rt         (id1_rt_2),
-        .id1_rd         (id1_rd_2),
-        .id1_sa         (id1_sa_2),
+        .id1_rs         (id1_rs_2       ),
+        .id1_rt         (id1_rt_2       ),
+        .id1_rd         (id1_rd_2       ),
+        .id1_sa         (id1_sa_2       ),
         .id1_w_reg_ena  (id1_w_reg_ena_2),
         .id1_w_reg_dst  (id1_w_reg_dst_2),
-        .id1_imme       (id1_imme_2),
-        .id1_j_imme     (id1_j_imme_2),
+        .id1_imme       (id1_imme_2     ),
+        .id1_j_imme     (id1_j_imme_2   ),
         .id1_is_branch  (id1_is_branch_2),
         .id1_is_j_imme  (id1_is_j_imme_2),
-        .id1_is_jr      (id1_is_jr_2),
-        .id1_is_ls      (id1_is_ls_2),
-        .id1_is_hilo    (id1_is_hilo_2),
-        .id1_is_cop0    (id1_is_cop0_2)
+        .id1_is_jr      (id1_is_jr_2    ),
+        .id1_is_ls      (id1_is_ls_2    ),
+        .id1_is_hilo    (id1_is_hilo_2  ),
+        .id1_is_cop0    (id1_is_cop0_2  ),
+        .id1_is_tlbp    (id1_is_tlbp_2  ),
+        .id1_is_tlbr    (id1_is_tlbr_2  ),
+        .id1_is_tlbwi   (id1_is_tlbwi_2 )
     );
 
 endmodule

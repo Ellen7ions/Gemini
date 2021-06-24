@@ -15,11 +15,17 @@ module id2_ex (
     input   wire        id2_is_ri_o,
     input   wire        id2_is_int_o,
     input   wire        id2_is_check_ov_o,
+    input   wire        id2_is_i_refill_tlbl_o,
+    input   wire        id2_is_i_invalid_tlbl_o,
+    input   wire        id2_is_refetch_o,
 
     input   wire        id2_is_branch_o,
     input   wire        id2_is_j_imme_o,
     input   wire        id2_is_jr_o,
     input   wire        id2_is_ls_o,
+    input   wire        id2_is_tlbp_o,
+    input   wire        id2_is_tlbr_o,
+    input   wire        id2_is_tlbwi_o,
     input   wire [31:0] id2_branch_target_o,
     input   wire [3 :0] id2_branch_sel_o,
     input   wire [4 :0] id2_rs_o,
@@ -53,11 +59,17 @@ module id2_ex (
     output  reg         id2_is_ri_i,
     output  reg         id2_is_int_i,
     output  reg         id2_is_check_ov_i,
+    output  reg         id2_is_i_refill_tlbl_i,
+    output  reg         id2_is_i_invalid_tlbl_i,
+    output  reg         id2_is_refetch_i,
 
     output  reg         id2_is_branch_i,
     output  reg         id2_is_j_imme_i,
     output  reg         id2_is_jr_i,
     output  reg         id2_is_ls_i,
+    output  reg         id2_is_tlbp_i,
+    output  reg         id2_is_tlbr_i,
+    output  reg         id2_is_tlbwi_i,
     output  reg  [31:0] id2_branch_target_i,
     output  reg  [3 :0] id2_branch_sel_i,
     output  reg  [4 :0] id2_rs_i,
@@ -121,6 +133,12 @@ module id2_ex (
             id2_is_check_ov_i   <= 1'h0;
             id2_is_int_i        <= 1'h0;
             id2_branch_target_i <= 32'h0;
+            id2_is_tlbp_i       <= 1'b0;
+            id2_is_tlbr_i       <= 1'b0;
+            id2_is_tlbwi_i      <= 1'b0;
+            id2_is_i_refill_tlbl_i    <=  1'b0;
+            id2_is_i_invalid_tlbl_i   <=  1'b0;
+            id2_is_refetch_i    <= 1'b0;
         end else if (!flush & !stall) begin
             id2_is_branch_i     <= id2_is_branch_o;
             id2_is_j_imme_i     <= id2_is_j_imme_o;
@@ -158,6 +176,12 @@ module id2_ex (
             id2_is_check_ov_i   <= id2_is_check_ov_o;
             id2_is_int_i        <= id2_is_int_o;
             id2_branch_target_i <= id2_branch_target_o;
+            id2_is_tlbp_i           <=  id2_is_tlbp_o;
+            id2_is_tlbr_i           <=  id2_is_tlbr_o;
+            id2_is_tlbwi_i          <=  id2_is_tlbwi_o;
+            id2_is_i_refill_tlbl_i    <=  id2_is_i_refill_tlbl_o;
+            id2_is_i_invalid_tlbl_i   <=  id2_is_i_invalid_tlbl_o;
+            id2_is_refetch_i    <= id2_is_refetch_o;
         end
     end
 endmodule
