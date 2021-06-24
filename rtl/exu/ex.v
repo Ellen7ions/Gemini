@@ -27,6 +27,7 @@ module ex (
     input   wire            id2_is_tlbp,
     input   wire            id2_is_tlbr,
     input   wire            id2_is_tlbwi,
+    input   wire            mem_is_w_cp0,
 
     // addr signals
     input   wire [4 :0]     id2_rd,
@@ -148,7 +149,7 @@ module ex (
     assign ex_is_tlbp           = id2_is_tlbp;
     assign ex_is_tlbr           = id2_is_tlbr;
     assign ex_is_tlbwi          = id2_is_tlbwi;
-    assign ex_tlb_stall_req     = id2_is_tlbwi | id2_is_tlbr | id2_is_tlbp;
+    assign ex_tlb_stall_req     = (id2_is_tlbwi | id2_is_tlbr | id2_is_tlbp) & mem_is_w_cp0;
 
     assign ex_has_exception =
             ex_is_eret          |

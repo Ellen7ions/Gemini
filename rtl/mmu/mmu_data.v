@@ -26,7 +26,8 @@ module mmu_data #(
     
 
     // w cp0
-    output  wire                        w_cp0_mmu_ena,
+    output  wire                        w_cp0_tlbp_ena,
+    output  wire                        w_cp0_tlbr_ena,
     output  wire [              31:0]   w_cp0_Index,
     output  wire [              31:0]   w_cp0_EntryHi,
     output  wire [              31:0]   w_cp0_EntryLo0,
@@ -101,22 +102,26 @@ module mmu_data #(
         direct_psyena | s_found & s_v;
 
     assign psyaddr =
-        {32{direct_psyena}} & direct_psyaddr |
-        {s_pfn, vaddr[11:0]};
+        {32{ direct_psyena}} & direct_psyaddr |
+        {32{~direct_psyena}} & {s_pfn, vaddr[11:0]};
 
-    assign w_cp0_mmu_ena    = is_tlbp   | is_tlbr;
+    assign w_cp0_tlbp_ena    = is_tlbp;
+    assign w_cp0_tlbr_ena    = is_tlbr;
     
+    // tlbr
     assign r_index          =
         r_cp0_Index[3 :0];
 
+    // tlbp
     assign w_cp0_Index      =
-        {32{is_tlbp}}   & {~s_found, 27'h0, s_index};
+        {~s_found, 27'h0, s_index};
+    // tlbr
     assign w_cp0_EntryHi    =
-        {32{is_tlbr}}   & {r_vpn, 5'h0, r_asid};
+        {r_vpn, 5'h0, r_asid};
     assign w_cp0_EntryLo0   =
-        {32{is_tlbr}}   & {6'h0, r_pfn0, r_c0, r_d0, r_v0, r_g};
+        {6'h0, r_pfn0, r_c0, r_d0, r_v0, r_g};
     assign w_cp0_EntryLo1   =
-        {32{is_tlbr}}   & {6'h0, r_pfn1, r_c1, r_d1, r_v1, r_g};
+        {6'h0, r_pfn1, r_c1, r_d1, r_v1, r_g};
     
     assign we       = is_tlbwi;
     assign w_index  = r_cp0_Index[3:0];
@@ -127,7 +132,7 @@ module mmu_data #(
     assign w_c0     = r_cp0_EntryLo0[5 :3];
     assign w_d0     = r_cp0_EntryLo0[2];
     assign w_v0     = r_cp0_EntryLo0[1];
-    assign w_pfn1   = r_cp0_EntryLo1[15:6];
+    assign w_pfn1   = r_cp0_EntryLo1[25:6]; // bug yellow!
     assign w_c1     = r_cp0_EntryLo1[5 :3];
     assign w_d1     = r_cp0_EntryLo1[2];
     assign w_v1     = r_cp0_EntryLo1[1];

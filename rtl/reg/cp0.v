@@ -34,7 +34,8 @@ module cp0 (
     input   wire        w_cp0_badvaddr_ena,
     input   wire [31:0] w_cp0_badvaddr,
 
-    input   wire        w_cp0_mmu_ena,
+    input   wire        w_cp0_tlbp_ena,
+    input   wire        w_cp0_tlbr_ena,
     input   wire [31:0] w_cp0_Index,
     input   wire [31:0] w_cp0_EntryHi,
     input   wire [31:0] w_cp0_EntryLo0,
@@ -84,8 +85,11 @@ module cp0 (
                     BadVAddr<= w_cp0_badvaddr;
             end
 
-            if (w_cp0_mmu_ena) begin
+            if (w_cp0_tlbp_ena) begin
                 Index       <= w_cp0_Index;
+            end
+
+            if (w_cp0_tlbr_ena) begin
                 EntryHi     <= w_cp0_EntryHi;
                 EntryLo0    <= w_cp0_EntryLo0;
                 EntryLo1    <= w_cp0_EntryLo1;
@@ -121,15 +125,15 @@ module cp0 (
                 end
 
                 {5'd2, 3'd0}: begin
-                    EntryLo0        <= w_data;
+                    EntryLo0        <= {6'h0, w_data[25:0]};
                 end
 
                 {5'd3, 3'd0}: begin
-                    EntryLo1        <= w_data;
+                    EntryLo1        <= {6'h0, w_data[25:0]};
                 end
 
                 {5'd10, 3'd0}: begin
-                    EntryHi         <= w_data;
+                    EntryHi         <= {w_data[31:13], 5'h0, w_data[7:0]};
                 end
 
                 default: begin

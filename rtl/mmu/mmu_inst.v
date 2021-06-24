@@ -52,7 +52,7 @@ module mmu_inst #(
         direct_psyena | s_found & s_v;
 
     assign psyaddr =
-        {32{direct_psyena}} & {direct_psyaddr       }   |
-        {32{direct_psyena}} & {s_pfn, vaddr[11:0]   }   ;
+        {32{ direct_psyena}} & {direct_psyaddr       }   |
+        {32{~direct_psyena}} & {s_pfn, vaddr[11:0]   }   ;
     
 endmodule

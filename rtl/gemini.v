@@ -73,7 +73,8 @@ module gemini (
     wire [65:0]     fifo_w_data_2;
 
     // mmu wires
-    wire            w_cp0_mmu_ena;
+    wire            w_cp0_tlbp_ena;
+    wire            w_cp0_tlbr_ena;
     wire [31:0]     w_cp0_Index;
     wire [31:0]     w_cp0_EntryHi;
     wire [31:0]     w_cp0_EntryLo0;
@@ -186,6 +187,7 @@ module gemini (
     wire            memp_is_refetch_i;
 
     wire            cls_refetch;
+    wire [31:0]     cls_refetch_pc;
 
     // ii => id2
     wire            pc_stall;
@@ -1229,7 +1231,8 @@ module gemini (
         .r_cp0_EntryLo0         (cp0_entrylo0           ),
         .r_cp0_EntryLo1         (cp0_entrylo1           ),
         
-        .w_cp0_mmu_ena          (w_cp0_mmu_ena          ),
+        .w_cp0_tlbp_ena         (w_cp0_tlbp_ena         ),
+        .w_cp0_tlbr_ena         (w_cp0_tlbr_ena         ),
         .w_cp0_Index            (w_cp0_Index            ),
         .w_cp0_EntryHi          (w_cp0_EntryHi          ),
         .w_cp0_EntryLo0         (w_cp0_EntryLo0         ),
@@ -1702,6 +1705,7 @@ module gemini (
         .id2_is_tlbp            (id2c_is_tlbp_i             ),
         .id2_is_tlbr            (id2c_is_tlbr_i             ),
         .id2_is_tlbwi           (id2c_is_tlbwi_i            ),
+        .mem_is_w_cp0           (exc_w_cp0_ena_i            ),
 
         .id2_rd             (id2c_rd_i          ),
         .id2_w_reg_dst      (id2c_w_reg_dst_i   ),
@@ -1802,6 +1806,8 @@ module gemini (
         .id2_is_tlbp            (id2p_is_tlbp_i             ),
         .id2_is_tlbr            (id2p_is_tlbr_i             ),
         .id2_is_tlbwi           (id2p_is_tlbwi_i            ),
+        .mem_is_w_cp0           (exp_w_cp0_ena_i            |
+                                 exc_w_cp0_ena_i            ),
 
         .id2_rd             (id2p_rd_i          ),
         .id2_w_reg_dst      (id2p_w_reg_dst_i   ),
@@ -2138,7 +2144,8 @@ module gemini (
         .w_cp0_badvaddr_ena         (w_cp0_badvaddr_ena ),
         .w_cp0_badvaddr             (w_cp0_badvaddr     ),
 
-        .w_cp0_mmu_ena              (w_cp0_mmu_ena      ),
+        .w_cp0_tlbp_ena             (w_cp0_tlbp_ena     ),
+        .w_cp0_tlbr_ena             (w_cp0_tlbr_ena     ),
         .w_cp0_Index                (w_cp0_Index        ),
         .w_cp0_EntryHi              (w_cp0_EntryHi      ),
         .w_cp0_EntryLo0             (w_cp0_EntryLo0     ),

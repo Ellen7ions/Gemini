@@ -81,8 +81,8 @@ module exception_ctrl (
     
     assign exception_has_2  = exception_has_exp_2 & ~refetch;
 
-    assign flush_pipline    = exception_has_1 | exception_has_2;
-    assign exception_pc_ena = exception_has_1 | exception_has_2;
+    assign flush_pipline    = exception_has_1 | exception_has_2 | refetch;
+    assign exception_pc_ena = exception_has_1 | exception_has_2 | refetch;
         
 
     always @(*) begin
@@ -95,7 +95,10 @@ module exception_ctrl (
         w_cp0_epc           = 32'h0;
         w_cp0_badvaddr_ena  = 1'b0;
         w_cp0_badvaddr      = 32'h0;
-        if (exception_has_1) begin
+        if (refetch) begin
+            w_cp0_update_ena= 1'b0;
+            exception_pc    = pc_1;
+        end else if (exception_has_1) begin
             w_cp0_bd            = in_delay_slot_1;
             w_cp0_exl           = 1'b1;
             w_cp0_epc           = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;

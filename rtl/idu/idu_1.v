@@ -289,7 +289,8 @@ module idu_1 (
             !(op_code_is_swr   )  &
             !(op_code_is_regimm & !(id1_rt ^ `BGEZ_RT_CODE)  )   &
             !(op_code_is_regimm & !(id1_rt ^ `BLTZ_RT_CODE)  )   &
-            !(op_code_is_cop0   & !(id1_rt ^ `MTC0_RS_CODE)  )   &
+            // I can't believe the trace miss this bug...
+            !(op_code_is_cop0   & !(id1_rs ^ `MTC0_RS_CODE)  )   &
             (id1_w_reg_dst != 5'h0);
     
 endmodule

@@ -16,7 +16,8 @@ module mmu #(
     input   wire [31:0] r_cp0_EntryLo0,
     input   wire [31:0] r_cp0_EntryLo1,
 
-    output  wire        w_cp0_mmu_ena,
+    output  wire        w_cp0_tlbp_ena,
+    output  wire        w_cp0_tlbr_ena,
     output  wire [31:0] w_cp0_Index,
     output  wire [31:0] w_cp0_EntryHi,
     output  wire [31:0] w_cp0_EntryLo0,
@@ -158,7 +159,8 @@ module mmu #(
         .r_cp0_EntryLo0     (r_cp0_EntryLo0         ),
         .r_cp0_EntryLo1     (r_cp0_EntryLo1         ),
 
-        .w_cp0_mmu_ena      (w_cp0_mmu_ena          ),
+        .w_cp0_tlbp_ena     (w_cp0_tlbp_ena         ),
+        .w_cp0_tlbr_ena     (w_cp0_tlbr_ena         ),
         .w_cp0_Index        (w_cp0_Index            ),
         .w_cp0_EntryHi      (w_cp0_EntryHi          ),
         .w_cp0_EntryLo0     (w_cp0_EntryLo0         ),
