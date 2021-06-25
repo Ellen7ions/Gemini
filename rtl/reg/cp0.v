@@ -33,6 +33,8 @@ module cp0 (
     input   wire [31:0] w_cp0_epc,
     input   wire        w_cp0_badvaddr_ena,
     input   wire [31:0] w_cp0_badvaddr,
+    input   wire        w_cp0_entryhi_ena,
+    input   wire [31:0] w_cp0_entryhi,
 
     input   wire        w_cp0_tlbp_ena,
     input   wire        w_cp0_tlbr_ena,
@@ -83,6 +85,10 @@ module cp0 (
                 EPC         <= w_cp0_epc;
                 if (w_cp0_badvaddr_ena)
                     BadVAddr<= w_cp0_badvaddr;
+            end
+
+            if (w_cp0_entryhi) begin
+                EntryHi[31:13]  <= w_cp0_entryhi[31:13];
             end
 
             if (w_cp0_tlbp_ena) begin

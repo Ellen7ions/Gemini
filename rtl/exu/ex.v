@@ -139,11 +139,11 @@ module ex (
 
     assign ex_is_i_refill_tlbl  = id2_is_i_refill_tlbl;
     assign ex_is_i_invalid_tlbl = id2_is_i_invalid_tlbl;
-    assign ex_is_d_refill_tlbl  = mmu_is_d_refill_tlbl;
-    assign ex_is_d_invalid_tlbl = mmu_is_d_refill_tlbs;
-    assign ex_is_d_refill_tlbs  = mmu_is_d_invalid_tlbl;
-    assign ex_is_d_invalid_tlbs = mmu_is_d_invalid_tlbs;
-    assign ex_is_modify         = mmu_is_modify;
+    assign ex_is_d_refill_tlbl  = id2_ls_ena & mmu_is_d_refill_tlbl;
+    assign ex_is_d_invalid_tlbl = id2_ls_ena & mmu_is_d_invalid_tlbl;
+    assign ex_is_d_refill_tlbs  = id2_ls_ena & mmu_is_d_refill_tlbs;
+    assign ex_is_d_invalid_tlbs = id2_ls_ena & mmu_is_d_invalid_tlbs;
+    assign ex_is_modify         = id2_ls_ena & mmu_is_modify;
     assign ex_is_refetch        = id2_is_refetch;
 
     assign ex_is_tlbp           = id2_is_tlbp;

@@ -668,6 +668,8 @@ module gemini (
     wire [31:0]     w_cp0_epc;
     wire            w_cp0_badvaddr_ena;
     wire [31:0]     w_cp0_badvaddr;
+    wire            w_cp0_entryhi_ena;
+    wire [31:0]     w_cp0_entryhi;
     wire            cp0_cls_exl;
     wire            exception_flush;
     wire [31:0]     cp0_epc;
@@ -2099,6 +2101,8 @@ module gemini (
         .w_cp0_epc                  (w_cp0_epc          ),
         .w_cp0_badvaddr_ena         (w_cp0_badvaddr_ena ),
         .w_cp0_badvaddr             (w_cp0_badvaddr     ),
+        .w_cp0_entryhi_ena          (w_cp0_entryhi_ena  ),
+        .w_cp0_entryhi              (w_cp0_entryhi      ),
         .cp0_cls_exl                (cp0_cls_exl        ),
 
         .flush_pipline              (exception_flush    )        
@@ -2143,6 +2147,8 @@ module gemini (
         .w_cp0_epc                  (w_cp0_epc          ),
         .w_cp0_badvaddr_ena         (w_cp0_badvaddr_ena ),
         .w_cp0_badvaddr             (w_cp0_badvaddr     ),
+        .w_cp0_entryhi_ena          (w_cp0_entryhi_ena  ), 
+        .w_cp0_entryhi              (w_cp0_entryhi      ),
 
         .w_cp0_tlbp_ena             (w_cp0_tlbp_ena     ),
         .w_cp0_tlbr_ena             (w_cp0_tlbr_ena     ),

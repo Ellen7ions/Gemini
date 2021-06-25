@@ -49,7 +49,7 @@ module mmu_inst #(
     assign s_asid       = r_cp0_EntryHi[7 :0];
 
     assign psyaddr_ena  =
-        direct_psyena | s_found & s_v;
+        (direct_psyena | s_found & s_v) & ~(is_tlb_refill_tlbl | is_tlb_invalid_tlbl);
 
     assign psyaddr =
         {32{ direct_psyena}} & {direct_psyaddr       }   |
