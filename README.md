@@ -8,6 +8,12 @@ If you find Castor and Pollux, you find me.
 
 ### Milestone
 
+#### 6-25
+
+Add TLB MMU, Pass Lab14. The original Lab14 has only 5 test points, you have to compile it with exceptions testing yourself.
+
+**Linux, where r u ?**
+
 #### 6-22
 
 Optimize Timing, **100mhz** again ~, but it's ubstable...
