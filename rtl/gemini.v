@@ -4,19 +4,42 @@ module gemini (
     input   wire        clk,
     input   wire        rst,
     input   wire [5 :0] interrupt,
-    output  wire        sram_inst_ena,
-    output  wire [31:0] sram_inst_addr_next_pc,
-    input   wire [31:0] sram_inst_rdata_1,
-    input   wire [31:0] sram_inst_rdata_2,
-    input   wire        sram_inst_rdata_1_ok,
-    input   wire        sram_inst_rdata_2_ok,
+
+    output  wire        is_tlbp,
+    output  wire        is_tlbr,
+    output  wire        is_tlbwi,
+    output  wire [31:0] r_cp0_Index,
+    output  wire [31:0] r_cp0_EntryHi,
+    output  wire [31:0] r_cp0_EntryLo0,
+    output  wire [31:0] r_cp0_EntryLo1,
+    input   wire        w_cp0_tlbp_ena,
+    input   wire        w_cp0_tlbr_ena,
+    input   wire [31:0] w_cp0_Index,
+    input   wire [31:0] w_cp0_EntryHi,
+    input   wire [31:0] w_cp0_EntryLo0,
+    input   wire [31:0] w_cp0_EntryLo1,
+
+    output  wire        inst_ena,
+    output  wire [31:0] inst_addr_next_pc,
+    input   wire [31:0] inst_rdata_1,
+    input   wire [31:0] inst_rdata_2,
+    input   wire        inst_ok_1,
+    input   wire        inst_ok_2,
     input   wire        i_cache_stall_req,
-    output  wire        sram_data_ena,
-    output  wire [3 :0] sram_data_wen,
-    output  wire [31:0] sram_data_waddr,
-    output  wire [31:0] sram_data_wdata,
-    input   wire [31:0] sram_data_rdata,
+    input   wire        inst_tlb_refill_tlbl,
+    input   wire        inst_tlb_invalid_tlbl,
+
+    output  wire        data_ena,
+    output  wire [3 :0] data_wea,
+    output  wire [31:0] data_addr,
+    output  wire [31:0] data_wdata,
+    input   wire [31:0] data_rdata,
     input   wire        d_cache_stall_req,
+    input   wire        data_tlb_refill_tlbl,
+    input   wire        data_tlb_refill_tlbs,
+    input   wire        data_tlb_invalid_tlbl,
+    input   wire        data_tlb_invalid_tlbs,
+    input   wire        data_tlb_modify,
     
     output  wire [31:0] debug_wb_pc_1,
     output  wire [3 :0] debug_wb_rf_wen_1,
@@ -27,20 +50,6 @@ module gemini (
     output  wire [4 :0] debug_wb_rf_wnum_2,
     output  wire [31:0] debug_wb_rf_wdata_2
 );
-
-    // internal ls wires
-    wire        inst_ena;
-    wire [31:0] inst_addr_next_pc;
-    wire [31:0] inst_rdata_1;
-    wire [31:0] inst_rdata_2;
-    wire        inst_rdata_1_ok;
-    wire        inst_rdata_2_ok;
-
-    wire        data_ena;
-    wire [3 :0] data_wea;
-    wire [31:0] data_waddr;
-    wire [31:0] data_wdata;
-    wire [31:0] data_rdata;
 
     // pipeline regs
     wire [31:0]     pc_cur_pc;
@@ -71,21 +80,6 @@ module gemini (
 
     wire [65:0]     fifo_w_data_1;
     wire [65:0]     fifo_w_data_2;
-
-    // mmu wires
-    wire            w_cp0_tlbp_ena;
-    wire            w_cp0_tlbr_ena;
-    wire [31:0]     w_cp0_Index;
-    wire [31:0]     w_cp0_EntryHi;
-    wire [31:0]     w_cp0_EntryLo0;
-    wire [31:0]     w_cp0_EntryLo1;
-    wire            inst_tlb_refill_tlbl;
-    wire            inst_tlb_invalid_tlbl;
-    wire            data_tlb_refill_tlbl;
-    wire            data_tlb_refill_tlbs;
-    wire            data_tlb_invalid_tlbl;
-    wire            data_tlb_invalid_tlbs;
-    wire            data_tlb_modify;
 
     wire            exc_tlb_stall_req;
     wire            exp_tlb_stall_req;
@@ -187,7 +181,6 @@ module gemini (
     wire            memp_is_refetch_i;
 
     wire            cls_refetch;
-    wire [31:0]     cls_refetch_pc;
 
     // ii => id2
     wire            pc_stall;
@@ -1220,61 +1213,14 @@ module gemini (
         .mem_lo_res_i       (memp_lo_res_i      )
     );
     
-    mmu mmu0 (
-        .clk                    (clk    ),
-        .rst                    (),
-        
-        .is_tlbp                (exc_is_tlbp_o          ),
-        .is_tlbr                (exc_is_tlbr_i          ),
-        .is_tlbwi               (exc_is_tlbwi_i         ),
-        
-        .r_cp0_Index            (cp0_index              ),
-        .r_cp0_EntryHi          (cp0_entryhi            ),
-        .r_cp0_EntryLo0         (cp0_entrylo0           ),
-        .r_cp0_EntryLo1         (cp0_entrylo1           ),
-        
-        .w_cp0_tlbp_ena         (w_cp0_tlbp_ena         ),
-        .w_cp0_tlbr_ena         (w_cp0_tlbr_ena         ),
-        .w_cp0_Index            (w_cp0_Index            ),
-        .w_cp0_EntryHi          (w_cp0_EntryHi          ),
-        .w_cp0_EntryLo0         (w_cp0_EntryLo0         ),
-        .w_cp0_EntryLo1         (w_cp0_EntryLo1         ),
-        
-        .inst_ena               (inst_ena               ),
-        .inst_addr_next_pc      (npc_next_pc            ),
-        .inst_rdata_1           (inst_rdata_1           ),
-        .inst_rdata_2           (inst_rdata_2           ),
-        .inst_ok_1              (inst_rdata_1_ok        ),
-        .inst_ok_2              (inst_rdata_2_ok        ),
-        .inst_tlb_refill_tlbl   (inst_tlb_refill_tlbl   ),
-        .inst_tlb_invalid_tlbl  (inst_tlb_invalid_tlbl  ),
-        
-        .data_ena               (data_ena               ),
-        .data_wea               (data_wea               ),
-        .data_addr              (data_waddr             ),
-        .data_wdata             (data_wdata             ),
-        .data_rdata             (data_rdata             ),
-        .data_tlb_refill_tlbl   (data_tlb_refill_tlbl   ),
-        .data_tlb_refill_tlbs   (data_tlb_refill_tlbs   ),
-        .data_tlb_invalid_tlbl  (data_tlb_invalid_tlbl  ),
-        .data_tlb_invalid_tlbs  (data_tlb_invalid_tlbs  ),
-        .data_tlb_modify        (data_tlb_modify        ),
-        
-        .sram_inst_ena          (sram_inst_ena          ),
-        .sram_inst_addr         (sram_inst_addr_next_pc ),
-        .sram_inst_rdata_1      (sram_inst_rdata_1      ),
-        .sram_inst_rdata_2      (sram_inst_rdata_2      ),
-        .sram_inst_ok_1         (sram_inst_rdata_1_ok   ),
-        .sram_inst_ok_2         (sram_inst_rdata_2_ok   ),
-
-        .sram_data_ena          (sram_data_ena          ),
-        .sram_data_wen          (sram_data_wen          ),
-        .sram_data_addr         (sram_data_waddr        ),
-        .sram_data_wdata        (sram_data_wdata        ),
-        .sram_data_rdata        (sram_data_rdata        )
-    );
-
-    // 
+    assign is_tlbp              = exc_is_tlbp_o;
+    assign is_tlbr              = exc_is_tlbr_i;
+    assign is_tlbwi             = exc_is_tlbwi_i;
+    assign r_cp0_Index          = cp0_index;
+    assign r_cp0_EntryHi        = cp0_entryhi;    
+    assign r_cp0_EntryLo0       = cp0_entrylo0;    
+    assign r_cp0_EntryLo1       = cp0_entrylo1;
+    assign inst_addr_next_pc    = npc_next_pc;
 
     npc npc_cp (
         .id_take_j_imme     (take_j_imme        ),
@@ -1288,8 +1234,8 @@ module gemini (
         .id_pc              (id2c_pc_i          ),
         .id_branch_target   (id2c_branch_target_i),
         .pc                 (pc_cur_pc          ),
-        .inst_rdata_1_ok    (inst_rdata_1_ok    ),
-        .inst_rdata_2_ok    (inst_rdata_2_ok    ),
+        .inst_rdata_1_ok    (inst_ok_1          ),
+        .inst_rdata_2_ok    (inst_ok_2          ),
         .next_pc            (npc_next_pc        )
     );
 
@@ -1309,9 +1255,9 @@ module gemini (
     );
 
     assign fifo_w_data_1    = 
-            {66{inst_rdata_1_ok}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_cur_pc        , inst_rdata_1};
+            {66{inst_ok_1}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_cur_pc        , inst_rdata_1};
     assign fifo_w_data_2    = 
-            {66{inst_rdata_2_ok}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_cur_pc + 32'h4, inst_rdata_2};
+            {66{inst_ok_2}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_cur_pc + 32'h4, inst_rdata_2};
 
     i_fifo i_fifo_cp (
         .clk                (clk                ),
@@ -1324,8 +1270,8 @@ module gemini (
         .r_data_1_ok        (fifo_r_data_1_ok   ),
         .r_data_2_ok        (fifo_r_data_2_ok   ),
         .fifo_stall_req     (fifo_stall_req     ),
-        .w_ena_1            (inst_rdata_1_ok & ~pc_stall),
-        .w_ena_2            (inst_rdata_2_ok & ~pc_stall),
+        .w_ena_1            (inst_ok_1 & ~pc_stall),
+        .w_ena_2            (inst_ok_2 & ~pc_stall),
         .w_data_1           (fifo_w_data_1      ),
         .w_data_2           (fifo_w_data_2      ) 
     );
@@ -2038,7 +1984,7 @@ module gemini (
         
         .data_ram_en                (data_ena               ),    
         .data_ram_wen               (data_wea               ),    
-        .data_ram_addr              (data_waddr             ),    
+        .data_ram_addr              (data_addr              ),    
         .data_ram_wdata             (data_wdata             ),    
         .data_ram_rdata             (data_rdata             )             
     );
