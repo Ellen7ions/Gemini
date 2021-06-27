@@ -19,15 +19,13 @@ module id2_ex (
     input   wire        id2_is_i_invalid_tlbl_o,
     input   wire        id2_is_refetch_o,
 
-    input   wire        id2_is_branch_o,
-    input   wire        id2_is_j_imme_o,
-    input   wire        id2_is_jr_o,
+    input   wire        id2_take_jmp_o,
+    input   wire [31:0] id2_jmp_target_o,
+
     input   wire        id2_is_ls_o,
     input   wire        id2_is_tlbp_o,
     input   wire        id2_is_tlbr_o,
     input   wire        id2_is_tlbwi_o,
-    input   wire [31:0] id2_branch_target_o,
-    input   wire [3 :0] id2_branch_sel_o,
     input   wire [4 :0] id2_rs_o,
     input   wire [4 :0] id2_rt_o,
     input   wire [4 :0] id2_rd_o,
@@ -35,8 +33,6 @@ module id2_ex (
     input   wire [4 :0] id2_sa_o,
     input   wire [31:0] id2_rs_data_o,
     input   wire [31:0] id2_rt_data_o,
-    input   wire [15:0] id2_imme_o,
-    input   wire [25:0] id2_j_imme_o,
     input   wire [31:0] id2_ext_imme_o,
     input   wire [31:0] id2_pc_o,
     input   wire [2 :0] id2_src_a_sel_o,
@@ -63,15 +59,13 @@ module id2_ex (
     output  reg         id2_is_i_invalid_tlbl_i,
     output  reg         id2_is_refetch_i,
 
-    output  reg         id2_is_branch_i,
-    output  reg         id2_is_j_imme_i,
-    output  reg         id2_is_jr_i,
+    output  reg         id2_take_jmp_i,
+    output  reg  [31:0] id2_jmp_target_i,
+
     output  reg         id2_is_ls_i,
     output  reg         id2_is_tlbp_i,
     output  reg         id2_is_tlbr_i,
     output  reg         id2_is_tlbwi_i,
-    output  reg  [31:0] id2_branch_target_i,
-    output  reg  [3 :0] id2_branch_sel_i,
     output  reg  [4 :0] id2_rs_i,
     output  reg  [4 :0] id2_rt_i,
     output  reg  [4 :0] id2_rd_i,
@@ -79,8 +73,6 @@ module id2_ex (
     output  reg  [4 :0] id2_sa_i,
     output  reg  [31:0] id2_rs_data_i,
     output  reg  [31:0] id2_rt_data_i,
-    output  reg  [15:0] id2_imme_i,
-    output  reg  [25:0] id2_j_imme_i,
     output  reg  [31:0] id2_ext_imme_i,
     output  reg  [31:0] id2_pc_i,
     output  reg  [2 :0] id2_src_a_sel_i,
@@ -97,9 +89,6 @@ module id2_ex (
 );
     always @(posedge clk) begin
         if (rst || (flush & !stall) || exception_flush) begin
-            id2_is_branch_i     <= 1'h0;
-            id2_is_j_imme_i     <= 1'h0;
-            id2_is_jr_i         <= 1'h0;
             id2_is_ls_i         <= 1'h0;
             id2_rs_i            <= 5'h0;
             id2_rt_i            <= 5'h0;
@@ -108,8 +97,6 @@ module id2_ex (
             id2_sa_i            <= 5'h0;
             id2_rs_data_i       <= 32'h0;
             id2_rt_data_i       <= 32'h0;
-            id2_imme_i          <= 16'h0;
-            id2_j_imme_i        <= 26'h0;
             id2_ext_imme_i      <= 31'h0;
             id2_pc_i            <= 31'h0;
             id2_src_a_sel_i     <= 3'h0;
@@ -122,7 +109,6 @@ module id2_ex (
             id2_ls_ena_i        <= 1'h0;
             id2_ls_sel_i        <= 4'h0;
             id2_wb_reg_sel_i    <= 1'h0;
-            id2_branch_sel_i    <= 4'h0;
             id2_w_cp0_addr_i    <= 8'd0;
             id2_in_delay_slot_i <= 1'h0;
             id2_is_eret_i       <= 1'h0;
@@ -132,17 +118,15 @@ module id2_ex (
             id2_is_ri_i         <= 1'h0;
             id2_is_check_ov_i   <= 1'h0;
             id2_is_int_i        <= 1'h0;
-            id2_branch_target_i <= 32'h0;
             id2_is_tlbp_i       <= 1'b0;
             id2_is_tlbr_i       <= 1'b0;
             id2_is_tlbwi_i      <= 1'b0;
             id2_is_i_refill_tlbl_i    <=  1'b0;
             id2_is_i_invalid_tlbl_i   <=  1'b0;
             id2_is_refetch_i    <= 1'b0;
+            id2_take_jmp_i      <= 1'b0;
+            id2_jmp_target_i    <= 32'h0;
         end else if (!flush & !stall) begin
-            id2_is_branch_i     <= id2_is_branch_o;
-            id2_is_j_imme_i     <= id2_is_j_imme_o;
-            id2_is_jr_i         <= id2_is_jr_o;
             id2_is_ls_i         <= id2_is_ls_o;
             id2_rs_i            <= id2_rs_o;
             id2_rt_i            <= id2_rt_o;
@@ -151,8 +135,6 @@ module id2_ex (
             id2_sa_i            <= id2_sa_o;
             id2_rs_data_i       <= id2_rs_data_o;
             id2_rt_data_i       <= id2_rt_data_o;
-            id2_imme_i          <= id2_imme_o;
-            id2_j_imme_i        <= id2_j_imme_o;
             id2_ext_imme_i      <= id2_ext_imme_o;
             id2_pc_i            <= id2_pc_o;
             id2_src_a_sel_i     <= id2_src_a_sel_o;
@@ -165,7 +147,6 @@ module id2_ex (
             id2_ls_ena_i        <= id2_ls_ena_o;
             id2_ls_sel_i        <= id2_ls_sel_o;
             id2_wb_reg_sel_i    <= id2_wb_reg_sel_o;
-            id2_branch_sel_i    <= id2_branch_sel_o;
             id2_w_cp0_addr_i    <= id2_w_cp0_addr_o;
             id2_in_delay_slot_i <= id2_in_delay_slot_o;
             id2_is_eret_i       <= id2_is_eret_o;
@@ -175,13 +156,14 @@ module id2_ex (
             id2_is_ri_i         <= id2_is_ri_o;
             id2_is_check_ov_i   <= id2_is_check_ov_o;
             id2_is_int_i        <= id2_is_int_o;
-            id2_branch_target_i <= id2_branch_target_o;
             id2_is_tlbp_i           <=  id2_is_tlbp_o;
             id2_is_tlbr_i           <=  id2_is_tlbr_o;
             id2_is_tlbwi_i          <=  id2_is_tlbwi_o;
             id2_is_i_refill_tlbl_i    <=  id2_is_i_refill_tlbl_o;
             id2_is_i_invalid_tlbl_i   <=  id2_is_i_invalid_tlbl_o;
             id2_is_refetch_i    <= id2_is_refetch_o;
+            id2_take_jmp_i      <= id2_take_jmp_o;
+            id2_jmp_target_i    <= id2_jmp_target_o;
         end
     end
 endmodule

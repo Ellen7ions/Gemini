@@ -215,8 +215,7 @@ module idu_1 (
             (op_code_is_bne    )   |
             (op_code_is_regimm )   |
             (op_code_is_bgtz   )   |
-            (op_code_is_blez   )   |
-            (op_code_is_jal    )   ;
+            (op_code_is_blez   )   ;
             
     assign id1_is_j_imme    = 
             (op_code_is_j      )   |
