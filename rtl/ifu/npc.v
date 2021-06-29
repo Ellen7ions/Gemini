@@ -24,7 +24,7 @@ module npc (
       next_pc = id_jmp_target;
     end else if (inst_rdata_1_ok & inst_rdata_2_ok) begin
       next_pc = {pc + 32'h8};
-    end else if (inst_rdata_1_ok & ~inst_rdata_2_ok) begin
+    end else if (inst_rdata_1_ok) begin
       next_pc = {pc + 32'h4};
     end else begin
       next_pc = pc;

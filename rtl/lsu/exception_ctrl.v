@@ -119,14 +119,10 @@ module exception_ctrl (
             w_cp0_update_ena= 1'b0;
             exception_pc    = pc_1;
         end else if (exception_has_1) begin
-            w_cp0_bd            = in_delay_slot_1;
             w_cp0_exl           = 1'b1;
-            w_cp0_epc           = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
+            w_cp0_epc           = pc_1;
             if (exception_is_int_1) begin
                 w_cp0_exccode           = 5'h00;
-                w_cp0_bd                = in_delay_slot_1;
-                w_cp0_exl               = 1'b1;
-                w_cp0_epc               = in_delay_slot_1 ? pc_1 - 32'h4 : pc_1;
             end else if (exception_is_i_refill_tlbl_1) begin
                 w_cp0_exccode   = 5'h02;
                 exception_pc    = 32'hbfc0_0200;

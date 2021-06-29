@@ -189,7 +189,6 @@ module gemini (
 
     // ii => id2
     wire            pc_stall;
-    wire            pc_flush;
     wire            fifo_flush;
     wire            issue_stall;
     wire            ii_id2_flush;
@@ -1227,13 +1226,11 @@ module gemini (
 
     assign inst_ena             = ~(rst | pc_stall);
     assign inst_addr_next_pc    = npc_next_pc;
-    assign inst_addr_pc         = pc_cur_pc;
 
     pc pc_cp (
         .clk                (clk                ),
         .rst                (rst                ),
         .stall              (pc_stall           ),
-        .flush              (pc_flush           ),
         .exception_pc_ena   (exception_pc_ena   ),
         .next_pc            (npc_next_pc        ),
         .pc                 (pc_cur_pc          )
@@ -2151,7 +2148,6 @@ module gemini (
         .mem_refetch        (memc_is_refetch_o  ),
 
         .pc_stall           (pc_stall           ),
-        .pc_flush           (pc_flush           ),
         .fifo_flush         (fifo_flush         ),
         .issue_stall        (issue_stall        ),
         .ii_id2_flush       (ii_id2_flush       ),

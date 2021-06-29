@@ -232,7 +232,7 @@ module ex (
             }} & ex_cp0_r_data);
     
     assign ex_ls_addr   =
-            {32{id2_ls_ena}} & (src_a + src_b);
+            {32{id2_ls_ena}} & (id2_rs_data + id2_ext_imme);
     
     assign ex_cp0_r_addr    = id2_w_cp0_addr;
     assign ex_cp0_r_ena     = !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0);

@@ -31,25 +31,18 @@ module mmu_inst #(
         .direct_psyaddr (direct_psyaddr)
     );
 
-    mmu_exception mmu_exception0 (
-        .en                     (en & ~direct_psyena),
-        .ls_sel                 (1'b0               ),
-        .found                  (s_found            ),
-        .v                      (s_v                ),
-        .d                      (s_d                ),
-        .is_tlb_refill_tlbl     (is_tlb_refill_tlbl ),
-        .is_tlb_refill_tlbs     (                   ),
-        .is_tlb_invalid_tlbl    (is_tlb_invalid_tlbl),
-        .is_tlb_invalid_tlbs    (),
-        .is_tlb_modify          ()
-    );
+    assign is_tlb_refill_tlbl   =
+        (en & ~direct_psyena) & ~s_found;
+    
+    assign is_tlb_invalid_tlbl  =
+        (en & ~direct_psyena) & s_found & ~s_v;
 
     assign s_vpn        = vaddr[31:13];
     assign s_odd        = vaddr[12];
     assign s_asid       = r_cp0_EntryHi[7 :0];
 
     assign psyaddr_ena  =
-        (direct_psyena | s_found & s_v) & ~(is_tlb_refill_tlbl | is_tlb_invalid_tlbl);
+        (direct_psyena | s_found & s_v);
 
     assign psyaddr =
         {32{ direct_psyena}} & {direct_psyaddr       }   |

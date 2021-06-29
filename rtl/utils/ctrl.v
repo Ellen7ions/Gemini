@@ -17,7 +17,6 @@ module ctrl (
     input   wire    mem_refetch,
     
     output  wire    pc_stall,
-    output  wire    pc_flush,
     output  wire    fifo_flush,
     output  wire    issue_stall,
     output  wire    ii_id2_flush,
@@ -41,9 +40,6 @@ module ctrl (
 
     assign pc_stall     =
             i_cache_stall_req | fifo_stall_req;
-    
-    assign pc_flush     = 
-            1'b0;
     
     assign fifo_flush   =
             b_ctrl_flush_req & (~forwardc_stall_req & ~forwardp_stall_req) | exception_flush | mem_refetch;
