@@ -108,6 +108,7 @@ module idu_2 (
     wire [15:0]     id2_imme;
     wire [25:0]     id2_j_imme;
     wire [31:0]     id2_branch_target;
+    wire [3 :0]     id2_branch_sel;
 
     wire op_code_is_special;
     wire op_code_is_cop0;
@@ -654,7 +655,7 @@ module idu_2 (
 
 
     assign id2_take_jmp   =
-            id2_is_jr | id2_is_branch & id2_take_branch | id2_is_j_imme;
+            id2_is_jr | id2_take_branch | id2_is_j_imme;
 
     assign id2_jmp_target   =
             {32{id2_is_j_imme   }} & {id2_pc[31:28], id2_j_imme, 2'b00} |
