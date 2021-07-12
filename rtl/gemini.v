@@ -1208,7 +1208,6 @@ module gemini (
     assign r_cp0_EntryHi        = cp0_entryhi;    
     assign r_cp0_EntryLo0       = cp0_entrylo0;    
     assign r_cp0_EntryLo1       = cp0_entrylo1;
-    assign inst_addr_next_pc    = npc_next_pc;
 
     npc npc_cp (
         .id_take_jmp        (id2c_take_jmp_i    ),
@@ -1224,22 +1223,28 @@ module gemini (
         .next_pc            (npc_next_pc        )
     );
 
-    assign inst_ena             = ~(rst | pc_stall);
-    assign inst_addr_next_pc    = npc_next_pc;
+    wire [31:0] pc_reg;
+    wire        w_fifo;
 
     pc pc_cp (
         .clk                (clk                ),
         .rst                (rst                ),
         .stall              (pc_stall           ),
+        .flush              (fifo_flush         ),
         .exception_pc_ena   (exception_pc_ena   ),
         .next_pc            (npc_next_pc        ),
-        .pc                 (pc_cur_pc          )
+        .pc                 (pc_cur_pc          ),
+        .pc_reg             (pc_reg             ),
+        .w_fifo             (w_fifo             )
     );
 
+    assign inst_ena             = ~(rst | pc_stall);
+    assign inst_addr_next_pc    = pc_cur_pc;
+
     assign fifo_w_data_1    = 
-            {66{inst_ok_1}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_cur_pc        , inst_rdata_1};
+            {66{inst_ok_1}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg        , inst_rdata_1};
     assign fifo_w_data_2    = 
-            {66{inst_ok_2}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_cur_pc + 32'h4, inst_rdata_2};
+            {66{inst_ok_2}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg + 32'h4, inst_rdata_2};
 
     i_fifo i_fifo_cp (
         .clk                (clk                ),
@@ -1252,8 +1257,8 @@ module gemini (
         .r_data_1_ok        (fifo_r_data_1_ok   ),
         .r_data_2_ok        (fifo_r_data_2_ok   ),
         .fifo_stall_req     (fifo_stall_req     ),
-        .w_ena_1            (inst_ok_1 & ~pc_stall),
-        .w_ena_2            (inst_ok_2 & ~pc_stall),
+        .w_ena_1            (inst_ok_1 & ~pc_stall & w_fifo),
+        .w_ena_2            (inst_ok_2 & ~pc_stall & w_fifo),
         .w_data_1           (fifo_w_data_1      ),
         .w_data_2           (fifo_w_data_2      ) 
     );

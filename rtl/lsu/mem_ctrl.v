@@ -54,7 +54,7 @@ module mem_ctrl (
     assign exp_is_data_ades = 1'b0;
 
     assign data_ram_en  =
-        exc_ls_ena & ~exc_has_exception & ~memc_has_exception & ~memp_has_exception & ~exc_refetch;
+        exc_ls_ena & ~exc_has_exception & ~memc_has_exception & ~exc_refetch;
 
     assign data_ram_wen =
         {4{exc_ls_ena}} & (
