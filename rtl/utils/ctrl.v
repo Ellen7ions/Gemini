@@ -54,7 +54,7 @@ module ctrl (
             issue_stall | (pc_stall & fifo_flush) | forwardc_stall_req | forwardp_stall_req | exc_stall_req | exp_stall_req | exc_tlb_stall_req | exp_tlb_stall_req;
     
     assign id2_ex_flush =
-            b_ctrl_flush_req | forwardc_flush_req | forwardp_flush_req | exception_flush | mem_refetch;
+            forwardc_flush_req | forwardp_flush_req | exception_flush | mem_refetch;
 
     assign id2_ex_stall =
             d_cache_stall_req | exc_stall_req | exp_stall_req | exc_tlb_stall_req | exp_tlb_stall_req;

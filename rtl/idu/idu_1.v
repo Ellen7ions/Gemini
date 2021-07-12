@@ -22,6 +22,8 @@ module idu_1 (
     output  wire            id1_is_tlbp,
     output  wire            id1_is_tlbr,
     output  wire            id1_is_tlbwi,
+    output  wire            id1_is_check_ov,
+    output  wire            id1_is_ri,
 
     output  wire            id1_is_hilo
 );
@@ -291,5 +293,28 @@ module idu_1 (
             // I can't believe the trace miss this bug...
             !(op_code_is_cop0   & !(id1_rs ^ `MTC0_RS_CODE)  )   &
             (id1_w_reg_dst != 5'h0);
+
+    assign id1_is_check_ov  = 
+        op_code_is_special  & func_code_is_add  |
+        op_code_is_special  & func_code_is_sub  |
+        op_code_is_addi; 
     
+    wire inst_is_special    = 
+            op_code_is_special  & (|id1_func_codes);
+    wire inst_is_regimm     = 
+            op_code_is_regimm   & (
+                ~(id1_rt ^ `BGEZ_RT_CODE   ) |    
+                ~(id1_rt ^ `BLTZ_RT_CODE   ) |
+                ~(id1_rt ^ `BGEZAL_RT_CODE ) |
+                ~(id1_rt ^ `BLTZAL_RT_CODE )  
+            );
+    wire inst_is_cop0       =
+            op_code_is_cop0     & (
+                ~(id1_rs ^ `MTC0_RS_CODE) |
+                ~(id1_rs ^ `MFC0_RS_CODE)
+            );
+
+    assign id1_is_ri        =
+        ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes);
+
 endmodule

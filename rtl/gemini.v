@@ -2014,7 +2014,7 @@ module gemini (
         .flush_pipline              (exception_flush    )        
     );
 
-    wire        cp0_w_ena = memc_w_cp0_ena_o | memp_w_cp0_ena_o;
+    wire        cp0_w_ena = memc_w_cp0_ena_o | memp_w_cp0_ena_o & ~memc_has_exception_o;
     wire [7 :0] cp0_w_addr=
         {8{memc_w_cp0_ena_o}} & memc_w_cp0_addr_o |
         {8{memp_w_cp0_ena_o}} & memp_w_cp0_addr_o ;
