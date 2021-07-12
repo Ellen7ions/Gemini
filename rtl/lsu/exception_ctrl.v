@@ -89,18 +89,18 @@ module exception_ctrl (
             exception_is_modify_1
         );
     
-    assign exception_has_2  =
-        ~refetch & (
-            exception_has_exp_2             |
-            exception_is_d_refill_tlbl_2    |
-            exception_is_d_invalid_tlbl_2   |
-            exception_is_d_refill_tlbs_2    |
-            exception_is_d_invalid_tlbs_2   |
-            exception_is_modify_2
-        );
+    // assign exception_has_2  =
+    //     ~refetch & (
+    //         exception_has_exp_2             |
+    //         exception_is_d_refill_tlbl_2    |
+    //         exception_is_d_invalid_tlbl_2   |
+    //         exception_is_d_refill_tlbs_2    |
+    //         exception_is_d_invalid_tlbs_2   |
+    //         exception_is_modify_2
+    //     );
 
-    assign flush_pipline    = exception_has_1 | exception_has_2 | refetch;
-    assign exception_pc_ena = exception_has_1 | exception_has_2 | refetch;
+    assign flush_pipline    = exception_has_1 | refetch;
+    assign exception_pc_ena = exception_has_1 | refetch;
         
 
     always @(*) begin
@@ -193,80 +193,6 @@ module exception_ctrl (
                 w_cp0_badvaddr          = mem_badvaddr_1;
                 w_cp0_entryhi_ena       = 1'b1;
                 w_cp0_entryhi[31:13]    = mem_badvaddr_1[31:13];
-            end
-        end else if (exception_has_2) begin
-            w_cp0_bd            = in_delay_slot_2;
-            w_cp0_exl           = 1'b1;
-            w_cp0_epc           = in_delay_slot_2 ? pc_2 - 32'h4 : pc_2;
-            if (exception_is_inst_adel_2) begin
-                w_cp0_exccode   = 5'h04;
-                w_cp0_badvaddr_ena = 1'b1;
-                w_cp0_badvaddr  = pc_2;
-            end else if (exception_is_i_refill_tlbl_2) begin
-                w_cp0_exccode   = 5'h02;
-                exception_pc    = 32'hbfc0_0200;
-                w_cp0_entryhi_ena       = 1'b1;
-                w_cp0_entryhi[31:13]    = pc_2[31:13];
-                w_cp0_badvaddr_ena      = 1'b1;
-                w_cp0_badvaddr          = pc_2;
-            end else if (exception_is_i_invalid_tlbl_2) begin
-                w_cp0_exccode   = 5'h02;
-                w_cp0_entryhi_ena       = 1'b1;
-                w_cp0_entryhi[31:13]    = pc_2[31:13];
-                w_cp0_badvaddr_ena      = 1'b1;
-                w_cp0_badvaddr          = pc_2;
-            end else if (exception_is_ri_2) begin
-                w_cp0_exccode   = 5'h0a;
-            end else if (exception_is_overflow_2) begin
-                w_cp0_exccode   = 5'h0c;
-            end else if (exception_is_syscall_2) begin
-                w_cp0_exccode   = 5'h08;
-            end else if (exception_is_break_2) begin
-                w_cp0_exccode   = 5'h09;
-            end else if (exception_is_eret_2) begin
-                w_cp0_update_ena    = 1'b0;
-                cp0_cls_exl         = 1'b1;
-                exception_pc        = r_cp0_epc;
-            end else if (exception_is_d_refill_tlbl_2) begin
-                w_cp0_exccode   = 5'h02;
-                exception_pc    = 32'hbfc0_0200;
-                w_cp0_entryhi_ena       = 1'b1;
-                w_cp0_entryhi[31:13]    = mem_badvaddr_2[31:13];
-                w_cp0_badvaddr_ena      = 1'b1;
-                w_cp0_badvaddr          = mem_badvaddr_2;
-            end else if (exception_is_d_invalid_tlbl_2) begin
-                w_cp0_exccode   = 5'h02;
-                w_cp0_entryhi_ena       = 1'b1;
-                w_cp0_entryhi[31:13]    = mem_badvaddr_2[31:13];
-                w_cp0_badvaddr_ena      = 1'b1;
-                w_cp0_badvaddr          = mem_badvaddr_2;
-            end else if (exception_is_d_refill_tlbs_2) begin
-                w_cp0_exccode   = 5'h03;
-                exception_pc    = 32'hbfc0_0200;
-                w_cp0_entryhi_ena       = 1'b1;
-                w_cp0_entryhi[31:13]    = mem_badvaddr_2[31:13];
-                w_cp0_badvaddr_ena      = 1'b1;
-                w_cp0_badvaddr          = mem_badvaddr_2;
-            end else if (exception_is_d_invalid_tlbs_2) begin
-                w_cp0_exccode   = 5'h03;
-                w_cp0_entryhi_ena       = 1'b1;
-                w_cp0_entryhi[31:13]    = pc_2[31:13];
-                w_cp0_badvaddr_ena      = 1'b1;
-                w_cp0_badvaddr          = mem_badvaddr_2;
-            end else if (exception_is_data_adel_2) begin
-                w_cp0_exccode       = 5'h04;
-                w_cp0_badvaddr_ena  = 1'b1;
-                w_cp0_badvaddr      = mem_badvaddr_2;
-            end else if (exception_is_data_ades_2) begin
-                w_cp0_exccode       = 5'h05;
-                w_cp0_badvaddr_ena  = 1'b1;
-                w_cp0_badvaddr      = mem_badvaddr_2;
-            end else if (exception_is_modify_2) begin
-                w_cp0_exccode   = 5'h01;
-                w_cp0_badvaddr_ena      = 1'b1;
-                w_cp0_badvaddr          = mem_badvaddr_2;
-                w_cp0_entryhi_ena       = 1'b1;
-                w_cp0_entryhi[31:13]    = mem_badvaddr_2[31:13];
             end
         end else begin
             w_cp0_update_ena    = 1'b0;

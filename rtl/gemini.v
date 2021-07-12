@@ -2014,18 +2014,12 @@ module gemini (
         .flush_pipline              (exception_flush    )        
     );
 
-    wire        cp0_w_ena = memc_w_cp0_ena_o | memp_w_cp0_ena_o & ~memc_has_exception_o;
-    wire [7 :0] cp0_w_addr=
-        {8{memc_w_cp0_ena_o}} & memc_w_cp0_addr_o |
-        {8{memp_w_cp0_ena_o}} & memp_w_cp0_addr_o ;
-    wire [31:0] cp0_w_data=
-        {32{memc_w_cp0_ena_o}}& memc_w_cp0_data_o |
-        {32{memp_w_cp0_ena_o}}& memp_w_cp0_data_o ;
+    wire        cp0_w_ena = memc_w_cp0_ena_o & ~memc_is_refetch_o;
+    wire [7 :0] cp0_w_addr= memc_w_cp0_addr_o;
+    wire [31:0] cp0_w_data= memc_w_cp0_data_o;
 
-    wire        cp0_r_ena   = exc_cp0_r_ena | exp_cp0_r_ena;
-    wire [7 :0] cp0_r_addr  =
-        {8{exc_cp0_r_ena}} & exc_cp0_r_addr |
-        {8{exp_cp0_r_ena}} & exp_cp0_r_addr ;
+    wire        cp0_r_ena   = exc_cp0_r_ena;
+    wire [7 :0] cp0_r_addr  = exc_cp0_r_addr;
 
     cp0 cp0c(
         .clk                        (clk                ),
@@ -2109,17 +2103,11 @@ module gemini (
 
     wire [1 :0] w_hilo_ena_cp;
     assign w_hilo_ena_cp[1]     = 
-         memc_w_hilo_ena_i[1] & (~memc_has_exception_i) & (~memc_is_refetch_i) | 
-        (memp_w_hilo_ena_i[1] & (~memp_has_exception_i) & (~memc_has_exception_i) & (~memc_is_refetch_i));
+        memc_w_hilo_ena_i[1] & (~memc_has_exception_i) & (~memc_is_refetch_i);
     assign w_hilo_ena_cp[0]     = 
-         memc_w_hilo_ena_i[0] & (~memc_has_exception_i) | 
-        (memp_w_hilo_ena_i[0] & (~memp_has_exception_i) & (~memc_has_exception_i));
-    wire [31:0] w_hi_res_cp     =
-            {32{ memc_w_hilo_ena_i[1] & ~memp_w_hilo_ena_i[1]}} & memc_hi_res_i |
-            {32{~memc_w_hilo_ena_i[1] &  memp_w_hilo_ena_i[1]}} & memp_hi_res_i ;
-    wire [31:0] w_lo_res_cp     =
-            {32{ memc_w_hilo_ena_i[0] & ~memp_w_hilo_ena_i[0]}} & memc_lo_res_i |
-            {32{~memc_w_hilo_ena_i[0] &  memp_w_hilo_ena_i[0]}} & memp_lo_res_i ;
+        memc_w_hilo_ena_i[0] & (~memc_has_exception_i) & (~memc_is_refetch_i);
+    wire [31:0] w_hi_res_cp     = memc_hi_res_i;
+    wire [31:0] w_lo_res_cp     = memc_lo_res_i;
 
     hilo hl (
         .clk                (clk                ),
