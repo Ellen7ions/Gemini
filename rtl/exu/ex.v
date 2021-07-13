@@ -80,9 +80,11 @@ module ex (
 
     // back from mem
     // if you want to LS, u can't have any exceptions from ex and mem.
-    output  wire            ex_has_exception,
+    output  wire            ex_ls_has_exp,
     input   wire            to_ex_is_data_adel,
     input   wire            to_ex_is_data_ades,
+
+    output  wire            ex_has_exception,
 
     // pass down
     output  wire            ex_in_delay_slot,
@@ -150,6 +152,12 @@ module ex (
     assign ex_is_tlbr           = id2_is_tlbr;
     assign ex_is_tlbwi          = id2_is_tlbwi;
     assign ex_tlb_stall_req     = (id2_is_tlbwi | id2_is_tlbr | id2_is_tlbp) & mem_is_w_cp0;
+
+    assign ex_ls_has_exp        =
+            ex_is_data_adel     |
+            ex_is_data_ades     |
+            ex_is_i_refill_tlbl |
+            ex_is_i_invalid_tlbl;
 
     assign ex_has_exception =
             ex_is_eret          |

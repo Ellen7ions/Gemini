@@ -1595,6 +1595,9 @@ module gemini (
         .w_data_2           (wbp_w_reg_data_o   )
     );
 
+    wire exc_ls_has_exp;
+    wire exp_ls_has_exp;
+
     ex exc (
         .clk                (clk                ),
         .rst                (rst                ),
@@ -1657,6 +1660,7 @@ module gemini (
         .ex_lo_res          (exc_lo_res_o       ),
 
         // back from mem
+        .ex_ls_has_exp      (exc_ls_has_exp     ),
         .ex_has_exception   (exc_has_exception_o),
         .to_ex_is_data_adel (to_exc_is_data_adel),
         .to_ex_is_data_ades (to_exc_is_data_ades),
@@ -1759,6 +1763,7 @@ module gemini (
         .ex_lo_res          (exp_lo_res_o       ),
         
         // back from mem
+        .ex_ls_has_exp      (exp_ls_has_exp     ),
         .ex_has_exception   (exp_has_exception_o),
         .to_ex_is_data_adel (to_exp_is_data_adel),
         .to_ex_is_data_ades (to_exp_is_data_ades),
@@ -1929,7 +1934,7 @@ module gemini (
         .exc_ls_addr                (exc_ls_addr_o          ),                
         .exc_rt_data                (exc_rt_data_o          ),                
         .exc_ls_sel                 (exc_ls_sel_o           ),         
-        .exc_has_exception          (exc_has_exception_o    ),                  
+        .exc_has_exception          (exc_ls_has_exp         ),                  
         .exc_refetch                (exc_is_refetch_o       ),
         .exc_is_data_adel           (to_exc_is_data_adel    ),                   
         .exc_is_data_ades           (to_exc_is_data_ades    ),        
@@ -2133,6 +2138,7 @@ module gemini (
         .forwardp_stall_req (forwardp_stall_req ),
         .forwardp_flush_req (forwardp_flush_req ),
         .b_ctrl_flush_req   (b_ctrl_flush_req   ),
+        .with_delaysolt     (id2p_in_delay_slot_i),
         .exc_stall_req      (exc_stall_req      ),
         .exp_stall_req      (exp_stall_req      ),
         .exception_flush    (exception_flush    ),

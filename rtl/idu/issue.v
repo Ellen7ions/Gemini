@@ -126,7 +126,7 @@ module issue (
         end
     end
 
-    assign update_in_ds = in_ds & stall | ~in_ds & p_data_1 & inst_jmp_1;
+    assign update_in_ds = in_ds & stall | ~in_ds & p_data_1 & inst_jmp_1 & ~p_data_2;
 
     always @(*) begin
         if (stall) begin
@@ -140,15 +140,14 @@ module issue (
                 p_data_1 = 1'b1;
                 p_data_2 = 
                     ~(
-                        in_ds               | 
-                        raw_conflict        | 
-                        inst_jmp_1          | 
-                        inst_jmp_2          | 
-                        id1_is_hilo_2       | 
-                        id1_is_cop0_2       | 
+                        in_ds               |
+                        raw_conflict        |
+                        inst_jmp_2          |
+                        id1_is_hilo_2       |
+                        id1_is_cop0_2       |
                         id1_is_ls_2         |
                         id1_is_ri_2         |
-                        id1_is_check_ov_2   | 
+                        id1_is_check_ov_2   |
                         id1_is_inst_adel_2
                     );
                 // if () begin
@@ -178,7 +177,7 @@ module issue (
     assign id1_valid_2              = p_data_2;
     assign id1_pc_2                 = fifo_r_data_2[63:32];
     assign id1_inst_2               = fifo_r_data_2[31: 0];
-    assign id1_in_delay_slot_2      = 1'b0;
+    assign id1_in_delay_slot_2      = inst_jmp_1 & p_data_2;
     assign id1_is_inst_adel_2       = id1_pc_2[1:0] != 2'b00;
     assign id1_is_i_refill_tlbl_2   = fifo_r_data_2[65];
     assign id1_is_i_invalid_tlbl_2  = fifo_r_data_2[64];
