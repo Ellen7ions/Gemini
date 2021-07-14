@@ -90,6 +90,10 @@ module idu_2 (
     // output wire             id2_take_j_imme,
     // output wire             id2_take_jr,
     // output wire             id2_flush_req,
+    output wire             id2_is_branch,
+    output wire             id2_is_j_imme,
+    output wire             id2_is_jr,
+    output wire [3 :0]      id2_branch_sel,
 
     output reg  [2 :0]      id2_src_a_sel,
     output reg  [2 :0]      id2_src_b_sel,
@@ -103,13 +107,9 @@ module idu_2 (
     output wire [3 :0]      id2_ls_sel,
     output wire             id2_wb_reg_sel
 );
-    wire            id2_is_branch;
-    wire            id2_is_j_imme;
-    wire            id2_is_jr;
     wire [15:0]     id2_imme;
     wire [25:0]     id2_j_imme;
     wire [31:0]     id2_branch_target;
-    wire [3 :0]     id2_branch_sel;
 
     wire op_code_is_special;
     wire op_code_is_cop0;
@@ -639,30 +639,6 @@ module idu_2 (
             (op_code_is_lw )   |
             (op_code_is_lwr)   |
             (op_code_is_lwl)   ;
-    
-    
-    wire id2_take_branch;
-    
-    wire beq_check      = id2_rs_data == id2_rt_data;
-    wire bne_check      = id2_rs_data != id2_rt_data;
-    wire bgez_check     = ~id2_rs_data[31];
-    wire bgtz_check     = ~id2_rs_data[31] & |(id2_rs_data[30:0]);
-    wire blez_check     = id2_rs_data[31] | !(|id2_rs_data);
-    wire bltz_check     = id2_rs_data[31];
-
-    assign id2_take_branch  =
-            (!(id2_branch_sel ^ `BRANCH_SEL_BEQ     )) & (beq_check  )  & id2_is_branch  |
-            (!(id2_branch_sel ^ `BRANCH_SEL_BNE     )) & (bne_check  )  & id2_is_branch  |
-            (!(id2_branch_sel ^ `BRANCH_SEL_BGEZ    )) & (bgez_check )  & id2_is_branch  |
-            (!(id2_branch_sel ^ `BRANCH_SEL_BGTZ    )) & (bgtz_check )  & id2_is_branch  |
-            (!(id2_branch_sel ^ `BRANCH_SEL_BLEZ    )) & (blez_check )  & id2_is_branch  |
-            (!(id2_branch_sel ^ `BRANCH_SEL_BLTZ    )) & (bltz_check )  & id2_is_branch  |
-            (!(id2_branch_sel ^ `BRANCH_SEL_BGEZAL  )) & (bgez_check )  & id2_is_branch  |
-            (!(id2_branch_sel ^ `BRANCH_SEL_BLTZAL  )) & (bltz_check )  & id2_is_branch  ;
-
-
-    assign id2_take_jmp   =
-            id2_is_jr | id2_take_branch | id2_is_j_imme;
 
     assign id2_jmp_target   =
             {32{id2_is_j_imme   }} & {id2_pc[31:28], id2_j_imme, 2'b00} |

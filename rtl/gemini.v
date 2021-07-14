@@ -891,6 +891,11 @@ module gemini (
         .id2_take_jmp_o     (id2c_take_jmp_o    ),
         .id2_jmp_target_o   (id2c_jmp_target_o  ),
 
+        .id2_is_branch_o    (id2c_is_branch_o   ),
+        .id2_is_j_imme_o    (id2c_is_j_imme_o   ),
+        .id2_is_jr_o        (id2c_is_jr_o       ),
+        .id2_branch_sel_o   (id2c_branch_sel_o  ),
+
         .id2_is_ls_o        (id2c_is_ls_o       ),
         .id2_is_tlbp_o      (id2c_is_tlbp_o     ),
         .id2_is_tlbr_o      (id2c_is_tlbr_o     ),
@@ -930,6 +935,11 @@ module gemini (
 
         .id2_take_jmp_i     (id2c_take_jmp_i     ),
         .id2_jmp_target_i   (id2c_jmp_target_i   ),
+
+        .id2_is_branch_i    (id2c_is_branch_i   ),
+        .id2_is_j_imme_i    (id2c_is_j_imme_i   ),
+        .id2_is_jr_i        (id2c_is_jr_i       ),
+        .id2_branch_sel_i   (id2c_branch_sel_i  ),
 
         .id2_is_ls_i        (id2c_is_ls_i       ),
         .id2_is_tlbp_i      (id2c_is_tlbp_i     ),
@@ -979,6 +989,11 @@ module gemini (
         .id2_take_jmp_o     (),
         .id2_jmp_target_o   (),
 
+        .id2_is_branch_o    (),
+        .id2_is_j_imme_o    (),
+        .id2_is_jr_o        (),
+        .id2_branch_sel_o   (),
+
         .id2_is_ls_o        (id2p_is_ls_o       ),
         .id2_is_tlbp_o      (id2p_is_tlbp_o     ),
         .id2_is_tlbr_o      (id2p_is_tlbr_o     ),
@@ -1018,6 +1033,11 @@ module gemini (
 
         .id2_take_jmp_i     (),
         .id2_jmp_target_i   (),
+
+        .id2_is_branch_i    (),
+        .id2_is_j_imme_i    (),
+        .id2_is_jr_i        (),
+        .id2_branch_sel_i   (),
 
         .id2_is_ls_i        (id2p_is_ls_i       ),
         .id2_is_tlbp_i      (id2p_is_tlbp_i     ),
@@ -1538,8 +1558,13 @@ module gemini (
     assign r_cp0_EntryLo1       = cp0_entrylo1;
 
     npc npc_cp (
-        .id_take_jmp        (id2c_take_jmp_i    ),
-        .id_jmp_target      (id2c_jmp_target_i  ),
+        .id2_rs_data        (id2c_rs_data_i     ),
+        .id2_rt_data        (id2c_rt_data_i     ),
+        .id2_is_branch      (id2c_is_branch_i   ),
+        .id2_is_jr          (id2c_is_jr_i       ),
+        .id2_is_j_imme      (id2c_is_j_imme_i   ),
+        .id2_branch_sel     (id2c_branch_sel_i  ),
+        .id2_jmp_target     (id2c_jmp_target_i  ),
         .flush_req          (b_ctrl_flush_req   ),
 
         .exception_pc_ena   (exception_pc_ena   ),
@@ -1837,10 +1862,10 @@ module gemini (
         .id2_rt_data        (id2c_rt_data_o     ),
         .id2_ext_imme       (id2c_ext_imme_o    ),
 
-        // .id2_take_branch    (id2c_take_branch   ),
-        // .id2_take_j_imme    (id2c_take_j_imme   ),
-        // .id2_take_jr        (id2c_take_jr       ),
-        // .id2_flush_req      (id2c_flush_req     ),  // attention !
+        .id2_is_branch      (id2c_is_branch_o   ),
+        .id2_is_j_imme      (id2c_is_j_imme_o   ),
+        .id2_is_jr          (id2c_is_jr_o       ),
+        .id2_branch_sel     (id2c_branch_sel_o  ),
 
         .id2_src_a_sel      (id2c_src_a_sel_o   ),
         .id2_src_b_sel      (id2c_src_b_sel_o   ),
@@ -1929,10 +1954,10 @@ module gemini (
         .id2_rt_data        (id2p_rt_data_o     ),
         .id2_ext_imme       (id2p_ext_imme_o    ),
 
-        // .id2_take_branch    (                   ),
-        // .id2_take_j_imme    (                   ),
-        // .id2_take_jr        (                   ),
-        // .id2_flush_req      (                   ),
+        .id2_is_branch      (),
+        .id2_is_j_imme      (),
+        .id2_is_jr          (),
+        .id2_branch_sel     (),
 
         .id2_src_a_sel      (id2p_src_a_sel_o   ),
         .id2_src_b_sel      (id2p_src_b_sel_o   ),
