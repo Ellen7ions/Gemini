@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module ex_lsu1 (
+module ex_lsu1c (
     input   wire            clk,
     input   wire            rst,
     input   wire            flush,

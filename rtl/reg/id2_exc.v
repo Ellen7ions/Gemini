@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module id2_ex (
+module id2_exc (
     input   wire        clk,
     input   wire        rst,
     input   wire        flush,

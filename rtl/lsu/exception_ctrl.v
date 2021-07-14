@@ -30,28 +30,6 @@ module exception_ctrl (
     input   wire            exception_is_modify_1,
     input   wire            exception_has_exp_1,
 
-    input   wire [31:0]     pc_2,
-    input   wire [31:0]     mem_badvaddr_2,
-    input   wire            in_delay_slot_2,
-
-    input   wire            exception_is_eret_2,
-    input   wire            exception_is_syscall_2,
-    input   wire            exception_is_break_2,
-    input   wire            exception_is_inst_adel_2,
-    input   wire            exception_is_data_adel_2,
-    input   wire            exception_is_data_ades_2,
-    input   wire            exception_is_overflow_2,
-    input   wire            exception_is_ri_2,
-    input   wire            exception_is_int_2,
-    input   wire            exception_is_i_refill_tlbl_2,
-    input   wire            exception_is_i_invalid_tlbl_2,
-    input   wire            exception_is_d_refill_tlbl_2,
-    input   wire            exception_is_d_invalid_tlbl_2,
-    input   wire            exception_is_d_refill_tlbs_2,
-    input   wire            exception_is_d_invalid_tlbs_2,
-    input   wire            exception_is_modify_2,
-    input   wire            exception_has_exp_2,
-
     // from cp0
     input   wire [31:0]     r_cp0_epc,
     // update pc
@@ -75,9 +53,6 @@ module exception_ctrl (
     output  wire            flush_pipline
 );
     wire            exception_has_1;
-    wire            exception_has_2;
-    wire            exception_is_interrupt;
-    assign exception_is_interrupt = exception_is_int_1 & ~refetch;
 
     assign exception_has_1  = 
         ~refetch & (
@@ -88,16 +63,6 @@ module exception_ctrl (
             exception_is_d_invalid_tlbs_1   |
             exception_is_modify_1
         );
-    
-    // assign exception_has_2  =
-    //     ~refetch & (
-    //         exception_has_exp_2             |
-    //         exception_is_d_refill_tlbl_2    |
-    //         exception_is_d_invalid_tlbl_2   |
-    //         exception_is_d_refill_tlbs_2    |
-    //         exception_is_d_invalid_tlbs_2   |
-    //         exception_is_modify_2
-    //     );
 
     assign flush_pipline    = exception_has_1 | refetch;
     assign exception_pc_ena = exception_has_1 | refetch;
