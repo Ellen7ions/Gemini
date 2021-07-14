@@ -36,10 +36,11 @@ module idu_2 (
     input  wire [2 :0]      forward_rt,
     input  wire [31:0]      exc_alu_res,
     input  wire [31:0]      exp_alu_res,
-    input  wire [31:0]      memc_alu_res,
-    input  wire [31:0]      memc_r_data,
-    input  wire [31:0]      memp_alu_res,
-    input  wire [31:0]      memp_r_data,
+    input  wire [31:0]      lsu1c_alu_res,
+    input  wire [31:0]      lsu1p_alu_res,
+    input  wire [31:0]      lsu2c_alu_res,
+    input  wire [31:0]      lsu2c_r_data,
+    input  wire [31:0]      lsu2p_alu_res,
 
     // regfile
     output wire [4 :0]      reg_r_addr_1,
@@ -327,17 +328,20 @@ module idu_2 (
                 !(forward_rs ^ `FORWARD_EXP_ALU_RES)
             }} & exp_alu_res    )   |
             ({32{
-                !(forward_rs ^ `FORWARD_MEMC_ALU_RES)
-            }} & memc_alu_res   )   |
+                !(forward_rs ^ `FORWARD_LS1P_ALU_RES)
+            }} & lsu1p_alu_res  )   |
             ({32{
-                !(forward_rs ^ `FORWARD_MEMC_MEM_DATA)
-            }} & memc_r_data    )   |
+                !(forward_rs ^ `FORWARD_LS1C_ALU_RES)
+            }} & lsu1c_alu_res  )   |
             ({32{
-                !(forward_rs ^ `FORWARD_MEMP_ALU_RES)
-            }} & memp_alu_res   )   |
+                !(forward_rs ^ `FORWARD_LS2C_ALU_RES)
+            }} & lsu2c_alu_res  )   |
             ({32{
-                !(forward_rs ^ `FORWARD_MEMP_MEM_DATA)
-            }} & memp_r_data    )   ;
+                !(forward_rs ^ `FORWARD_LS2C_MEM_DATA)
+            }} & lsu2c_r_data   )   |
+            ({32{
+                !(forward_rs ^ `FORWARD_LS2P_ALU_RES)
+            }} & lsu2p_alu_res)     ;
     
     assign id2_rt_data      =
             ({32{
@@ -350,17 +354,20 @@ module idu_2 (
                 !(forward_rt ^ `FORWARD_EXP_ALU_RES)
             }} & exp_alu_res    )   |
             ({32{
-                !(forward_rt ^ `FORWARD_MEMC_ALU_RES)
-            }} & memc_alu_res   )   |
+                !(forward_rt ^ `FORWARD_LS1P_ALU_RES)
+            }} & lsu1p_alu_res  )   |
             ({32{
-                !(forward_rt ^ `FORWARD_MEMC_MEM_DATA)
-            }} & memc_r_data    )   |
+                !(forward_rt ^ `FORWARD_LS1C_ALU_RES)
+            }} & lsu1c_alu_res  )   |
             ({32{
-                !(forward_rt ^ `FORWARD_MEMP_ALU_RES)
-            }} & memp_alu_res   )   |
+                !(forward_rt ^ `FORWARD_LS2C_ALU_RES)
+            }} & lsu2c_alu_res  )   |
             ({32{
-                !(forward_rt ^ `FORWARD_MEMP_MEM_DATA)
-            }} & memp_r_data    )   ;
+                !(forward_rt ^ `FORWARD_LS2C_MEM_DATA)
+            }} & lsu2c_r_data   )   |
+            ({32{
+                !(forward_rt ^ `FORWARD_LS2P_ALU_RES)
+            }} & lsu2p_alu_res)     ;
             
     assign id2_branch_sel = 
             {4{
