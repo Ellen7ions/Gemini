@@ -123,15 +123,15 @@
 `define ALU_RES_SEL_CP0     3'b100    
 
 `define LS_SEL_NOP          4'b0000
-`define LS_SEL_LB           4'b1000
-`define LS_SEL_LBU          4'b1001
-`define LS_SEL_LH           4'b1010
-`define LS_SEL_LHU          4'b1011
-`define LS_SEL_LW           4'b1100
-`define LS_SEL_LWL          4'b1101
-`define LS_SEL_LWR          4'b1110
-`define LS_SEL_SB           4'b0001
-`define LS_SEL_SH           4'b0010
-`define LS_SEL_SW           4'b0011
-`define LS_SEL_SWL          4'b0100
-`define LS_SEL_SWR          4'b0101
+`define LS_SEL_LB           4'b0111
+`define LS_SEL_LBU          4'b0001
+`define LS_SEL_LH           4'b0010
+`define LS_SEL_LHU          4'b0011
+`define LS_SEL_LW           4'b0100
+`define LS_SEL_LWL          4'b0101
+`define LS_SEL_LWR          4'b0110
+`define LS_SEL_SB           4'b1001
+`define LS_SEL_SH           4'b1010
+`define LS_SEL_SW           4'b1011
+`define LS_SEL_SWL          4'b1100
+`define LS_SEL_SWR          4'b1101

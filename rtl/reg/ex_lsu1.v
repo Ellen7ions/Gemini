@@ -9,6 +9,7 @@ module ex_lsu1 (
     input   wire [31:0]     ex_pc_o,
     input   wire [31:0]     ex_alu_res_o,
     input   wire [31:0]     ex_ls_addr_o,
+    input   wire [31:0]     ex_psyaddr_o,
     input   wire [1 :0]     ex_w_hilo_ena_o,
     input   wire [31:0]     ex_hi_res_o,
     input   wire [31:0]     ex_lo_res_o,
@@ -48,6 +49,7 @@ module ex_lsu1 (
     output  reg  [31:0]     ex_pc_i,
     output  reg  [31:0]     ex_alu_res_i,
     output  reg  [31:0]     ex_ls_addr_i,
+    output  reg  [31:0]     ex_psyaddr_i,
     output  reg  [1 :0]     ex_w_hilo_ena_i,
     output  reg  [31:0]     ex_hi_res_i,
     output  reg  [31:0]     ex_lo_res_i,
@@ -126,6 +128,7 @@ module ex_lsu1 (
             ex_is_tlbwi_i           <= 1'b0                 ;
             ex_is_refetch_i         <= 1'b0                 ;
             ex_is_tlbp_i            <= 1'b0                 ;
+            ex_psyaddr_i            <= 32'h0                ;
         end else if (!flush & !stall) begin
             ex_alu_res_i            <= ex_alu_res_o         ;
             ex_w_hilo_ena_i         <= ex_w_hilo_ena_o      ;
@@ -165,6 +168,7 @@ module ex_lsu1 (
             ex_is_tlbr_i            <= ex_is_tlbr_o         ;
             ex_is_tlbwi_i           <= ex_is_tlbwi_o        ;
             ex_is_tlbp_i            <= ex_is_tlbp_o         ;
+            ex_psyaddr_i            <= ex_psyaddr_o         ;
         end
     end
     

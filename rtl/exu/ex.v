@@ -19,11 +19,6 @@ module ex (
     input   wire            id2_is_i_refill_tlbl,
     input   wire            id2_is_i_invalid_tlbl,
     input   wire            id2_is_refetch,
-    input   wire            mmu_is_d_refill_tlbl,
-    input   wire            mmu_is_d_refill_tlbs,
-    input   wire            mmu_is_d_invalid_tlbl,
-    input   wire            mmu_is_d_invalid_tlbs,
-    input   wire            mmu_is_modify,
     input   wire            id2_is_tlbp,
     input   wire            id2_is_tlbr,
     input   wire            id2_is_tlbwi,
@@ -72,6 +67,7 @@ module ex (
     // ex output
     output  wire            ex_stall_req,
     output  wire [31:0]     ex_alu_res,
+    output  wire            ex_ls_or,
     output  wire [31:0]     ex_ls_addr,
     output  wire [1 :0]     ex_w_hilo_ena,  // ?
     output  wire [31:0]     ex_hi_res,
@@ -142,11 +138,6 @@ module ex (
 
     assign ex_is_i_refill_tlbl  = id2_is_i_refill_tlbl;
     assign ex_is_i_invalid_tlbl = id2_is_i_invalid_tlbl;
-    assign ex_is_d_refill_tlbl  = id2_ls_ena & mmu_is_d_refill_tlbl;
-    assign ex_is_d_invalid_tlbl = id2_ls_ena & mmu_is_d_invalid_tlbl;
-    assign ex_is_d_refill_tlbs  = id2_ls_ena & mmu_is_d_refill_tlbs;
-    assign ex_is_d_invalid_tlbs = id2_ls_ena & mmu_is_d_invalid_tlbs;
-    assign ex_is_modify         = id2_ls_ena & mmu_is_modify;
     assign ex_is_refetch        = id2_is_refetch;
 
     assign ex_is_tlbp           = id2_is_tlbp;
@@ -235,6 +226,9 @@ module ex (
     
     assign ex_ls_addr   =
             {32{id2_ls_ena}} & (id2_rs_data + id2_ext_imme);
+    
+    assign ex_ls_or     =
+            ex_ls_sel[3];
     
     assign ex_cp0_r_addr    = id2_w_cp0_addr;
     assign ex_cp0_r_ena     = !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0);

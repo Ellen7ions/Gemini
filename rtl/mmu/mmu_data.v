@@ -3,17 +3,16 @@
 module mmu_data #(
     parameter TLBNUM = 16
     ) (
+    // from ex
     input   wire                        en,
     input   wire                        ls_sel,
     input   wire [              31:0]   vaddr,
-    output  wire                        psyaddr_ena,
     output  wire [              31:0]   psyaddr,
     output  wire                        is_tlb_refill_tlbl,
     output  wire                        is_tlb_refill_tlbs,
     output  wire                        is_tlb_invalid_tlbl,
     output  wire                        is_tlb_invalid_tlbs,
     output  wire                        is_tlb_modify,
-
     input   wire                        is_tlbp,
     input   wire                        is_tlbr,
     input   wire                        is_tlbwi,
@@ -97,9 +96,6 @@ module mmu_data #(
     assign s_vpn        = is_tlbp ? r_cp0_EntryHi[31:13] : vaddr[31:13];
     assign s_asid       = r_cp0_EntryHi[7:0];
     assign s_odd        = vaddr[12];
-
-    assign psyaddr_ena  =
-        (direct_psyena | s_found & s_v);
 
     assign psyaddr =
         {32{ direct_psyena}} & direct_psyaddr |
