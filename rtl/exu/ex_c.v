@@ -3,7 +3,7 @@
 `include "../idu/id_def.v"
 `include "../utils/forward_def.v"
 
-module ex (
+module ex_c (
     input   wire            clk,
     input   wire            rst,
     
@@ -250,7 +250,7 @@ module ex (
     assign ex_w_cp0_addr    = id2_w_cp0_addr;
     assign ex_w_cp0_data    = id2_rt_data;
 
-    alu alu_kernel (
+    alu_c alu_kernel (
         .clk            (clk            ),
         .rst            (rst            ),
         .src_a          (src_a          ),

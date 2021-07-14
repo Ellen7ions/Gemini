@@ -10,7 +10,6 @@ module ctrl (
     // the delaysolt issue with the branch inst in c datapath.
     input   wire    with_delaysolt,
     input   wire    exc_stall_req,
-    input   wire    exp_stall_req,
     input   wire    exception_flush,
     input   wire    lsu1_tlb_stall_req,
     input   wire    mem_refetch,
@@ -46,19 +45,19 @@ module ctrl (
             b_ctrl_flush_req & (~forwardc_req & ~forwardp_req) | exception_flush | mem_refetch;
     
     assign issue_stall  =
-            d_cache_stall_req | forwardc_req | forwardp_req | exc_stall_req | exp_stall_req | lsu1_tlb_stall_req;
+            d_cache_stall_req | forwardc_req | forwardp_req | exc_stall_req | lsu1_tlb_stall_req;
     
     assign ii_id2_flush =
             b_ctrl_flush_req | exception_flush | mem_refetch;
     
     assign ii_id2_stall =
-            issue_stall | (pc_stall & fifo_flush) | forwardc_req | forwardp_req | exc_stall_req | exp_stall_req | lsu1_tlb_stall_req;
+            issue_stall | (pc_stall & fifo_flush) | forwardc_req | forwardp_req | exc_stall_req | lsu1_tlb_stall_req;
     
     assign id2_ex_flush =
             b_ctrl_flush_req & with_delaysolt | forwardc_req | forwardp_req | exception_flush | mem_refetch;
 
     assign id2_ex_stall =
-            d_cache_stall_req | exc_stall_req | exp_stall_req | lsu1_tlb_stall_req;
+            d_cache_stall_req | exc_stall_req | lsu1_tlb_stall_req;
 
     
     assign ex_lsu1_flush       =
@@ -66,21 +65,21 @@ module ctrl (
     assign ex_lsu1_exp_flush   =
         exception_flush | mem_refetch;
     assign ex_lsu1_stall   =
-        lsu1_tlb_stall_req | exc_stall_req | exp_stall_req | d_cache_stall_req;
+        lsu1_tlb_stall_req | exc_stall_req | d_cache_stall_req;
     
     assign lsu1_lsu2_flush     =
         exception_flush | mem_refetch | lsu1_tlb_stall_req;
     assign lsu1_lsu2_exp_flush =
         exception_flush | mem_refetch;
     assign lsu1_lsu2_stall =
-        exc_stall_req | exp_stall_req | d_cache_stall_req;
+        exc_stall_req | d_cache_stall_req;
 
     assign mem_wb_flush =
             1'b0;
     
     assign mem_wb_stall =
-            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush & ~mem_refetch);
+            d_cache_stall_req | ((exc_stall_req) & ~exception_flush & ~mem_refetch);
 
     assign wb_stall     =
-            d_cache_stall_req | ((exc_stall_req | exp_stall_req) & ~exception_flush & ~mem_refetch);
+            d_cache_stall_req | ((exc_stall_req) & ~exception_flush & ~mem_refetch);
 endmodule
