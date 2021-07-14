@@ -2115,7 +2115,7 @@ module gemini (
         .ex_wb_reg_sel      (exp_wb_reg_sel_o   )
     );
 
-    lsu2 memc (
+    lsu2c memc (
         .ex_mem_pc              (lsu1c_pc_i         ),
         .ex_mem_alu_res         (lsu1c_alu_res_i    ),
         .ex_mem_ls_addr         (lsu1c_ls_addr_i    ),
@@ -2178,67 +2178,18 @@ module gemini (
         .data_ram_rdata     (memc_data_rdata    )
     );
 
-    lsu2 memp (
+    lsu2p memp (
         .ex_mem_pc              (lsu1p_pc_i         ),
         .ex_mem_alu_res         (lsu1p_alu_res_i    ),
-        .ex_mem_ls_addr         (lsu1p_ls_addr_i    ),
-        .ex_mem_rt_data         (lsu1p_rt_data_i    ),
         .ex_mem_w_reg_ena       (lsu1p_w_reg_ena_i  ),
         .ex_mem_w_reg_dst       (lsu1p_w_reg_dst_i  ),
-        .ex_mem_ls_ena          (lsu1p_ls_ena_i     ),
-        .ex_mem_ls_sel          (lsu1p_ls_sel_i     ),
         .ex_mem_wb_reg_sel      (lsu1p_wb_reg_sel_i ),
 
-        .ex_mem_w_cp0_ena       (lsu1p_w_cp0_ena_i  ),
-        .ex_mem_w_cp0_addr      (lsu1p_w_cp0_addr_i ),
-        .ex_mem_w_cp0_data      (lsu1p_w_cp0_data_i ),
-
-        .ex_mem_in_delay_slot       (lsu1p_in_delay_slot_i      ),
-        .ex_mem_is_eret             (lsu1p_is_eret_i            ),
-        .ex_mem_is_syscall          (lsu1p_is_syscall_i         ),
-        .ex_mem_is_break            (lsu1p_is_break_i           ),
-        .ex_mem_is_inst_adel        (lsu1p_is_inst_adel_i       ),
-        .ex_mem_is_data_adel        (lsu1p_is_data_adel_i       ),
-        .ex_mem_is_data_ades        (lsu1p_is_data_ades_i       ),
-        .ex_mem_is_overflow         (lsu1p_is_overflow_i        ),
-        .ex_mem_is_ri               (lsu1p_is_ri_i              ),
-        .ex_mem_is_int              (lsu1p_is_int_i             ),
-        .ex_mem_is_i_refill_tlbl    (lsu1p_is_i_refill_tlbl_i   ),
-        .ex_mem_is_i_invalid_tlbl   (lsu1p_is_i_invalid_tlbl_i  ),
-        .ex_mem_is_d_refill_tlbl    (lsu1p_is_d_refill_tlbl_i   ),
-        .ex_mem_is_d_invalid_tlbl   (lsu1p_is_d_invalid_tlbl_i  ),
-        .ex_mem_is_d_refill_tlbs    (lsu1p_is_d_refill_tlbs_i   ),
-        .ex_mem_is_d_invalid_tlbs   (lsu1p_is_d_invalid_tlbs_i  ),
-        .ex_mem_is_modify           (lsu1p_is_modify_i          ),
-        .ex_mem_is_refetch          (lsu1p_is_refetch_i         ),
-        .ex_mem_is_tlbr             (lsu1p_is_tlbr_i            ),
-        .ex_mem_is_tlbwi            (lsu1p_is_tlbwi_i           ),
-        .ex_mem_has_exception       (lsu1p_has_exception_i      ),
-
-        .ex_mem_w_hilo_ena  (lsu1p_w_hilo_ena_i   ),
-        .ex_mem_hi_res      (lsu1p_hi_res_i       ),
-        .ex_mem_lo_res      (lsu1p_lo_res_i       ),
-
-        .mem_pc             (memp_pc_o          ),
-        .mem_alu_res        (memp_alu_res_o     ),
-        .mem_w_reg_ena      (memp_w_reg_ena_o   ),
-        .mem_w_reg_dst      (memp_w_reg_dst_o   ),
-        .mem_r_data         (memp_r_data_o      ),
-        .mem_wb_reg_sel     (memp_wb_reg_sel_o  ),
-
-        .mem_w_cp0_ena      (memp_w_cp0_ena_o   ),
-        .mem_w_cp0_addr     (memp_w_cp0_addr_o  ),
-        .mem_w_cp0_data     (memp_w_cp0_data_o  ),
-
-        .mem_refetch        (memp_is_refetch_o  ),
-        .mem_has_exception  (memp_has_exception_o),
-        .cls_refetch        (                   ),
-
-        .mem_w_hilo_ena     (memp_w_hilo_ena_o  ),
-        .mem_hi_res         (memp_hi_res_o      ),
-        .mem_lo_res         (memp_lo_res_o      ),
-
-        .data_ram_rdata     (memp_data_rdata    )
+        .mem_pc                 (memp_pc_o          ),
+        .mem_alu_res            (memp_alu_res_o     ),
+        .mem_w_reg_ena          (memp_w_reg_ena_o   ),
+        .mem_w_reg_dst          (memp_w_reg_dst_o   ),
+        .mem_wb_reg_sel         (memp_wb_reg_sel_o  )
     );
 
     mem_ctrl mem_ctrl0 (
