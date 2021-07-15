@@ -47,7 +47,7 @@ module mmu_mapping #(
     input   wire [3 :0] lsu1_wea,
     input   wire [31:0] lsu1_psyaddr,
     input   wire [31:0] lsu1_wdata,
-    output  wire [31:0] lsu1_rdata,
+    output  wire [31:0] lsu1_rdata,     // send to lsu2
 
     // sram
     output  wire        sram_inst_ena,

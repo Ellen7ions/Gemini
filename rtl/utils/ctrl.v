@@ -61,14 +61,14 @@ module ctrl (
 
     
     assign ex_lsu1_flush       =
-        exception_flush | mem_refetch;
+        exception_flush | mem_refetch | lsu1_tlb_stall_req;
     assign ex_lsu1_exp_flush   =
         exception_flush | mem_refetch;
     assign ex_lsu1_stall   =
-        lsu1_tlb_stall_req | exc_stall_req | d_cache_stall_req;
+        exc_stall_req | d_cache_stall_req;
     
     assign lsu1_lsu2_flush     =
-        exception_flush | mem_refetch | lsu1_tlb_stall_req;
+        exception_flush | mem_refetch;
     assign lsu1_lsu2_exp_flush =
         exception_flush | mem_refetch;
     assign lsu1_lsu2_stall =

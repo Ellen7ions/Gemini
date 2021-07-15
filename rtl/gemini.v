@@ -232,7 +232,6 @@ module gemini (
     wire [25:0]     id1p_j_imme_i;
     wire            id1p_in_delay_slot_i;
     
-    // id2 => ex   
     wire            id2c_in_delay_slot_o;
     wire            id2c_is_eret_o;
     wire            id2c_is_syscall_o;
@@ -341,7 +340,6 @@ module gemini (
     wire            id2p_w_reg_ena_i;
     wire            id2p_wb_reg_sel_i;
 
-    // ex => mem
     wire            exc_has_exception_o;
     wire            exc_has_exception_i;
     wire            memc_has_exception_i;
@@ -1130,8 +1128,8 @@ module gemini (
         .ex_vaddr               (exc_ls_addr_o          ),
         .ex_psyaddr             (exc_psyaddr_o          ),
         .ex_tlb_refill_tlbl     (exc_is_d_refill_tlbl_o ),
-        .ex_tlb_refill_tlbs     (exc_is_d_invalid_tlbl_o),
-        .ex_tlb_invalid_tlbl    (exc_is_d_refill_tlbs_o ),
+        .ex_tlb_refill_tlbs     (exc_is_d_refill_tlbs_o ),
+        .ex_tlb_invalid_tlbl    (exc_is_d_invalid_tlbl_o),
         .ex_tlb_invalid_tlbs    (exc_is_d_invalid_tlbs_o),
         .ex_tlb_modify          (exc_is_modify_o        ),
 
@@ -1155,7 +1153,7 @@ module gemini (
         .sram_data_rdata        (sram_data_rdata        )
     );
 
-    assign is_tlbp              = exc_is_tlbp_i;
+    assign is_tlbp              = exc_is_tlbp_o;
     assign is_tlbr              = lsu1c_is_tlbr_i;
     assign is_tlbwi             = lsu1c_is_tlbwi_i;
     assign r_cp0_Index          = cp0_index;
@@ -1640,6 +1638,11 @@ module gemini (
         .ex_cp0_r_ena       (exc_cp0_r_ena      ),
         .ex_cp0_r_addr      (exc_cp0_r_addr     ),
         .ex_cp0_r_data      (cp0_r_data         ),
+
+        .lsu1_w_cp0_ena     (exc_w_cp0_ena_i    ),
+        .lsu1_w_cp0_addr    (exc_w_cp0_addr_i   ),
+        .lsu1_w_cp0_data    (exc_w_cp0_data_i   ),
+
         .id2_src_a_sel      (id2c_src_a_sel_i   ),
         .id2_src_b_sel      (id2c_src_b_sel_i   ),
         .id2_alu_sel        (id2c_alu_sel_i     ),

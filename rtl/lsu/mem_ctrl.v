@@ -13,6 +13,7 @@ module mem_ctrl (
 
     // MEM
     input   wire            mem2c_has_exception,
+    // refetch check ?
     output  wire [31:0]     mem2c_r_data,
 
     output  wire            data_ram_en,
