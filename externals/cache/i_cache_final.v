@@ -388,16 +388,21 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
     end
     reg flag_cache_miss;
 
+    reg [63:0] cache_replace_count;
     reg [63:0] cache_miss_count;
     reg [63:0] cache_total_count;
 
     always @(posedge clk) begin
         if(rst) begin
-            flag_cache_miss  <=  0;
-            cache_miss_count <=  0;
-            cache_total_count<=  0;
+            flag_cache_miss     <=  0;
+            cache_miss_count    <=  0;
+            cache_total_count   <=  0;
+            cache_replace_count <= 0;
         end else begin
             if( miss && flag_cache_miss == 1'b0) begin
+                if((LRU_sel_next == 2'b10 && cache_tag_out[0][19] == 1'b1) ||(LRU_sel_next == 2'b01 && cache_tag_out[1][19] == 1'b1))begin
+                    cache_replace_count <= cache_replace_count + 1;
+                end
                 flag_cache_miss <= 1'b1;
                 cache_miss_count <= cache_miss_count + 1;
             end else if(flag_cache_miss == 1'b1 && (!miss)) begin
