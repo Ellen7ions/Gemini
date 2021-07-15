@@ -24,7 +24,7 @@ module i_cache_final #(
         parameter ADDR_WIDTH = 32,
         parameter CACHE_LINE_SIZE = 8,
         parameter CACHE_WAY_SIZE = 2,
-        parameter CACHE_LINE_NUM = 128
+        parameter CACHE_LINE_NUM = 256
     )(
         input wire              clk,
         input wire              rst, 
@@ -94,9 +94,9 @@ module i_cache_final #(
 
     assign rready = 1'b1;  //always accept data from ram(slaver) so far.
     localparam Byte_c = 2;
-    localparam INDEX_WIDTH = $clog2(CACHE_LINE_NUM);  //index_width = 7
+    localparam INDEX_WIDTH = $clog2(CACHE_LINE_NUM);  //index_width = 8
     localparam OFFSET_WIDTH =$clog2(CACHE_LINE_SIZE);  //offset width = 3
-    localparam TAG_WIDTH = ADDR_WIDTH - INDEX_WIDTH - OFFSET_WIDTH - Byte_c;  //tag width = 20
+    localparam TAG_WIDTH = ADDR_WIDTH - INDEX_WIDTH - OFFSET_WIDTH - Byte_c;  //tag width = 19
     
     initial begin
         if(TAG_WIDTH <= 0) begin
@@ -105,7 +105,7 @@ module i_cache_final #(
         end
     end
 
-//way 2  cache_line_size 32bytes   cache_line_num = 128   
+//way 2  cache_line_size 32bytes   cache_line_num = 256   
 //cpu info
     wire [TAG_WIDTH -1 :0]   tag_cpu = cpu_instr_addr_pc [ADDR_WIDTH-1 : 2 + OFFSET_WIDTH + INDEX_WIDTH]; //ADDR_WIDTH - TAG_WIDTH +1
     wire [INDEX_WIDTH -1 :0] index_cpu = cpu_instr_addr [2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
@@ -118,7 +118,8 @@ module i_cache_final #(
     wire [23:0] cache_tag_out [CACHE_WAY_SIZE -1 :0];
     reg [2:0]  write_tag_en[CACHE_WAY_SIZE-1:0];
     assign  tag_ram_addr =  stall_all? index_cpu_pc: index_cpu;
-    assign  cache_tag_in = {4'b0001,tag_cpu};
+    //[18:0]
+    assign  cache_tag_in = {5'b00001,tag_cpu};
 
 //data part
     wire [INDEX_WIDTH-1 : 0] instr_ram_data_index;
@@ -158,9 +159,11 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
     wire [1:0] hit_tag;
     reg miss;
 
-    assign hit_tag = (cache_tag_out[0][20] == 1'b1 && cache_tag_out[0][19:0] == tag_cpu)? 2'b01 
-                        :(cache_tag_out[1][20] == 1'b1 && cache_tag_out[1][19:0] == tag_cpu)? 2'b10 : 2'b00;
+    /*assign hit_tag = (cache_tag_out[0][20] == 1'b1 && cache_tag_out[0][19:0] == tag_cpu)? 2'b01 
+                        :(cache_tag_out[1][20] == 1'b1 && cache_tag_out[1][19:0] == tag_cpu)? 2'b10 : 2'b00;*/
 
+    assign hit_tag = (cache_tag_out[0][19] == 1'b1 && cache_tag_out[0][18:0] == tag_cpu)? 2'b01 
+                        :(cache_tag_out[1][19] == 1'b1 && cache_tag_out[1][18:0] == tag_cpu)? 2'b10 : 2'b00;
     reg Before_clk;
     always @(posedge clk) begin
         if(rst) begin
@@ -263,20 +266,6 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
             LRU_sel <= LRU_sel_next;
         end
     end
-
-/*    always @(*) begin
-        if(rst)begin
-            LRU_sel_next = 2'b00;
-        end else begin
-            if(hit_tag == 2'b01) begin
-                LRU_sel_next  = 2'b01;
-            end else if (hit_tag == 2'b10) begin
-                LRU_sel_next = 2'b10;
-            end else begin
-                LRU_sel_next = LRU_sel;
-            end
-        end
-    end*/
 
     always @(*) begin
         if(rst) begin
@@ -411,7 +400,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
             if( miss && flag_cache_miss == 1'b0) begin
                 flag_cache_miss <= 1'b1;
                 cache_miss_count <= cache_miss_count + 1;
-            end else if(flag_cache_miss == 1'b1) begin
+            end else if(flag_cache_miss == 1'b1 && (!miss)) begin
                 flag_cache_miss <= 1'b0;
             end
             if(cpu_instr_ena && ~stall_all)begin
