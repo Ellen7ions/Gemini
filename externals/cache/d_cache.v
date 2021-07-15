@@ -78,7 +78,6 @@ module d_cache#(
     );
     assign awid  = 4'h0;
     assign wstrb  = 4'h0;
-    assign bready  = 1'b0; 
     assign arid = 4'h0;  //not used so far.
 
     assign awburst  = 2'b01;
@@ -91,6 +90,10 @@ module d_cache#(
     //wire cache_ena = r_mem_ena || (w_mem_ena!=4'b0000);
     reg cache_ena;
     reg reg_cache_ena;
+
+    reg raddr_rcv;      //读事务地址握手成功
+    reg waddr_rcv;      //写事务地址握手成功
+    reg wdata_rcv;      //写数据握手成功
 
     always @(posedge clk ) begin
         if(rst)begin
@@ -216,9 +219,9 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
     reg [1:0] LRU_sel_next;
 
 //CACHE
-    localparam [1:0] CACHE_IDLE    = 2'b00;
-    localparam [1:0] CACHE_READ    = 2'b01;
-    localparam [1:0] CACHE_WRITE   = 2'b10;
+    localparam [1:0] CACHE_IDLE    =  2'b00;
+    localparam [1:0] CACHE_READ    =  2'b01;
+    localparam [1:0] CACHE_WRITE   =  2'b10;
 
     reg [1:0] cur_cache_status;
     always @(posedge clk) begin
@@ -259,6 +262,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
     localparam [9:0] LW_DREAD   = 10'b00000_10000;
     localparam [9:0] LW_ISTALL  = 10'b00000_10001;
 
+
     localparam [9:0] SW_IDLE    = 10'b00001_00000;
     localparam [9:0] SW_ADDR    = 10'b00010_00000;
     localparam [9:0] SW_WRITE   = 10'b00100_00000;
@@ -297,13 +301,23 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
 
     assign mem_data = (cur_state == LW_ISTALL)? Cache_mem_data_reg : Cache_mem_data;
 
-    always @(*) begin
+    /*always @(*) begin
         if(rst)begin
             dirty = 1'b0;
         end else if(!miss ||!reg_cache_ena) begin
             dirty = 1'b0;
         end else begin
             dirty = (LRU_sel_next == 2'b01)? cache_tag_out[1][21] : cache_tag_out[0][21];
+        end
+    end*/
+
+    always @(*) begin
+        if(rst)begin
+            dirty = 1'b0;
+        end else if(miss)begin
+            dirty = (LRU_sel_next == 2'b01)? cache_tag_out[1][21] : cache_tag_out[0][21];
+        end else begin
+            dirty = 1'b0;
         end
     end
 
@@ -322,8 +336,21 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
     end
     assign d_cache_stall = (rst)? 1'b0 :   (next_state == LW_ADDR || next_state == LW_READ ||next_state == LW_DREAD ||next_state == LW_WRITE ||
                                             next_state == SW_ADDR || next_state == SW_READ ||next_state == SW_DREAD ||next_state == SW_WRITE ||
-                                            cur_state == SW_ADDR || cur_state == SW_READ ||cur_state == SW_DREAD ||cur_state == SW_WRITE||
+                                            cur_state == SW_ADDR || cur_state == SW_READ ||cur_state == SW_DREAD ||cur_state == SW_WRITE|| cur_state == SW_IDLE||
                                             cur_state == LW_ADDR || cur_state == LW_READ ||cur_state == LW_DREAD ||cur_state == LW_WRITE )? 1'b1:1'b0;
+
+    always @(posedge clk ) begin
+        raddr_rcv <= rst             ? 1'b0 :
+                    arvalid&&arready ? 1'b1 :
+                     (cur_state == SW_DREAD || cur_state == LW_DREAD ||cur_state == SW_READ ||cur_state == LW_READ)? 1'b0 : raddr_rcv;
+        waddr_rcv <= rst             ? 1'b0 :
+                    awvalid&&awready ? 1'b1 :
+                    (cur_state == SW_DREAD || cur_state == LW_DREAD ||cur_state == SW_READ ||cur_state == LW_READ)? 1'b0 : waddr_rcv;
+        wdata_rcv <= rst                  ? 1'b0 :
+                    wvalid&&wready&&wlast ? 1'b1 :
+                    (cur_state == SW_DREAD || cur_state == LW_DREAD ||cur_state == SW_READ ||cur_state == LW_READ)? 1'b0 : wdata_rcv;
+    end
+    assign bready  = waddr_rcv; 
     integer  i;
     always @(*) begin
         if(rst) begin
@@ -434,14 +461,14 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                         awvalid     = 1'b1;
                         awlen       = CACHE_LINE_SIZE -1;
                         awaddr      = cache_wb_addr;
-                        wvalid      =1'b1;
-                        next_state  = awready && arready && wready? LW_WRITE :LW_ADDR;
+                        wvalid      = 1'b1;
+                        next_state  = (waddr_rcv && wready && raddr_rcv)?  LW_WRITE :LW_ADDR;
                     end else begin
                         arvalid     = 1'b1;
                         arlen       = CACHE_LINE_SIZE-1;
                         araddr      = cache_line_addr;
 
-                        next_state  = arready?LW_READ:LW_ADDR;
+                        next_state  = arready? LW_READ : LW_ADDR;
                     end
                 end
 
@@ -484,20 +511,8 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                             next_state = LW_ISTALL;
                             cache_ena = 1'b1;
                         end else begin
-                            case(data_cache_status)
-                                CACHE_IDLE:begin
-                                    next_state  = NO_L_SW;
-                                    cache_ena  =  1'b0;
-                                end
-                                CACHE_READ:begin
-                                    next_state = LW_IDLE;
-                                    cache_ena = 1'b1;
-                                end
-                                CACHE_WRITE:begin
-                                    next_state = SW_IDLE;
-                                    cache_ena = 1'b1;
-                                end
-                            endcase
+                            next_state = NO_L_SW;
+                            cache_ena = 1'b0;
                         end
                     end else begin
                         cache_ena = 1'b1;
@@ -517,7 +532,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                     awlen <= 8'b0000_0000;
                     awvalid <= 1'b0;
 
-                    wvalid = 1'b0;
+                    wvalid = 1'b1;
                     case(hit_tag)
                         2'b01:begin
                             wdata = cache_block_out_v1[cur_count];
@@ -541,6 +556,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
 
                 LW_DREAD:begin
                     wlast = 1'b0;
+                    wvalid = 1'b0;
                     LRU_sel_next = LRU_sel;
                     cache_block_in[0] = write_buffer[0];
                     cache_block_in[1] = write_buffer[1];
@@ -573,20 +589,8 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                         next_state = LW_ISTALL;
                         cache_ena = 1'b1;
                     end else begin
-                        case(data_cache_status)
-                            CACHE_IDLE:begin
-                                next_state   = NO_L_SW;
-                                cache_ena =1'b0;
-                            end
-                            CACHE_READ:begin
-                                next_state   = LW_IDLE;
-                                cache_ena = 1'b1; 
-                            end
-                            CACHE_WRITE:begin
-                                next_state   = SW_IDLE;
-                                cache_ena = 1'b1; 
-                            end
-                        endcase
+                        next_state = NO_L_SW;
+                        cache_ena = 1'b0;
                     end
                 end
 
@@ -596,20 +600,8 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                         next_state = LW_ISTALL;
                         cache_ena = 1'b1;
                     end else begin
-                        case(data_cache_status)
-                            CACHE_IDLE:begin
-                                next_state   = NO_L_SW;
-                                cache_ena = 1'b0;
-                            end
-                            CACHE_READ:begin
-                                next_state   = LW_IDLE;
-                                cache_ena = 1'b1; 
-                            end
-                            CACHE_WRITE:begin
-                                next_state   = SW_IDLE;
-                                cache_ena = 1'b1; 
-                            end
-                        endcase
+                        next_state = NO_L_SW;
+                        cache_ena = 1'b0;
                     end
                 end
 
@@ -619,6 +611,8 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                     cache_block_in[offset_cur] = w_mem_data_reg;
                     if(!miss) begin
                         LRU_sel_next = hit_tag;
+                        next_state = NO_L_SW;
+                        cache_ena  = 1'b0;
                         case(hit_tag)
                             2'b01:begin
                                 for( i = 0;i<CACHE_LINE_SIZE;i = i+1)begin
@@ -639,20 +633,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                                 write_data_bank_en_v2[offset_cur] = w_mem_ena_reg;
                             end
                         endcase
-                        case(data_cache_status)
-                            CACHE_IDLE: begin
-                               next_state  = NO_L_SW;
-                               cache_ena = 1'b0; 
-                            end
-                            CACHE_READ:begin
-                                next_state = LW_IDLE;
-                                cache_ena = 1'b1;
-                            end
-                            CACHE_WRITE:begin
-                                next_state = SW_IDLE;
-                                cache_ena = 1'b1;
-                            end
-                        endcase
+
                     end else begin
                         for(i = 0;i < CACHE_LINE_SIZE;i= i+1) begin
                             write_data_bank_en_v1[i] = 4'b0000;
@@ -679,7 +660,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                         wvalid = 1'b1;
                         wlast  = 1'b0;
 
-                        next_state = arready && awready && wready? SW_WRITE:SW_ADDR;
+                        next_state = (raddr_rcv && waddr_rcv  && wready)? SW_WRITE:SW_ADDR;
                     end else begin
                         araddr  <= cache_line_addr;
                         arlen   <= CACHE_LINE_SIZE -1;
@@ -688,7 +669,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                     end
                 end
 
-                SW_READ:begin
+                SW_READ:begin   //ok
                     LRU_sel_next = LRU_sel;
                     araddr  <= 32'h0000_0000;
                     arlen   <= 8'b0000_0000;
@@ -720,21 +701,9 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                         end
                     endcase
                     if(rlast)begin
-                            next_offset = 3'b000;
-                        case(data_cache_status)
-                            CACHE_IDLE:begin
-                                next_state  = NO_L_SW;
-                                cache_ena = 1'b0;
-                            end
-                            CACHE_READ:begin
-                                next_state = LW_IDLE;
-                                cache_ena = 1'b1;
-                            end
-                            CACHE_WRITE:begin
-                                next_state = SW_IDLE;
-                                cache_ena = 1'b1;
-                            end
-                        endcase
+                        next_offset = 3'b000;
+                        next_state  = NO_L_SW;
+                        cache_ena   = 1'b0;
                     end else begin
                         next_state  = SW_READ;
                         cache_ena = 1'b1;
@@ -753,7 +722,6 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                     awlen   <= 8'b0000_0000;
                     awvalid <= 1'b0;
                     
-                    wvalid = 1'b0;
                     case(LRU_sel_next)
                         2'b01:begin
                             wdata = cache_block_out_v2[cur_count];
@@ -763,12 +731,14 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                         end
                     endcase
                     write_buffer [cur_offset] = (cur_offset ==offset_cur)?
-                                                                w_mem_data:rdata;
+                                                                w_mem_data_reg:rdata;
                     if(cur_count < 3'b111)begin
+                        wvalid = 1'b1;
                         next_state   = SW_WRITE;
                         next_offset  = cur_offset + 1;
                         next_count   = cur_count  + 1;
                     end else begin
+                        wvalid = 1'b0;
                         wlast        = 1'b1;
                         next_state   = SW_DREAD;
                         next_offset  = 3'b000;
@@ -779,6 +749,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                 SW_DREAD:begin
                     LRU_sel_next = LRU_sel;
                     wlast = 1'b0;
+                    wvalid = 1'b0;
                     cache_block_in[0] = write_buffer[0];
                     cache_block_in[1] = write_buffer[1];
                     cache_block_in[2] = write_buffer[2];
@@ -804,20 +775,8 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cache_ena || reg_cache_ena),.w
                             end
                         end
                     endcase
-                    case(data_cache_status)
-                        CACHE_IDLE:begin
-                            cache_ena = 1'b0;
-                            next_state   = NO_L_SW;
-                        end
-                        CACHE_READ:begin
-                            next_state   = LW_IDLE; 
-                            cache_ena = 1'b1;
-                        end
-                        CACHE_WRITE:begin
-                            next_state   = SW_IDLE;
-                            cache_ena = 1'b1; 
-                        end
-                    endcase
+                    next_state = NO_L_SW;
+                    cache_ena  = 1'b0;
                 end
             endcase
         end
