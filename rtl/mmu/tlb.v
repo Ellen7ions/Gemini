@@ -4,7 +4,6 @@ module tlb #(
     parameter TLBNUM = 16
     ) (
     input   wire                        clk,
-    input   wire                        rst,
     input   wire [              18:0]   s_vpn_1,
     input   wire                        s_odd_1,
     input   wire [              7 :0]   s_asid_1,

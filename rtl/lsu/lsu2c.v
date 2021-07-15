@@ -2,7 +2,7 @@
 
 `include "../idu/id_def.v"
 
-module lsu (
+module lsu2c (
     input   wire [31:0] ex_mem_pc,
 
     input   wire [31:0] ex_mem_alu_res,

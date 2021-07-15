@@ -2,7 +2,7 @@
 
 `include "../idu/id_def.v"
 
-module alu (
+module alu_c (
     input   wire        clk,
     input   wire        rst,
     input   wire [31:0] src_a,

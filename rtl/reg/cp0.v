@@ -123,7 +123,8 @@ module cp0 (
                 end
 
                 {5'd14, 3'd0}: begin
-                    EPC             <= w_data;
+                    if (~w_cp0_update_ena)
+                        EPC         <= w_data;
                 end
 
                 {5'd0, 3'd0}: begin

@@ -1,11 +1,10 @@
 `timescale 1ns / 1ps
 
 
-module mmu #(
+module mmu_mapping #(
     parameter TLBNUM = 16
     ) (
     input   wire        clk,
-    input   wire        rst,
 
     input   wire        is_tlbp,
     input   wire        is_tlbr,
@@ -32,16 +31,23 @@ module mmu #(
     output  wire        inst_tlb_refill_tlbl,
     output  wire        inst_tlb_invalid_tlbl,
 
-    input   wire        data_ena,
-    input   wire [3 :0] data_wea,
-    input   wire [31:0] data_addr,
-    input   wire [31:0] data_wdata,
-    output  wire [31:0] data_rdata,
-    output  wire        data_tlb_refill_tlbl,
-    output  wire        data_tlb_refill_tlbs,
-    output  wire        data_tlb_invalid_tlbl,
-    output  wire        data_tlb_invalid_tlbs,
-    output  wire        data_tlb_modify,
+    // from ex
+    input   wire        ex_ls_ena,
+    input   wire        ex_ls_or,
+    input   wire [31:0] ex_vaddr,
+    output  wire [31:0] ex_psyaddr,
+    output  wire        ex_tlb_refill_tlbl,
+    output  wire        ex_tlb_refill_tlbs,
+    output  wire        ex_tlb_invalid_tlbl,
+    output  wire        ex_tlb_invalid_tlbs,
+    output  wire        ex_tlb_modify,
+
+    // from lsu1
+    input   wire        lsu1_ena,
+    input   wire [3 :0] lsu1_wea,
+    input   wire [31:0] lsu1_psyaddr,
+    input   wire [31:0] lsu1_wdata,
+    output  wire [31:0] lsu1_rdata,
 
     // sram
     output  wire        sram_inst_ena,
@@ -104,7 +110,6 @@ module mmu #(
     wire                        inst_psyaddr_ena;
     wire [              31:0]   inst_psyaddr;
     wire                        data_psyaddr_ena;
-    wire [              31:0]   data_psyaddr;
 
     assign sram_inst_ena    =   inst_psyaddr_ena & inst_ena;
     assign sram_inst_addr   =   inst_psyaddr;
@@ -113,11 +118,11 @@ module mmu #(
     assign inst_ok_1        =   sram_inst_ok_1;
     assign inst_ok_2        =   sram_inst_ok_2;
 
-    assign sram_data_ena    =   data_psyaddr_ena & data_ena;
-    assign sram_data_addr   =   data_psyaddr;
-    assign sram_data_wen    =   data_wea;
-    assign sram_data_wdata  =   data_wdata;
-    assign data_rdata       =   sram_data_rdata;
+    assign sram_data_ena    =   lsu1_ena;
+    assign sram_data_addr   =   lsu1_psyaddr;
+    assign sram_data_wen    =   lsu1_wea;
+    assign sram_data_wdata  =   lsu1_wdata;
+    assign lsu1_rdata       =   sram_data_rdata;
 
     mmu_inst #(TLBNUM) inst_map (
         .en                 (inst_ena               ),
@@ -139,16 +144,15 @@ module mmu #(
     );
 
     mmu_data #(TLBNUM) data_map (
-        .en                 (data_ena               ),
-        .ls_sel             (|data_wea              ),
-        .vaddr              (data_addr              ),
-        .psyaddr_ena        (data_psyaddr_ena       ),
-        .psyaddr            (data_psyaddr           ),
-        .is_tlb_refill_tlbl (data_tlb_refill_tlbl   ),    
-        .is_tlb_refill_tlbs (data_tlb_refill_tlbs   ),    
-        .is_tlb_invalid_tlbl(data_tlb_invalid_tlbl  ),        
-        .is_tlb_invalid_tlbs(data_tlb_invalid_tlbs  ),        
-        .is_tlb_modify      (data_tlb_modify        ),
+        .en                 (ex_ls_ena              ),
+        .ls_sel             (ex_ls_or               ),
+        .vaddr              (ex_vaddr               ),
+        .psyaddr            (ex_psyaddr             ),
+        .is_tlb_refill_tlbl (ex_tlb_refill_tlbl     ),    
+        .is_tlb_refill_tlbs (ex_tlb_refill_tlbs     ),    
+        .is_tlb_invalid_tlbl(ex_tlb_invalid_tlbl    ),        
+        .is_tlb_invalid_tlbs(ex_tlb_invalid_tlbs    ),        
+        .is_tlb_modify      (ex_tlb_modify          ),
 
         .is_tlbp            (is_tlbp                ),
         .is_tlbr            (is_tlbr                ),
@@ -206,7 +210,6 @@ module mmu #(
 
     tlb #(TLBNUM) tlb0 (
         .clk            (clk                ),
-        .rst            (rst                ),
         .s_vpn_1        (s_vpn_1            ),
         .s_odd_1        (s_odd_1            ),
         .s_asid_1       (s_asid_1           ),

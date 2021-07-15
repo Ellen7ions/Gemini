@@ -6,7 +6,13 @@ Gemini is prominent in the winter skies of the northern Hemisphere and is visibl
 
 If you find Castor and Pollux, you find me.
 
-### Milestone
+### [Problems]
+
+I find the timing is still failed thougth I remove the cp0, hilo, exceptions and load-store from p datapath.
+
+The critical datapath exists the path from npc to mmu and tlb, maybe I should add a register between npc and mmu.
+
+### [Milestone]
 
 #### 6-25
 
