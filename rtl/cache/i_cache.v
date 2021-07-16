@@ -1,10 +1,30 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2021/06/05 20:43:32
+// Design Name: 
+// Module Name: i_cache_final
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
-module i_cache_final #(
+
+module i_cache #(
         parameter ADDR_WIDTH = 32,
         parameter CACHE_LINE_SIZE = 8,
         parameter CACHE_WAY_SIZE = 2,
-        parameter CACHE_LINE_NUM = 128
+        parameter CACHE_LINE_NUM = 256
     )(
         input wire              clk,
         input wire              rst, 
@@ -12,14 +32,14 @@ module i_cache_final #(
         //input wire pc_stall,
         input wire              cpu_instr_ena,  //~rst
         input wire [31:0]       cpu_instr_addr,
-        input wire [31:0]       cpu_instr_addr_pc,
+//        input wire [31:0]       cpu_instr_addr_pc,
         //input wire cpu_stall_control
         output wire [31:0]      cpu_instr_data,
         output wire [31:0]      cpu_instr_data2,
         output wire             cpu_instr_data_1ok,
         output wire             cpu_instr_data_2ok,
         output wire             stall_all,
-
+    
         //axi
         //aw   with out awcache awlock  awprot
         output wire [3:0]       awid,
@@ -56,27 +76,27 @@ module i_cache_final #(
         input wire              bvalid,
         output wire             bready
     );
-    assign awid     = 4'h0;
-    assign awaddr   = 32'h0000_0000;
-    assign awlen    = 8'h00;
-    assign awsize   = 3'h0;
+    assign awid  = 4'h0;
+    assign awaddr  = 32'h0000_0000;
+    assign awlen  = 8'h00;
+    assign awsize  = 3'h0;
     assign awburst  = 2'h0;
     assign awvalid  = 1'b0;
-    assign wdata    = 32'h0000_0000;
-    assign wstrb    = 4'h0;
-    assign wlast    = 1'b0;
-    assign wvalid   = 1'b0;
-    assign bready   = 1'b0;
-    assign arid     = 4'h0;  //not used so far.
+    assign wdata  = 32'h0000_0000;
+    assign wstrb  = 4'h0;
+    assign wlast  = 1'b0;
+    assign wvalid  = 1'b0;
+    assign bready  = 1'b0; 
+    assign arid = 4'h0;  //not used so far.
 
-    assign arsize  = 3'b010;  //means 2^2: 4bytes     while 3'b011 means 2^3 
+    assign arsize = 3'b010;  //means 2^2: 4bytes     while 3'b011 means 2^3 
     assign arburst = 2'b01; //means incre, which is used in ram.
 
     assign rready = 1'b1;  //always accept data from ram(slaver) so far.
     localparam Byte_c = 2;
-    localparam INDEX_WIDTH = $clog2(CACHE_LINE_NUM);  //index_width = 7
+    localparam INDEX_WIDTH = $clog2(CACHE_LINE_NUM);  //index_width = 8
     localparam OFFSET_WIDTH =$clog2(CACHE_LINE_SIZE);  //offset width = 3
-    localparam TAG_WIDTH = ADDR_WIDTH - INDEX_WIDTH - OFFSET_WIDTH - Byte_c;  //tag width = 20
+    localparam TAG_WIDTH = ADDR_WIDTH - INDEX_WIDTH - OFFSET_WIDTH - Byte_c;  //tag width = 19
     
     initial begin
         if(TAG_WIDTH <= 0) begin
@@ -85,28 +105,48 @@ module i_cache_final #(
         end
     end
 
-//way 2  cache_line_size 32bytes   cache_line_num = 128   
+
+//way 2  cache_line_size 32bytes   cache_line_num = 256   
 //cpu info
-    wire [TAG_WIDTH -1 :0]  tag_cpu    = cpu_instr_addr_pc [ADDR_WIDTH-1 : 2 + OFFSET_WIDTH + INDEX_WIDTH]; //ADDR_WIDTH - TAG_WIDTH +1
+    reg[31:0]   cpu_instr_addr_pc;
+    reg         cpu_instr_ena_reg;       
+    always @(posedge clk) begin
+        if(rst)begin
+            cpu_instr_addr_pc <= 32'h0000_0000;
+            cpu_instr_ena_reg <= 1'b0;
+        end else begin
+            if(!stall_all && cpu_instr_ena) begin
+                cpu_instr_addr_pc <= cpu_instr_addr;
+            end
+
+            if (!stall_all) begin
+                cpu_instr_ena_reg <= cpu_instr_ena;
+            end
+        end
+    end
+
+    wire [TAG_WIDTH -1 :0]   tag_cpu = cpu_instr_addr_pc [ADDR_WIDTH-1 : 2 + OFFSET_WIDTH + INDEX_WIDTH]; //ADDR_WIDTH - TAG_WIDTH +1
     wire [INDEX_WIDTH -1 :0] index_cpu = cpu_instr_addr [2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
-    wire [OFFSET_WIDTH-1:0] offset_cpu = cpu_instr_addr_pc [2+OFFSET_WIDTH-1 : 2];
+    wire [INDEX_WIDTH -1 :0] index_cpu_pc = cpu_instr_addr_pc[2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
+    wire [OFFSET_WIDTH-1:0]  offset_cpu = cpu_instr_addr_pc [2+OFFSET_WIDTH-1 : 2];
 
 //tag part
     wire [INDEX_WIDTH -1 :0] tag_ram_addr;
     wire [23:0] cache_tag_in;
     wire [23:0] cache_tag_out [CACHE_WAY_SIZE -1 :0];
     reg [2:0]  write_tag_en[CACHE_WAY_SIZE-1:0];
-    assign  tag_ram_addr = index_cpu;
-    assign  cache_tag_in = {4'b0001,tag_cpu};
+    assign  tag_ram_addr =  stall_all? index_cpu_pc: index_cpu;
+    //[18:0]
+    assign  cache_tag_in = {5'b00001,tag_cpu};
 
 //data part
-    wire [6 : 0] instr_ram_data_index; 
+    wire [INDEX_WIDTH-1 : 0] instr_ram_data_index;
     wire [31 : 0] cache_block_in;
     wire [31 : 0] cache_block_out_v1 [CACHE_LINE_SIZE-1:0]; //  [7:0]
     wire [31 : 0] cache_block_out_v2 [CACHE_LINE_SIZE-1:0];
     reg [3:0]  write_data_bank_en_v1[CACHE_LINE_SIZE-1 :0];
     reg [3:0]  write_data_bank_en_v2[CACHE_LINE_SIZE-1 :0];
-    assign instr_ram_data_index = index_cpu;
+    assign instr_ram_data_index =  stall_all? index_cpu_pc: index_cpu;
     assign cache_block_in = rdata;
 
 
@@ -137,14 +177,26 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
     wire [1:0] hit_tag;
     reg miss;
 
-    assign hit_tag = (cache_tag_out[0][20] == 1'b1 && cache_tag_out[0][19:0] == tag_cpu)? 2'b01 
-                        :(cache_tag_out[1][20] == 1'b1 && cache_tag_out[1][19:0] == tag_cpu)? 2'b10 : 2'b00;
+    /*assign hit_tag = (cache_tag_out[0][20] == 1'b1 && cache_tag_out[0][19:0] == tag_cpu)? 2'b01 
+                        :(cache_tag_out[1][20] == 1'b1 && cache_tag_out[1][19:0] == tag_cpu)? 2'b10 : 2'b00;*/
+
+    assign hit_tag = (cache_tag_out[0][19] == 1'b1 && cache_tag_out[0][18:0] == tag_cpu)? 2'b01 
+                        :(cache_tag_out[1][19] == 1'b1 && cache_tag_out[1][18:0] == tag_cpu)? 2'b10 : 2'b00;
+    reg Before_clk;
+    always @(posedge clk) begin
+        if(rst) begin
+            Before_clk <= 1'b0;
+        end else begin
+            Before_clk <= 1'b1;
+        end
+    end
 
     always @(*) begin
         if(rst) begin
             miss = 1'b0;
-        end else begin
-            if(cpu_instr_ena) begin
+        end else if(Before_clk == 1'b0) begin
+            miss = 1'b0;
+        end else if(cpu_instr_ena) begin
                 if(hit_tag[0]==1'b0 && hit_tag[1] == 1'b0)begin
                     miss = 1'b1;
                 end else begin
@@ -153,7 +205,6 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
             end else begin
                 miss = 1'b0;
             end
-        end
     end
 
 //LRU_sel
@@ -170,35 +221,29 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
     reg        [1:0] cur_state, next_state;
     reg        [2:0] next_offset, offset_cur;
 
-    reg Before_clk;
-    always @(posedge clk) begin
-        if(rst) begin
-            Before_clk <= 1'b0;
-        end else begin
-            Before_clk <= 1'b1;
-        end
-    end
-
-    assign stall_all = (rst)? 1'b0: (Before_clk == 1'b0)? 1'b0 : (next_state == READ_ADDR || next_state == READ_DATA)? 1'b1 :1'b0;
+    assign stall_all = (rst)? 1'b0: (Before_clk == 1'b0)? 1'b0 : (next_state == READ_ADDR || next_state == READ_DATA 
+                                                                    || cur_state == READ_ADDR || cur_state ==READ_DATA )? 1'b1 :1'b0;
 //output ↓
     reg [31:0] cpu_instr_data_t_next;
     reg [31:0] cpu_instr_data_t_next2;
     reg cpu_instr_data_1ok_next;
     reg cpu_instr_data_2ok_next;
     wire [2:0] offset_data2;
-    assign offset_data2 = (offset_cpu < 3'b111)? offset_cpu + 1 : 32'h0;
-        always @(*) begin
-        if(rst || miss|| ~cpu_instr_ena)begin
+    assign offset_data2 = (offset_cpu < 3'b111)? offset_cpu + 1 :offset_cpu;
+
+    always @(*) begin
+        if(rst || miss)begin
             cpu_instr_data_t_next = 32'h0000_0000;
+            cpu_instr_data_t_next2 =32'h0000_0000;
             cpu_instr_data_1ok_next = 1'b0;
             cpu_instr_data_2ok_next = 1'b0;
         end else begin
             case(hit_tag)
                 2'b01:begin
                     cpu_instr_data_t_next = cache_block_out_v1[offset_cpu];
-                    cpu_instr_data_1ok_next = ~stall_all;
-                    if(offset_cpu < 3'b111)begin
-                        cpu_instr_data_2ok_next = ~stall_all;
+                    cpu_instr_data_1ok_next = 1'b1;
+                    if(~offset_cpu[0])begin
+                        cpu_instr_data_2ok_next = 1'b1;
                         cpu_instr_data_t_next2 = cache_block_out_v1[offset_data2];
                     end else begin
                         cpu_instr_data_2ok_next = 1'b0;
@@ -207,25 +252,19 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                 end
                 2'b10:begin
                     cpu_instr_data_t_next = cache_block_out_v2[offset_cpu];
-                    cpu_instr_data_1ok_next = ~stall_all;
-                    if(offset_cpu < 3'b111)begin
+                    cpu_instr_data_1ok_next = 1'b1;
+                    if(~offset_cpu[0])begin
                         cpu_instr_data_t_next2 = cache_block_out_v2[offset_data2];
-                        cpu_instr_data_2ok_next = ~stall_all;
+                        cpu_instr_data_2ok_next = 1'b1;
                     end else begin
                         cpu_instr_data_2ok_next = 1'b0;
                         cpu_instr_data_t_next2 = cache_block_out_v2[offset_data2];
                     end
                 end
-
-                default: begin
-                    cpu_instr_data_t_next   = 32'h0;
-                    cpu_instr_data_t_next2  = 32'h0;
-                    cpu_instr_data_1ok_next = 1'h0;
-                    cpu_instr_data_2ok_next = 1'h0;
-                end
             endcase
         end
     end
+
     assign cpu_instr_data  = cpu_instr_data_t_next;
     assign cpu_instr_data2 = cpu_instr_data_t_next2;
     assign cpu_instr_data_1ok = cpu_instr_data_1ok_next;
@@ -256,16 +295,20 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                 READ_IDLE:begin
                     if(Before_clk == 1'b0) begin
                         next_state = READ_IDLE;
-                        LRU_sel_next = 2'b00;
+                        LRU_sel_next = 2'b01;
                     end else if(~cpu_instr_ena) begin
                         next_state = READ_IDLE;
-                        LRU_sel_next = LRU_sel_next;
+                        if(hit_tag == 2'b01) begin
+                            LRU_sel_next  = 2'b01;
+                        end else if (hit_tag == 2'b10) begin
+                            LRU_sel_next = 2'b10;
+                        end else begin
+                            LRU_sel_next = LRU_sel;
+                        end
                     end else if(axi_ena) begin
                         next_state = READ_ADDR;
-                        LRU_sel_next = (LRU_sel == 2'b00)? 2'b01: ((LRU_sel== 2'b01)? 2'b10 : 2'b01); 
                     end else begin
                         next_state = READ_IDLE;
-                        LRU_sel_next = LRU_sel_next;
                     end
                 end
 
@@ -277,12 +320,6 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                 READ_DATA:begin
                     next_state = rlast? READ_IDLE :READ_DATA;
                     next_offset = rlast? 3'b000 : offset_cur + 1;
-                end
-
-                default: begin
-                    next_state      = READ_IDLE;
-                    LRU_sel_next    = LRU_sel_next;
-                    next_offset     = 3'b000;
                 end
             endcase
         end
@@ -325,7 +362,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                     arlen <= 8'b0000_0000;
                     arvalid <= 1'b0;
                     case(LRU_sel_next)
-                        2'b01:begin
+                        2'b10:begin
                             write_tag_en[0] <= 3'b111;
                             write_tag_en[1] <= 3'b000;
                             for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
@@ -338,7 +375,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                             end
                             write_data_bank_en_v1[offset_cur] <= 4'b1111;
                         end
-                        2'b10:begin
+                        2'b01:begin
                             write_tag_en[0] <= 3'b000;
                             write_tag_en[1] <= 3'b111;
                             for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
@@ -365,6 +402,33 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                     arvalid <= 1'b0;
                 end
             endcase
+        end
+    end
+    reg flag_cache_miss;
+
+    reg [63:0] cache_replace_count;
+    reg [63:0] cache_miss_count;
+    reg [63:0] cache_total_count;
+
+    always @(posedge clk) begin
+        if(rst) begin
+            flag_cache_miss     <=  0;
+            cache_miss_count    <=  0;
+            cache_total_count   <=  0;
+            cache_replace_count <= 0;
+        end else begin
+            if( miss && flag_cache_miss == 1'b0) begin
+                if((LRU_sel_next == 2'b10 && cache_tag_out[0][19] == 1'b1) ||(LRU_sel_next == 2'b01 && cache_tag_out[1][19] == 1'b1))begin
+                    cache_replace_count <= cache_replace_count + 1;
+                end
+                flag_cache_miss <= 1'b1;
+                cache_miss_count <= cache_miss_count + 1;
+            end else if(flag_cache_miss == 1'b1 && (!miss)) begin
+                flag_cache_miss <= 1'b0;
+            end
+            if(cpu_instr_ena && ~stall_all)begin
+                cache_total_count <= cache_total_count +1;
+            end
         end
     end
 endmodule

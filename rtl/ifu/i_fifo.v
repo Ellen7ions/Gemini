@@ -40,7 +40,7 @@ module i_fifo (
     assign r_data_1_ok  = ~empty & ~flush;
     assign r_data_2_ok  = ~empty & (r_ptr + 4'h1 != w_ptr) & ~flush;
     assign fifo_stall_req = 
-            (full | (cstate != NORMAL)) & ~flush;
+            (full | left_one) & ~flush;
 
     assign r_data_1     = queue[r_ptr           [INDEX-1:0]];
     assign r_data_2     = queue[rptr_plus_one   [INDEX-1:0]];

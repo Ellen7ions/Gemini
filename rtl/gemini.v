@@ -1095,6 +1095,9 @@ module gemini (
     wire        data_tlb_invalid_tlbs;
     wire        data_tlb_modify;
 
+    wire [31:0] pc_reg;
+    wire        w_fifo;
+
     mmu_mapping mmu_mapping0 (
         .clk                    (clk                    ),
         
@@ -1180,13 +1183,10 @@ module gemini (
         .next_pc            (npc_next_pc        )
     );
 
-    wire [31:0] pc_reg;
-    wire        w_fifo;
-
     pc pc_cp (
         .clk                (clk                ),
         .rst                (rst                ),
-        .stall              (pc_stall           ),
+        .stall              (pc_stall | i_cache_stall_req),
         .flush              (fifo_flush         ),
         .exception_pc_ena   (exception_pc_ena   ),
         .next_pc            (npc_next_pc        ),
@@ -1214,8 +1214,8 @@ module gemini (
         .r_data_1_ok        (fifo_r_data_1_ok   ),
         .r_data_2_ok        (fifo_r_data_2_ok   ),
         .fifo_stall_req     (fifo_stall_req     ),
-        .w_ena_1            (inst_ok_1 & ~pc_stall & w_fifo),
-        .w_ena_2            (inst_ok_2 & ~pc_stall & w_fifo),
+        .w_ena_1            (inst_ok_1 & ~i_cache_stall_req & w_fifo & ~fifo_stall_req),
+        .w_ena_2            (inst_ok_2 & ~i_cache_stall_req & w_fifo & ~fifo_stall_req),
         .w_data_1           (fifo_w_data_1      ),
         .w_data_2           (fifo_w_data_2      ) 
     );
@@ -1802,7 +1802,7 @@ module gemini (
     );
 
     mem_ctrl mem_ctrl0 (
-        .exc_ls_ena                 (exc_ls_ena_i           ),
+        .exc_ls_ena                 (exc_ls_ena_i & ~ex_lsu1_stall),
         .exc_ls_addr                (exc_psyaddr_i          ),
         .exc_rt_data                (exc_rt_data_i          ),
         .exc_ls_sel                 (exc_ls_sel_i           ),

@@ -32,7 +32,7 @@ module i_cache_final #(
         //input wire pc_stall,
         input wire              cpu_instr_ena,  //~rst
         input wire [31:0]       cpu_instr_addr,
-        input wire [31:0]       cpu_instr_addr_pc,
+//        input wire [31:0]       cpu_instr_addr_pc,
         //input wire cpu_stall_control
         output wire [31:0]      cpu_instr_data,
         output wire [31:0]      cpu_instr_data2,
@@ -105,8 +105,26 @@ module i_cache_final #(
         end
     end
 
+
 //way 2  cache_line_size 32bytes   cache_line_num = 256   
 //cpu info
+    reg[31:0]   cpu_instr_addr_pc;
+    reg         cpu_instr_ena_reg;       
+    always @(posedge clk) begin
+        if(rst)begin
+            cpu_instr_addr_pc <= 32'h0000_0000;
+            cpu_instr_ena_reg <= 1'b0;
+        end else begin
+            if(!stall_all && cpu_instr_ena) begin
+                cpu_instr_addr_pc <= cpu_instr_addr;
+            end
+
+            if (!stall_all) begin
+                cpu_instr_ena_reg <= cpu_instr_ena;
+            end
+        end
+    end
+
     wire [TAG_WIDTH -1 :0]   tag_cpu = cpu_instr_addr_pc [ADDR_WIDTH-1 : 2 + OFFSET_WIDTH + INDEX_WIDTH]; //ADDR_WIDTH - TAG_WIDTH +1
     wire [INDEX_WIDTH -1 :0] index_cpu = cpu_instr_addr [2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
     wire [INDEX_WIDTH -1 :0] index_cpu_pc = cpu_instr_addr_pc[2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
@@ -172,7 +190,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
             Before_clk <= 1'b1;
         end
     end
-    //assign miss = rst? 1'b0 :Before_clk? 1'b0 : cpu_instr_ena?
+
     always @(*) begin
         if(rst) begin
             miss = 1'b0;
@@ -214,7 +232,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
     assign offset_data2 = (offset_cpu < 3'b111)? offset_cpu + 1 :offset_cpu;
 
     always @(*) begin
-        if(rst || miss|| ~cpu_instr_ena)begin
+        if(rst || miss)begin
             cpu_instr_data_t_next = 32'h0000_0000;
             cpu_instr_data_t_next2 =32'h0000_0000;
             cpu_instr_data_1ok_next = 1'b0;
@@ -224,7 +242,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                 2'b01:begin
                     cpu_instr_data_t_next = cache_block_out_v1[offset_cpu];
                     cpu_instr_data_1ok_next = 1'b1;
-                    if(offset_cpu < 3'b111)begin
+                    if(~offset_cpu[0])begin
                         cpu_instr_data_2ok_next = 1'b1;
                         cpu_instr_data_t_next2 = cache_block_out_v1[offset_data2];
                     end else begin
@@ -235,7 +253,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                 2'b10:begin
                     cpu_instr_data_t_next = cache_block_out_v2[offset_cpu];
                     cpu_instr_data_1ok_next = 1'b1;
-                    if(offset_cpu < 3'b111)begin
+                    if(~offset_cpu[0])begin
                         cpu_instr_data_t_next2 = cache_block_out_v2[offset_data2];
                         cpu_instr_data_2ok_next = 1'b1;
                     end else begin

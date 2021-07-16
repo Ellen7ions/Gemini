@@ -12,28 +12,19 @@ module pc(
     output  reg         w_fifo
 );
 
-    reg ce;
-    always @(posedge clk ) begin
-        if (rst) begin
-            ce <= 1'b0;
-        end else begin
-            ce <= 1'b1;
-        end
-    end 
-
     always @(posedge clk) begin
         if (rst) begin
             pc <= 32'hbfc0_0000;
-        end else if (!stall) begin
+        end else if (!stall | exception_pc_ena) begin
             pc <= next_pc;
         end
     end
 
     always @(posedge clk ) begin
-        if (rst || (flush & !stall)) begin
-            pc_reg  <= 32'h0;
+        if (rst | (flush & !stall) | exception_pc_ena) begin
+            pc_reg  <= 32'hbfc0_0000;
             w_fifo  <= 1'b0;
-        end else if (ce & !flush & !stall) begin
+        end else if (!flush & !stall) begin
             pc_reg  <= pc;
             w_fifo  <= 1'b1;
         end
