@@ -6,7 +6,8 @@ module gemini (
     input   wire [5 :0] interrupt,
     
     output  wire        sram_inst_ena,
-    output  wire [31:0] sram_inst_addr,
+    output  wire [31:0] sram_inst_vaddr,
+    output  wire [31:0] sram_inst_psyaddr,
     input   wire [31:0] sram_inst_rdata_1,
     input   wire [31:0] sram_inst_rdata_2,
     input   wire        sram_inst_ok_1,
@@ -1144,7 +1145,8 @@ module gemini (
         .lsu1_rdata             (data_rdata             ),
 
         .sram_inst_ena          (sram_inst_ena          ),
-        .sram_inst_addr         (sram_inst_addr         ),
+        .sram_inst_vaddr        (sram_inst_vaddr        ),
+        .sram_inst_psyaddr      (sram_inst_psyaddr      ),
         .sram_inst_rdata_1      (sram_inst_rdata_1      ),
         .sram_inst_rdata_2      (sram_inst_rdata_2      ),
         .sram_inst_ok_1         (sram_inst_ok_1         ),

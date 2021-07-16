@@ -26,55 +26,49 @@ module i_cache #(
         parameter CACHE_WAY_SIZE = 2,
         parameter CACHE_LINE_NUM = 256
     )(
-        input wire              clk,
-        input wire              rst, 
-        //cpu
-        //input wire pc_stall,
-        input wire              cpu_instr_ena,  //~rst
-        input wire [31:0]       cpu_instr_addr,
-//        input wire [31:0]       cpu_instr_addr_pc,
-        //input wire cpu_stall_control
-        output wire [31:0]      cpu_instr_data,
-        output wire [31:0]      cpu_instr_data2,
-        output wire             cpu_instr_data_1ok,
-        output wire             cpu_instr_data_2ok,
-        output wire             stall_all,
+        input   wire              clk,
+        input   wire              rst, 
+
+        input   wire        cpu_instr_ena,
+
+        input   wire [31:0] cpu_instr_vaddr,
+        input   wire [31:0] cpu_instr_psyaddr,    
+
+        output  wire [31:0] cpu_instr_data,
+        output  wire [31:0] cpu_instr_data2,
+        output  wire        cpu_instr_data_1ok,
+        output  wire        cpu_instr_data_2ok,
+        output  wire        stall_all,
     
-        //axi
-        //aw   with out awcache awlock  awprot
-        output wire [3:0]       awid,
-        output wire [31:0]      awaddr,
-        output wire [7:0]       awlen,
-        output wire [2:0]       awsize,
-        output wire [1:0]       awburst,
-        output wire             awvalid,
-        input  wire             awready,
-        //w
-        output wire [31 : 0]    wdata,
-        output wire [3 : 0]     wstrb,//
-        output wire             wlast,
-        output wire             wvalid,
-        input wire              wready,
-        //ar
-        output wire [3 : 0]     arid,
-        output reg [31 : 0]     araddr,
-        output reg [7 : 0]      arlen,
-        output wire [2 : 0]     arsize,
-        output wire [1 : 0]     arburst,
-        output reg              arvalid,
-        input wire              arready,
-        //r
-        input wire [3 : 0]      rid,
-        input wire [31 : 0]     rdata,
-        input wire [1 : 0]      rresp,
-        input wire              rlast,
-        input wire              rvalid,
-        output wire             rready,
-        //b
-        input wire [3 : 0]      bid,
-        input wire [1 : 0]      bresp,
-        input wire              bvalid,
-        output wire             bready
+        output  wire [3 :0] awid,
+        output  wire [31:0] awaddr,
+        output  wire [7 :0] awlen,
+        output  wire [2 :0] awsize,
+        output  wire [1 :0] awburst,
+        output  wire        awvalid,
+        input   wire        awready,
+        output  wire [31:0] wdata,
+        output  wire [3 :0] wstrb,
+        output  wire        wlast,
+        output  wire        wvalid,
+        input   wire        wready,
+        output  wire [3 :0] arid,
+        output  reg  [31:0] araddr,
+        output  reg  [7 :0] arlen,
+        output  wire [2 :0] arsize,
+        output  wire [1 :0] arburst,
+        output  reg         arvalid,
+        input   wire        arready,
+        input   wire [3 :0] rid,
+        input   wire [31:0] rdata,
+        input   wire [1 :0] rresp,
+        input   wire        rlast,
+        input   wire        rvalid,
+        output  wire        rready,
+        input   wire [3 :0] bid,
+        input   wire [1 :0] bresp,
+        input   wire        bvalid,
+        output  wire        bready
     );
     assign awid  = 4'h0;
     assign awaddr  = 32'h0000_0000;
@@ -108,46 +102,42 @@ module i_cache #(
 
 //way 2  cache_line_size 32bytes   cache_line_num = 256   
 //cpu info
-    reg[31:0]   cpu_instr_addr_pc;
-    reg         cpu_instr_ena_reg;       
+    reg[31:0]   cpu_instr_psyaddr_reg;
+    reg[31:0]   cpu_instr_vaddr_reg;
     always @(posedge clk) begin
         if(rst)begin
-            cpu_instr_addr_pc <= 32'h0000_0000;
-            cpu_instr_ena_reg <= 1'b0;
+            cpu_instr_psyaddr_reg   <= 32'h0;
+            cpu_instr_vaddr_reg     <= 32'h0; 
         end else begin
             if(!stall_all && cpu_instr_ena) begin
-                cpu_instr_addr_pc <= cpu_instr_addr;
-            end
-
-            if (!stall_all) begin
-                cpu_instr_ena_reg <= cpu_instr_ena;
+                cpu_instr_psyaddr_reg   <= cpu_instr_psyaddr;
+                cpu_instr_vaddr_reg     <= cpu_instr_vaddr;
             end
         end
     end
 
-    wire [TAG_WIDTH -1 :0]   tag_cpu = cpu_instr_addr_pc [ADDR_WIDTH-1 : 2 + OFFSET_WIDTH + INDEX_WIDTH]; //ADDR_WIDTH - TAG_WIDTH +1
-    wire [INDEX_WIDTH -1 :0] index_cpu = cpu_instr_addr [2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
-    wire [INDEX_WIDTH -1 :0] index_cpu_pc = cpu_instr_addr_pc[2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
-    wire [OFFSET_WIDTH-1:0]  offset_cpu = cpu_instr_addr_pc [2+OFFSET_WIDTH-1 : 2];
+    wire [TAG_WIDTH-1   :0] tag_cpu     = cpu_instr_psyaddr_reg [ADDR_WIDTH-1 : 2 + OFFSET_WIDTH + INDEX_WIDTH];
+    wire [INDEX_WIDTH-1 :0] index_cpu   = cpu_instr_vaddr       [2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
+    wire [OFFSET_WIDTH-1:0] offset_cpu  = cpu_instr_vaddr_reg   [2+OFFSET_WIDTH-1 : 2];
 
 //tag part
     wire [INDEX_WIDTH -1 :0] tag_ram_addr;
     wire [23:0] cache_tag_in;
     wire [23:0] cache_tag_out [CACHE_WAY_SIZE -1 :0];
-    reg [2:0]  write_tag_en[CACHE_WAY_SIZE-1:0];
-    assign  tag_ram_addr =  stall_all? index_cpu_pc: index_cpu;
+    reg  [2:0]  write_tag_en[CACHE_WAY_SIZE-1:0];
+    assign  tag_ram_addr = stall_all ? cpu_instr_vaddr_reg[2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH] : index_cpu;
     //[18:0]
     assign  cache_tag_in = {5'b00001,tag_cpu};
 
 //data part
-    wire [INDEX_WIDTH-1 : 0] instr_ram_data_index;
-    wire [31 : 0] cache_block_in;
-    wire [31 : 0] cache_block_out_v1 [CACHE_LINE_SIZE-1:0]; //  [7:0]
-    wire [31 : 0] cache_block_out_v2 [CACHE_LINE_SIZE-1:0];
-    reg [3:0]  write_data_bank_en_v1[CACHE_LINE_SIZE-1 :0];
-    reg [3:0]  write_data_bank_en_v2[CACHE_LINE_SIZE-1 :0];
-    assign instr_ram_data_index =  stall_all? index_cpu_pc: index_cpu;
-    assign cache_block_in = rdata;
+    wire [INDEX_WIDTH-1:0] instr_ram_data_index;
+    wire [31:0] cache_block_in;
+    wire [31:0] cache_block_out_v1[CACHE_LINE_SIZE-1:0]; //  [7:0]
+    wire [31:0] cache_block_out_v2[CACHE_LINE_SIZE-1:0];
+    reg  [3 :0] write_data_bank_en_v1[CACHE_LINE_SIZE-1:0];
+    reg  [3 :0] write_data_bank_en_v2[CACHE_LINE_SIZE-1:0];
+    assign instr_ram_data_index = stall_all ? cpu_instr_vaddr_reg[2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH] : index_cpu;
+    assign cache_block_in       = rdata;
 
 
 //tag ram
@@ -325,7 +315,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
         end
     end
 
-    assign cache_line_addr = {cpu_instr_addr_pc[ADDR_WIDTH-1 : OFFSET_WIDTH+2],{(OFFSET_WIDTH + Byte_c){1'b0}}};
+    assign cache_line_addr = {cpu_instr_psyaddr_reg[ADDR_WIDTH-1 : OFFSET_WIDTH+2],{(OFFSET_WIDTH + Byte_c){1'b0}}};
 
     integer i;
     always @(*) begin

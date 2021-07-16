@@ -51,7 +51,8 @@ module mmu_mapping #(
 
     // sram
     output  wire        sram_inst_ena,
-    output  wire [31:0] sram_inst_addr,
+    output  wire [31:0] sram_inst_vaddr,
+    output  wire [31:0] sram_inst_psyaddr,
     input   wire [31:0] sram_inst_rdata_1,
     input   wire [31:0] sram_inst_rdata_2,
     input   wire        sram_inst_ok_1,
@@ -112,7 +113,8 @@ module mmu_mapping #(
     wire                        data_psyaddr_ena;
 
     assign sram_inst_ena    =   inst_psyaddr_ena & inst_ena;
-    assign sram_inst_addr   =   inst_psyaddr;
+    assign sram_inst_vaddr  =   inst_addr_next_pc;
+    assign sram_inst_psyaddr=   inst_psyaddr;
     assign inst_rdata_1     =   sram_inst_rdata_1;
     assign inst_rdata_2     =   sram_inst_rdata_2;
     assign inst_ok_1        =   sram_inst_ok_1;

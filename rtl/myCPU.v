@@ -60,7 +60,8 @@ module myCPU (
 );
 
     wire        sram_inst_ena;
-    wire [31:0] sram_inst_addr;
+    wire [31:0] sram_inst_vaddr;
+    wire [31:0] sram_inst_psyaddr;
     wire [31:0] sram_inst_rdata_1;
     wire [31:0] sram_inst_rdata_2;
     wire        sram_inst_ok_1;
@@ -73,7 +74,8 @@ module myCPU (
         .interrupt              (interrupt              ),
         
         .sram_inst_ena          (sram_inst_ena          ),
-        .sram_inst_addr         (sram_inst_addr         ),
+        .sram_inst_vaddr        (sram_inst_vaddr        ),
+        .sram_inst_psyaddr      (sram_inst_psyaddr      ),
         .sram_inst_rdata_1      (sram_inst_rdata_1      ),    
         .sram_inst_rdata_2      (sram_inst_rdata_2      ),    
         .sram_inst_ok_1         (sram_inst_ok_1         ),
@@ -101,11 +103,12 @@ module myCPU (
         .clk                    (clk                    ),
         .rst                    (rst                    ),
         .cpu_instr_ena          (sram_inst_ena          ),
-        .cpu_instr_addr         (sram_inst_addr         ),   
+        .cpu_instr_vaddr        (sram_inst_vaddr        ),
+        .cpu_instr_psyaddr      (sram_inst_psyaddr      ),
         .cpu_instr_data         (sram_inst_rdata_1      ),
-        .cpu_instr_data2        (sram_inst_rdata_2      ),    
-        .cpu_instr_data_1ok     (sram_inst_ok_1         ),    
-        .cpu_instr_data_2ok     (sram_inst_ok_2         ),    
+        .cpu_instr_data2        (sram_inst_rdata_2      ),
+        .cpu_instr_data_1ok     (sram_inst_ok_1         ),
+        .cpu_instr_data_2ok     (sram_inst_ok_2         ),
         .stall_all              (i_cache_stall_req      ),
 
         .awid                   (awid                   ),
