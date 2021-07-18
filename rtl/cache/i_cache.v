@@ -26,8 +26,8 @@ module i_cache #(
         parameter CACHE_WAY_SIZE = 2,
         parameter CACHE_LINE_NUM = 256
     )(
-        input   wire              clk,
-        input   wire              rst, 
+        input   wire        clk,
+        input   wire        rst, 
 
         input   wire        cpu_instr_ena,
 
