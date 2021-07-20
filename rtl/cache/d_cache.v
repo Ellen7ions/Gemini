@@ -92,7 +92,7 @@ module d_cache #(
     wire [3          :0]        bank_wea    ;
     wire [INDEX_LOG-1:0]        bank_addra  ;
     wire [31         :0]        bank_dina   ;
-    wire [31         :0]        bank_douta  [WAY-1:0];
+    wire [32*WORD_NUM-1 :0]     bank_douta  [WAY-1:0];
 
     wire [WAY*WORD_NUM-1:0]     refill_en   ;
     wire [3          :0]        refill_wea  ;
@@ -131,7 +131,7 @@ module d_cache #(
                 .wea    (bank_wea                   ),
                 .addra  (bank_addra                 ),
                 .dina   (bank_dina                  ),
-                .douta  (bank_douta [i*WORD_NUM+j]  )
+                .douta  (bank_douta [i][j*WORD_NUM+:32])
                 );             
             end
         end
@@ -350,6 +350,21 @@ module d_cache #(
     assign wbuffer_offset_i     = offset_reg;
     assign wbuffer_wdata_i      = wdata_reg;
 
+    reg [31:0] miss_refill_data;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            miss_refill_data <= 32'h0;
+        end else if (is_refill & (write_line_counter == offset_reg)) begin
+            miss_refill_data <= axi_rdata;
+        end
+    end
+
+    assign cpu_rdata            = 
+        ~miss ? 
+            bank_douta[1][offset_reg*32+:32] & {32{hit_sel[1]}} | bank_douta[0][offset_reg*32+:32] & {32{hit_sel[0]}} : 
+            miss_refill_data;
+
     reg replace_flag;
     always @(*) begin
         replace_flag        = 1'b0;
@@ -423,10 +438,10 @@ module d_cache #(
                 axi_buffer_en       = dirty_douta[lfsr_sel_reg];
                 axi_buffer_addr     = {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
                 axi_buffer_data     = {
-                    bank_douta[lfsr_sel_reg*WAY+3],
-                    bank_douta[lfsr_sel_reg*WAY+2],
-                    bank_douta[lfsr_sel_reg*WAY+1],
-                    bank_douta[lfsr_sel_reg*WAY+0]
+                    bank_douta[lfsr_sel_reg][96+:32],
+                    bank_douta[lfsr_sel_reg][64+:32],
+                    bank_douta[lfsr_sel_reg][32+:32],
+                    bank_douta[lfsr_sel_reg][0 +:32]
                 };
             end
 
