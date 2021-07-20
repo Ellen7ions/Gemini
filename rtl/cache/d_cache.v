@@ -48,6 +48,7 @@ module d_cache #(
     //  parameters
     
     localparam OFFSET_LOG   = $clog2(LINE_SIZE / 4);
+    localparam WORD_NUM     = LINE_SIZE / 4;
     localparam INDEX_LOG    = $clog2(LINE_NUM);
     localparam WAY_LOG      = $clog2(WAY);
     localparam TAG_INDEX    = 32 - 2 - OFFSET_LOG - INDEX_LOG;
@@ -75,33 +76,28 @@ module d_cache #(
 
 
     // instances
-    wire                dirty_ena   [WAY-1:0];
-    wire                dirty_wea   [WAY-1:0];
-    wire [INDEX_LOG-1:0]dirty_addra [WAY-1:0];
-    wire                dirty_dina  [WAY-1:0];
-    wire                dirty_douta [WAY-1:0];
+    wire [WAY      -1:0]        dirty_ena   ;
+    wire                        dirty_wea   ;
+    wire [INDEX_LOG-1:0]        dirty_addra ;
+    wire                        dirty_dina  ;
+    wire [WAY      -1:0]        dirty_douta ;
 
-    wire                tagv_ena    [WAY-1:0];
-    wire                tagv_wea    [WAY-1:0];
-    wire [INDEX_LOG-1:0]tagv_addra  [WAY-1:0];
-    wire [20         :0]tagv_dina   [WAY-1:0];
-    wire [20         :0]tagv_douta  [WAY-1:0];
+    wire [WAY      -1:0]        tagv_ena    ;
+    wire                        tagv_wea    ;
+    wire [INDEX_LOG-1:0]        tagv_addra  ;
+    wire [20         :0]        tagv_dina   ;
+    wire [20         :0]        tagv_douta  [WAY-1:0];
 
-    wire [WAY*OFFSET_LOG-1:0]   bank_ena    ;
-    wire [3          :0]        bank_wea    [WAY*OFFSET_LOG-1:0];
-    wire [INDEX_LOG-1:0]        bank_addra  [WAY*OFFSET_LOG-1:0];
-    wire [31         :0]        bank_dina   [WAY*OFFSET_LOG-1:0];
-    wire [31         :0]        bank_douta  [WAY*OFFSET_LOG-1:0];
+    wire [WAY*WORD_NUM-1:0]     bank_ena    ;
+    wire [3          :0]        bank_wea    ;
+    wire [INDEX_LOG-1:0]        bank_addra  ;
+    wire [31         :0]        bank_dina   ;
+    wire [31         :0]        bank_douta  [WAY-1:0];
 
-    wire [WAY*OFFSET_LOG-1:0]   refill_en   ;
+    wire [WAY*WORD_NUM-1:0]     refill_en   ;
     wire [3          :0]        refill_wea  ;
     wire [INDEX_LOG-1:0]        refill_addra;
     wire [31         :0]        refill_dina ;
-
-    wire [WAY*OFFSET_LOG-1:0]   wbuffer_en   ;
-    wire [3          :0]        wbuffer_wea  ;
-    wire [INDEX_LOG-1:0]        wbuffer_addra;
-    wire [31         :0]        wbuffer_dina ;
 
     genvar i, j;
     generate
@@ -109,9 +105,9 @@ module d_cache #(
             D dirty_inst (
                 .clka   (clk            ),
                 .ena    (dirty_ena[i]   ),
-                .wea    (dirty_wea[i]   ),
-                .addra  (dirty_addra[i] ),
-                .dina   (dirty_dina[i]  ),
+                .wea    (dirty_wea      ),
+                .addra  (dirty_addra    ),
+                .dina   (dirty_dina     ),
                 .douta  (dirty_douta[i] )
             );
         end
@@ -120,9 +116,9 @@ module d_cache #(
             TAGV tagv_inst (
                 .clka   (clk            ),
                 .ena    (tagv_ena[i]    ),
-                .wea    (tagv_wea[i]    ),
-                .addra  (tagv_addra[i]  ),
-                .dina   (tagv_dina[i]   ),
+                .wea    (tagv_wea       ),
+                .addra  (tagv_addra     ),
+                .dina   (tagv_dina      ),
                 .douta  (tagv_douta[i]  )
             );
         end
@@ -131,11 +127,11 @@ module d_cache #(
             for (j = 0; j < LINE_SIZE / 4; j = j + 1) begin: bank
                 DATA bank_inst (
                 .clka   (clk                        ),
-                .ena    (bank_ena[i*OFFSET_LOG+j]   ),
-                .wea    (bank_wea[i*OFFSET_LOG+j]   ),
-                .addra  (bank_addra[i*OFFSET_LOG+j] ),
-                .dina   (bank_dina[i*OFFSET_LOG+j]  ),
-                .douta  (bank_douta[i*OFFSET_LOG+j] )
+                .ena    (bank_ena   [i*WORD_NUM+j]  ),
+                .wea    (bank_wea                   ),
+                .addra  (bank_addra                 ),
+                .dina   (bank_dina                  ),
+                .douta  (bank_douta [i*WORD_NUM+j]  )
                 );             
             end
         end
@@ -158,7 +154,7 @@ module d_cache #(
     write_buffer write_buffer0 (
         .clk        (clk                ),
         .rst        (rst                ),
-        .stall      (),
+        .stall      (1'b0               ),
         
         .en_i       (wbuffer_en_i       ),
         .hit_sel_i  (wbuffer_hit_sel_i  ),
@@ -257,7 +253,7 @@ module d_cache #(
     wire [TAG_INDEX -1:0] tag_reg       = psyaddr_reg[31:2+OFFSET_LOG+INDEX_LOG];
 
     wire hit_write_conflict             = 
-        wbuffer_en_reg & (wbuffer_offset_reg == cpu_offset | wbuffer_offset_i == cpu_offset);
+        wbuffer_en_reg & (wbuffer_offset_reg == cpu_offset) | wbuffer_en_i & (wbuffer_offset_i == cpu_offset);
     
     wire [WAY       -1:0] hit_sel       = {
         (tag_reg == tagv_douta[1][TAG_INDEX:1]) & tagv_douta[1][0],
@@ -276,22 +272,14 @@ module d_cache #(
         .in     (write_line_counter ),
         .out    (refill_offset_sel  )
     );
-    assign refill_en                = 
-        {{4{lfsr_sel_reg}} & refill_offset_sel, {4{lfsr_sel_reg}} & refill_offset_sel};
-    assign refill_wea               = 4'b1111;
-    assign refill_addra             = index_reg;
     assign refill_dina              =
         (offset_reg == write_line_counter) && (|wen_reg) ? 
             refill_store_data : axi_rdata;
-    
-    // write buffer
-    assign wbuffer_en               =
-        {{4{wbuffer_hit_sel_reg}} & wbuffer_offset_reg, {4{wbuffer_hit_sel_reg}} & wbuffer_offset_reg};
-    assign wbuffer_wea              = wbuffer_wen_reg;
-    assign wbuffer_addra            = wbuffer_index_reg;
-    assign wbuffer_dina             = wbuffer_wdata_reg;
 
-
+    reg is_lookup;
+    reg is_hit_write;
+    reg is_replace;
+    reg is_refill;
 
     always @(posedge clk) begin
         if (rst) begin
@@ -303,7 +291,68 @@ module d_cache #(
         end
     end
 
+
+    wire [WORD_NUM-1:0] cpu_offset_sel;
+    wire [WORD_NUM-1:0] offset_reg_sel;
+    decoder decoder0 (
+        .in     (cpu_offset     ),
+        .out    (cpu_offset_sel )
+    );
+    decoder decoder1 (
+        .in     (offset_reg     ),
+        .out    (offset_reg_sel )
+    );
+
+    assign tagv_ena             = 
+        {WAY{is_lookup}} |
+        {lfsr_sel_reg, ~lfsr_sel_reg} & {WAY{is_replace | is_refill}};
+    assign tagv_wea             = 
+        is_refill;
+    assign tagv_addra           = 
+        {INDEX_LOG{is_lookup}} & cpu_index |
+        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+    assign tagv_dina            =
+        {tag_reg, 1'b1};
+
+    assign bank_ena             = 
+        {cpu_offset_sel, cpu_offset_sel} & {WAY*WORD_NUM{is_lookup}} |
+        {wbuffer_offset_reg & {WORD_NUM{wbuffer_hit_sel_reg[1]}},
+         wbuffer_offset_reg & {WORD_NUM{wbuffer_hit_sel_reg[0]}}} & {WAY*WORD_NUM{is_hit_write}} |
+        {{WORD_NUM{lfsr_sel_reg}}, {WORD_NUM{~lfsr_sel_reg}}} & {WAY*WORD_NUM{is_replace}}  |
+        {{4{lfsr_sel_reg}} & refill_offset_sel, {4{~lfsr_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
+    assign bank_wea             = 
+        {4{is_hit_write}} & wbuffer_wen_reg | 
+        {4{is_refill}} & 4'b1111;
+    assign bank_addra           = 
+        {INDEX_LOG{is_lookup}} & cpu_index |
+        {INDEX_LOG{is_hit_write}} & wbuffer_index_reg |
+        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+    assign bank_dina            =
+        {32{is_hit_write}} & wbuffer_wdata_reg |
+        {32{is_refill}} & refill_dina;
+
+    assign dirty_ena            = 
+        {WAY{is_hit_write}} & wbuffer_hit_sel_reg |
+        {WAY{is_refill | is_replace}} & {lfsr_sel_reg, ~lfsr_sel_reg};
+    assign dirty_wea            =
+        is_hit_write | is_refill;
+    assign dirty_addra          =
+        {INDEX_LOG{is_hit_write}} & wbuffer_index_reg |
+        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+    assign dirty_dina           =
+        is_hit_write | is_refill & |wen_reg;
+
+
+    assign wbuffer_en_i         = ~miss & |wen_reg;
+    assign wbuffer_hit_sel_i    = hit_sel;
+    assign wbuffer_wen_i        = wen_reg;
+    assign wbuffer_index_i      = index_reg;
+    assign wbuffer_offset_i     = offset_reg;
+    assign wbuffer_wdata_i      = wdata_reg;
+
+    reg replace_flag;
     always @(*) begin
+        replace_flag        = 1'b0;
         lfsr_stall          = 1'b0;
         cpu_d_cache_stall   = 1'b0;
         master_next_state   = IDLE_STATE;
@@ -317,6 +366,10 @@ module d_cache #(
         axi_arsize          = 3'h0;
         axi_arvalid         = 1'b0;
 
+        is_lookup           = 1'b0;
+        is_replace          = 1'b0;
+        is_refill           = 1'b0;
+
         case (master_state)
         IDLE_STATE: begin
             lfsr_stall      = 1'b0;
@@ -325,6 +378,7 @@ module d_cache #(
                 cpu_d_cache_stall = 1'b1; 
             end else begin
                 master_next_state = LOOKUP_STATE;
+                is_lookup         = 1'b1;
                 cpu_d_cache_stall = 1'b0; 
             end 
         end
@@ -336,6 +390,7 @@ module d_cache #(
                 cpu_d_cache_stall = 1'b1;
             end else if (~miss & cpu_en) begin
                 master_next_state = LOOKUP_STATE;
+                is_lookup         = 1'b1;
                 cpu_d_cache_stall = 1'b0;
             end else begin
                 master_next_state = MISS_STATE;
@@ -351,14 +406,7 @@ module d_cache #(
             end else begin
                 master_next_state   = REPLACE_STATE;
                 lfsr_stall          = 1'b1;
-                axi_buffer_en       = dirty_douta[lfsr_sel];
-                axi_buffer_addr     = {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
-                axi_buffer_data     = {
-                    bank_douta[lfsr_sel][3],
-                    bank_douta[lfsr_sel][2],
-                    bank_douta[lfsr_sel][1],
-                    bank_douta[lfsr_sel][0]
-                };
+                is_replace          = 1'b1;
                 
                 axi_araddr          = {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
                 axi_arlen           = LINE_SIZE / 4 - 1;
@@ -370,6 +418,18 @@ module d_cache #(
         REPLACE_STATE: begin
             cpu_d_cache_stall       = 1'b1;
             lfsr_stall              = 1'b1;
+            if (~replace_flag) begin
+                replace_flag = 1'b1;
+                axi_buffer_en       = dirty_douta[lfsr_sel_reg];
+                axi_buffer_addr     = {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
+                axi_buffer_data     = {
+                    bank_douta[lfsr_sel_reg*WAY+3],
+                    bank_douta[lfsr_sel_reg*WAY+2],
+                    bank_douta[lfsr_sel_reg*WAY+1],
+                    bank_douta[lfsr_sel_reg*WAY+0]
+                };
+            end
+
             if (axi_arready) begin
                 master_next_state   = REFILL_STATE;
             end else begin
@@ -381,6 +441,8 @@ module d_cache #(
             axi_rready              = 1'b1;
             lfsr_stall              = 1'b1;
             cpu_d_cache_stall       = 1'b1;
+            if (axi_rvalid)
+                is_refill       = 1'b1;
             if (axi_rvalid & axi_rlast) begin
                 master_next_state   = IDLE_STATE;
             end else begin
@@ -406,6 +468,7 @@ module d_cache #(
         end
 
         WRITE_STATE: begin
+            is_hit_write = 1'b1;
             if (wbuffer_en_reg) begin
                 slave_next_state = WRITE_STATE;
             end else begin
