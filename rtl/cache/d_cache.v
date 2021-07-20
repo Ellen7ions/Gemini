@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+`include "../idu/id_def.v"
+
 module d_cache #(
     parameter WAY       = 2,
     parameter LINE_SIZE = 16,
@@ -196,8 +198,12 @@ module d_cache #(
     );
 
     reg                     axi_buffer_en;
+    reg                     axi_buffer_uncached;
+    reg  [2 :0]             axi_buffer_size;
+    reg  [3 :0]             axi_buffer_wstrb;
     reg  [31:0]             axi_buffer_addr;
-    reg  [LINE_SIZE*8-1:0]  axi_buffer_data;
+    reg  [31:0]             axi_buffer_data;
+    reg  [LINE_SIZE*8-1:0]  axi_buffer_cache_line;
     wire                    axi_buffer_free;
 
     write_axi_buffer #(LINE_SIZE) write_axi_buffer0 (
@@ -205,8 +211,12 @@ module d_cache #(
         .rst        (rst                ),
         
         .en         (axi_buffer_en      ),
+        .uncached   (axi_buffer_uncached),
         .addr       (axi_buffer_addr    ),
+        .size       (axi_buffer_size    ),
+        .wstrb      (axi_buffer_wstrb   ),
         .data       (axi_buffer_data    ),
+        .cache_line (axi_buffer_cache_line),
         .empty      (axi_buffer_free    ),
 
         .axi_awaddr (axi_awaddr         ),
@@ -365,6 +375,25 @@ module d_cache #(
             bank_douta[1][offset_reg*32+:32] & {32{hit_sel[1]}} | bank_douta[0][offset_reg*32+:32] & {32{hit_sel[0]}} : 
             miss_refill_data;
 
+    wire [3 :0] _size;
+
+    assign _size = 
+        {3{ load_type_reg == `LS_SEL_LB     |
+            load_type_reg == `LS_SEL_LBU    |
+            load_type_reg == `LS_SEL_SB     
+        }} & 3'h0   |
+        {3{ load_type_reg == `LS_SEL_LH     |
+            load_type_reg == `LS_SEL_LHU    |
+            load_type_reg == `LS_SEL_SH     
+        }} & 3'h1   |
+        {3{ load_type_reg == `LS_SEL_LW     |
+            load_type_reg == `LS_SEL_LWL    |
+            load_type_reg == `LS_SEL_LWR    |
+            load_type_reg == `LS_SEL_SW     |
+            load_type_reg == `LS_SEL_SWL    |
+            load_type_reg == `LS_SEL_SWR    
+        }} & 3'h2;
+
     reg replace_flag;
     always @(*) begin
         replace_flag        = 1'b0;
@@ -374,7 +403,11 @@ module d_cache #(
 
         axi_buffer_en       = 1'b0;
         axi_buffer_addr     = 32'h0;
-        axi_buffer_data     = {LINE_SIZE*8{1'b0}};
+        axi_buffer_uncached = 1'b0;
+        axi_buffer_size     = 3'h0;
+        axi_buffer_wstrb    = 4'h0;
+        axi_buffer_cache_line= {LINE_SIZE*8{1'b0}};
+        axi_buffer_data     = 32'h0;
 
         axi_araddr          = 32'h0;
         axi_arlen           = 8'h0;
@@ -424,10 +457,10 @@ module d_cache #(
                 lfsr_stall          = 1'b1;
                 is_replace          = 1'b1;
                 
-                axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : psyaddr_reg;
+                axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
                 axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
-                axi_arsize          = 3'b010;
-                axi_arvalid         = 1'b1;
+                axi_arsize          = ~uncached_reg ? 3'b010 : _size;
+                axi_arvalid         = ~uncached_reg | uncached_reg & (wen_reg == 4'h0);
             end
         end
 
@@ -436,9 +469,13 @@ module d_cache #(
             lfsr_stall              = 1'b1;
             if (~replace_flag) begin
                 replace_flag = 1'b1;
-                axi_buffer_en       = dirty_douta[lfsr_sel_reg] & ~uncached_reg;
-                axi_buffer_addr     = {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
-                axi_buffer_data     = {
+                axi_buffer_en       = dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & |wen_reg;
+                axi_buffer_uncached = uncached_reg;
+                axi_buffer_size     = _size;
+                axi_buffer_wstrb    = wen_reg;
+                axi_buffer_addr     = uncached_reg ? psyaddr_reg : {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
+                axi_buffer_data     = wdata_reg;
+                axi_buffer_cache_line   = {
                     bank_douta[lfsr_sel_reg][96+:32],
                     bank_douta[lfsr_sel_reg][64+:32],
                     bank_douta[lfsr_sel_reg][32+:32],
