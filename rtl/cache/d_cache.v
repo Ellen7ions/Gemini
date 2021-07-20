@@ -10,6 +10,7 @@ module d_cache #(
 
     input   wire        cpu_en,
     input   wire [3 :0] cpu_wen,
+    input   wire        cpu_uncached,
     input   wire [3 :0] cpu_load_type,
     input   wire [31:0] cpu_vaddr,
     input   wire [31:0] cpu_psyaddr,
@@ -17,30 +18,25 @@ module d_cache #(
     output  wire [31:0] cpu_rdata,
     output  reg  [31:0] cpu_d_cache_stall,
 
-    // axi
     output  reg  [31:0] axi_araddr,
-    output  reg  [3 :0] axi_arlen,
+    output  reg  [7 :0] axi_arlen,
     output  reg  [2 :0] axi_arsize,
     output  reg         axi_arvalid,
     input   wire        axi_arready,
-
     input   wire [31:0] axi_rdata,
     input   wire        axi_rlast,
     input   wire        axi_rvalid,
     output  reg         axi_rready,
-
     output  wire [31:0] axi_awaddr,
-    output  wire [3 :0] axi_awlen,
+    output  wire [7 :0] axi_awlen,
     output  wire [2 :0] axi_awsize,
     output  wire        axi_awvalid,
     input   wire        axi_awready,
-    
     output  wire [31:0] axi_wdata,
     output  wire [3 :0] axi_wstrb,
     output  wire        axi_wlast,
     output  wire        axi_wvalid,
     input   wire        axi_wready,
-
     input   wire        axi_bvalid,
     output  wire        axi_bready
 );
@@ -184,6 +180,7 @@ module d_cache #(
         
         .en_i       (cpu_en             ),
         .wen_i      (cpu_wen            ),
+        .uncached_i (cpu_uncached       ),
         .load_type_i(cpu_load_type      ),
         .vaddr_i    (cpu_vaddr          ),
         .psyaddr_i  (cpu_psyaddr        ),
@@ -191,6 +188,7 @@ module d_cache #(
 
         .en_o       (en_reg             ),
         .wen_o      (wen_reg            ),
+        .uncached_o (uncached_reg       ),
         .load_type_o(load_type_reg      ),
         .vaddr_o    (vaddr_reg          ),
         .psyaddr_o  (psyaddr_reg        ),
@@ -253,13 +251,14 @@ module d_cache #(
     wire [TAG_INDEX -1:0] tag_reg       = psyaddr_reg[31:2+OFFSET_LOG+INDEX_LOG];
 
     wire hit_write_conflict             = 
-        wbuffer_en_reg & (wbuffer_offset_reg == cpu_offset) | wbuffer_en_i & (wbuffer_offset_i == cpu_offset);
+        wbuffer_en_reg & (wbuffer_offset_reg == cpu_offset) | ~uncached_reg & wbuffer_en_i & (wbuffer_offset_i == cpu_offset);
     
     wire [WAY       -1:0] hit_sel       = {
         (tag_reg == tagv_douta[1][TAG_INDEX:1]) & tagv_douta[1][0],
         (tag_reg == tagv_douta[0][TAG_INDEX:1]) & tagv_douta[0][0]
     };
-    wire miss                           = hit_sel == 2'b00;
+    wire miss                           = (hit_sel == 2'b00) | uncached_reg;
+
     reg  [OFFSET_LOG-1:0] write_line_counter;
 
 
@@ -280,6 +279,7 @@ module d_cache #(
     reg is_hit_write;
     reg is_replace;
     reg is_refill;
+    reg is_uncached_refill;
 
     always @(posedge clk) begin
         if (rst) begin
@@ -343,7 +343,7 @@ module d_cache #(
         is_hit_write | is_refill & |wen_reg;
 
 
-    assign wbuffer_en_i         = ~miss & |wen_reg;
+    assign wbuffer_en_i         = ~miss & |wen_reg & uncached_reg;
     assign wbuffer_hit_sel_i    = hit_sel;
     assign wbuffer_wen_i        = wen_reg;
     assign wbuffer_index_i      = index_reg;
@@ -355,7 +355,7 @@ module d_cache #(
     always @(posedge clk) begin
         if (rst) begin
             miss_refill_data <= 32'h0;
-        end else if (is_refill & (write_line_counter == offset_reg)) begin
+        end else if (is_uncached_refill | is_refill & (write_line_counter == offset_reg)) begin
             miss_refill_data <= axi_rdata;
         end
     end
@@ -377,13 +377,14 @@ module d_cache #(
         axi_buffer_data     = {LINE_SIZE*8{1'b0}};
 
         axi_araddr          = 32'h0;
-        axi_arlen           = 4'h0;
+        axi_arlen           = 8'h0;
         axi_arsize          = 3'h0;
         axi_arvalid         = 1'b0;
 
         is_lookup           = 1'b0;
         is_replace          = 1'b0;
         is_refill           = 1'b0;
+        is_uncached_refill  = 1'b0;
 
         case (master_state)
         IDLE_STATE: begin
@@ -423,8 +424,8 @@ module d_cache #(
                 lfsr_stall          = 1'b1;
                 is_replace          = 1'b1;
                 
-                axi_araddr          = {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
-                axi_arlen           = LINE_SIZE / 4 - 1;
+                axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : psyaddr_reg;
+                axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
                 axi_arsize          = 3'b010;
                 axi_arvalid         = 1'b1;
             end
@@ -435,7 +436,7 @@ module d_cache #(
             lfsr_stall              = 1'b1;
             if (~replace_flag) begin
                 replace_flag = 1'b1;
-                axi_buffer_en       = dirty_douta[lfsr_sel_reg];
+                axi_buffer_en       = dirty_douta[lfsr_sel_reg] & ~uncached_reg;
                 axi_buffer_addr     = {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}};
                 axi_buffer_data     = {
                     bank_douta[lfsr_sel_reg][96+:32],
@@ -456,8 +457,10 @@ module d_cache #(
             axi_rready              = 1'b1;
             lfsr_stall              = 1'b1;
             cpu_d_cache_stall       = 1'b1;
-            if (axi_rvalid)
+            if (axi_rvalid & ~uncached_reg)
                 is_refill       = 1'b1;
+            else 
+                is_uncached_refill = 1'b1;
             if (axi_rvalid & axi_rlast) begin
                 master_next_state   = IDLE_STATE;
             end else begin

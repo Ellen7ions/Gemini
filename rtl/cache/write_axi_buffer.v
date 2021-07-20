@@ -10,7 +10,7 @@ module write_axi_buffer #(
     input   wire [LINE_SIZE * 8-1   :0] data,
     output  wire                        empty,
     output  reg  [31                :0] axi_awaddr,
-    output  reg  [3                 :0] axi_awlen,
+    output  reg  [7                 :0] axi_awlen,
     output  reg  [2                 :0] axi_awsize,
     output  reg                         axi_awvalid,
     input   wire                        axi_awready,
@@ -46,7 +46,7 @@ module write_axi_buffer #(
 
     always @(*) begin
         axi_awaddr  = 32'h0;
-        axi_awlen   = 4'h0;
+        axi_awlen   = 8'h0;
         axi_awsize  = 3'h0;
         axi_awvalid = 1'b0;
         axi_wdata   = 32'h0;

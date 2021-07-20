@@ -12,12 +12,12 @@ module myCPU (
     // input   wire        sram_inst_ok_1,
     // input   wire        sram_inst_ok_2,
     // input   wire        i_cache_stall_req,
-    output  wire        sram_data_ena,
-    output  wire [3 :0] sram_data_wen,
-    output  wire [31:0] sram_data_addr,
-    output  wire [31:0] sram_data_wdata,
-    input   wire [31:0] sram_data_rdata,
-    input   wire        d_cache_stall_req,
+    // output  wire        sram_data_ena,
+    // output  wire [3 :0] sram_data_wen,
+    // output  wire [31:0] sram_data_addr,
+    // output  wire [31:0] sram_data_wdata,
+    // input   wire [31:0] sram_data_rdata,
+    // input   wire        d_cache_stall_req,
 
     output  wire [3 :0] awid,
     output  wire [31:0] awaddr,
@@ -67,6 +67,13 @@ module myCPU (
     wire        sram_inst_ok_1;
     wire        sram_inst_ok_2;
     wire        i_cache_stall_req;
+
+    wire        sram_data_ena;
+    wire [3 :0] sram_data_wen;
+    wire [31:0] sram_data_addr;
+    wire [31:0] sram_data_wdata;
+    wire [31:0] sram_data_rdata;
+    wire        d_cache_stall_req;
 
     gemini gemini0 (
         .clk                    (clk                    ),
@@ -140,6 +147,42 @@ module myCPU (
         .bresp                  (bresp                  ),
         .bvalid                 (bvalid                 ),
         .bready                 (bready                 )
+    );
+
+    d_cache d_cache0 (
+        .clk                    (clk                    ),
+        .rst                    (rst                    ),
+        
+        .cpu_en                 (sram_data_ena          ),
+        .cpu_wen                (sram_data_wen          ),
+        .cpu_load_type          (),
+        .cpu_vaddr              (),
+        .cpu_psyaddr            (),
+        .cpu_wdata              (),
+        .cpu_rdata              (),
+        .cpu_d_cache_stall      (),
+        
+        .axi_araddr             (),
+        .axi_arlen              (),
+        .axi_arsize             (),
+        .axi_arvalid            (),
+        .axi_arready            (),
+        .axi_rdata              (),
+        .axi_rlast              (),
+        .axi_rvalid             (),
+        .axi_rready             (),
+        .axi_awaddr             (),
+        .axi_awlen              (),
+        .axi_awsize             (),
+        .axi_awvalid            (),
+        .axi_awready            (),
+        .axi_wdata              (),
+        .axi_wstrb              (),
+        .axi_wlast              (),
+        .axi_wvalid             (),
+        .axi_wready             (),
+        .axi_bvalid             (),
+        .axi_bready             ()
     );
 
 endmodule
