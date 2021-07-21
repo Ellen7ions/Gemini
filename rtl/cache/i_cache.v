@@ -39,52 +39,16 @@ module i_cache #(
         output  wire        cpu_instr_data_1ok,
         output  wire        cpu_instr_data_2ok,
         output  wire        stall_all,
-    
-        output  wire [3 :0] awid,
-        output  wire [31:0] awaddr,
-        output  wire [7 :0] awlen,
-        output  wire [2 :0] awsize,
-        output  wire [1 :0] awburst,
-        output  wire        awvalid,
-        input   wire        awready,
-        output  wire [31:0] wdata,
-        output  wire [3 :0] wstrb,
-        output  wire        wlast,
-        output  wire        wvalid,
-        input   wire        wready,
-        output  wire [3 :0] arid,
+
         output  reg  [31:0] araddr,
         output  reg  [7 :0] arlen,
-        output  wire [2 :0] arsize,
-        output  wire [1 :0] arburst,
         output  reg         arvalid,
         input   wire        arready,
-        input   wire [3 :0] rid,
         input   wire [31:0] rdata,
-        input   wire [1 :0] rresp,
         input   wire        rlast,
         input   wire        rvalid,
-        output  wire        rready,
-        input   wire [3 :0] bid,
-        input   wire [1 :0] bresp,
-        input   wire        bvalid,
-        output  wire        bready
+        output  wire        rready
     );
-    assign awid  = 4'h0;
-    assign awaddr  = 32'h0000_0000;
-    assign awlen  = 8'h00;
-    assign awsize  = 3'h0;
-    assign awburst  = 2'h0;
-    assign awvalid  = 1'b0;
-    assign wdata  = 32'h0000_0000;
-    assign wstrb  = 4'h0;
-    assign wlast  = 1'b0;
-    assign wvalid  = 1'b0;
-    assign bready  = 1'b0; 
-    assign arid = 4'h0;  //not used so far.
-
-    assign arsize = 3'b010;  //means 2^2: 4bytes     while 3'b011 means 2^3 
-    assign arburst = 2'b01; //means incre, which is used in ram.
 
     assign rready = 1'b1;  //always accept data from ram(slaver) so far.
     localparam Byte_c = 2;
@@ -351,34 +315,44 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                     araddr <= 32'h0000_0000;
                     arlen <= 8'b0000_0000;
                     arvalid <= 1'b0;
-                    case(LRU_sel_next)
-                        2'b10:begin
-                            write_tag_en[0] <= 3'b111;
-                            write_tag_en[1] <= 3'b000;
-                            for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                if(i != offset_cur) begin
-                                write_data_bank_en_v1[i] <= 4'b0000;
+                    if (rvalid) begin
+                        case(LRU_sel_next)
+                            2'b10:begin
+                                write_tag_en[0] <= 3'b111;
+                                write_tag_en[1] <= 3'b000;
+                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                    if(i != offset_cur) begin
+                                    write_data_bank_en_v1[i] <= 4'b0000;
+                                    end
                                 end
-                            end
-                            for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                write_data_bank_en_v2[i] <= 4'b0000;
-                            end
-                            write_data_bank_en_v1[offset_cur] <= 4'b1111;
-                        end
-                        2'b01:begin
-                            write_tag_en[0] <= 3'b000;
-                            write_tag_en[1] <= 3'b111;
-                            for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                if(i != offset_cur) begin
-                                write_data_bank_en_v2[i] <= 4'b0000;
+                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                    write_data_bank_en_v2[i] <= 4'b0000;
                                 end
+                                write_data_bank_en_v1[offset_cur] <= 4'b1111;
                             end
-                            for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                write_data_bank_en_v1[i] <= 4'b0000;
+                            2'b01:begin
+                                write_tag_en[0] <= 3'b000;
+                                write_tag_en[1] <= 3'b111;
+                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                    if(i != offset_cur) begin
+                                    write_data_bank_en_v2[i] <= 4'b0000;
+                                    end
+                                end
+                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                    write_data_bank_en_v1[i] <= 4'b0000;
+                                end
+                                write_data_bank_en_v2[offset_cur] <= 4'b1111;
                             end
-                            write_data_bank_en_v2[offset_cur] <= 4'b1111;
+                        endcase
+                    end else begin
+                         write_tag_en[0] <= 3'b000;
+                        write_tag_en[1] <= 3'b000;
+                        for (i = 0;i<CACHE_LINE_SIZE;i= i+1)begin
+                            write_data_bank_en_v1[i] <= 4'b0000;
+                            write_data_bank_en_v2[i] <= 4'b0000;
                         end
-                    endcase
+                    end
+                    
                 end
                 default:begin
                     write_tag_en[0] <= 3'b000;
