@@ -20,11 +20,9 @@ module d_cache #(
     output  wire [31:0] cpu_rdata,
     output  reg  [31:0] cpu_d_cache_stall,
 
-    output  wire [3 :0] axi_awid,
     output  wire [31:0] axi_awaddr,
     output  wire [7 :0] axi_awlen,
     output  wire [2 :0] axi_awsize,
-    output  wire [1 :0] axi_awburst,
     output  wire        axi_awvalid,
     input   wire        axi_awready,
     output  wire [31:0] axi_wdata,
@@ -32,32 +30,18 @@ module d_cache #(
     output  wire        axi_wlast,
     output  wire        axi_wvalid,
     input   wire        axi_wready,
-    output  wire [3 :0] axi_arid,
     output  reg  [31:0] axi_araddr,
     output  reg  [7 :0] axi_arlen,
     output  reg  [2 :0] axi_arsize,
-    output  wire [1 :0] axi_arburst,
     output  reg         axi_arvalid,
     input   wire        axi_arready,
-    input   wire [3 :0] axi_rid,
     input   wire [31:0] axi_rdata,
-    input   wire        axi_rresp,
     input   wire        axi_rlast,
     input   wire        axi_rvalid,
     output  reg         axi_rready,
-    input   wire [3 :0] axi_bid,
-    input   wire [1 :0] axi_bresp,
     input   wire        axi_bvalid,
     output  wire        axi_bready
 );
-    
-    assign axi_awid     = 4'h0;
-    assign axi_awburst  = 2'h0;
-    assign axi_arid     = 4'h0;
-    assign axi_arburst  = 2'h0;
-    
-
-
 
     //  parameters
     

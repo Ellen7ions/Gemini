@@ -5,79 +5,46 @@ module myCPU (
     input   wire        rst,
     input   wire [5:0]  interrupt,
 
-    // output  wire        sram_inst_ena,
-    // output  wire [31:0] sram_inst_addr,
-    // input   wire [31:0] sram_inst_rdata_1,
-    // input   wire [31:0] sram_inst_rdata_2,
-    // input   wire        sram_inst_ok_1,
-    // input   wire        sram_inst_ok_2,
-    // input   wire        i_cache_stall_req,
-    // output  wire        sram_data_ena,
-    // output  wire [3 :0] sram_data_wen,
-    // output  wire [31:0] sram_data_addr,
-    // output  wire [31:0] sram_data_wdata,
-    // input   wire [31:0] sram_data_rdata,
-    // input   wire        d_cache_stall_req,
+    output  wire [3 :0] awid,
+    output  wire [31:0] awaddr,
+    output  wire [7 :0] awlen,
+    output  wire [2 :0] awsize,
+    output  wire [1 :0] awburst,
+    output  wire [1 :0] awlock,
+    output  wire [3 :0] awcache,
+    output  wire [2 :0] awprot,
+    output  wire        awvalid,
+    input   wire        awready,
 
-    output  wire [3 :0] i_awid,
-    output  wire [31:0] i_awaddr,
-    output  wire [7 :0] i_awlen,
-    output  wire [2 :0] i_awsize,
-    output  wire [1 :0] i_awburst,
-    output  wire        i_awvalid,
-    input   wire        i_awready,
-    output  wire [31:0] i_wdata,
-    output  wire [3 :0] i_wstrb,
-    output  wire        i_wlast,
-    output  wire        i_wvalid,
-    input   wire        i_wready,
-    output  wire [3 :0] i_arid,
-    output  wire [31:0] i_araddr,
-    output  wire [7 :0] i_arlen,
-    output  wire [2 :0] i_arsize,
-    output  wire [1 :0] i_arburst,
-    output  wire        i_arvalid,
-    input   wire        i_arready,
-    input   wire [3 :0] i_rid,
-    input   wire [31:0] i_rdata,
-    input   wire [1 :0] i_rresp,
-    input   wire        i_rlast,
-    input   wire        i_rvalid,
-    output  wire        i_rready,
-    input   wire [3 :0] i_bid,
-    input   wire [1 :0] i_bresp,
-    input   wire        i_bvalid,
-    output  wire        i_bready,
+    output  wire [3 :0] wid,
+    output  wire [31:0] wdata,
+    output  wire [3 :0] wstrb,
+    output  wire        wlast,
+    output  wire        wvalid,
+    input   wire        wready,
 
-    output  wire [3 :0] d_awid,
-    output  wire [31:0] d_awaddr,
-    output  wire [7 :0] d_awlen,
-    output  wire [2 :0] d_awsize,
-    output  wire [1 :0] d_awburst,
-    output  wire        d_awvalid,
-    input   wire        d_awready,
-    output  wire [31:0] d_wdata,
-    output  wire [3 :0] d_wstrb,
-    output  wire        d_wlast,
-    output  wire        d_wvalid,
-    input   wire        d_wready,
-    output  wire [3 :0] d_arid,
-    output  wire [31:0] d_araddr,
-    output  wire [7 :0] d_arlen,
-    output  wire [2 :0] d_arsize,
-    output  wire [1 :0] d_arburst,
-    output  wire        d_arvalid,
-    input   wire        d_arready,
-    input   wire [3 :0] d_rid,
-    input   wire [31:0] d_rdata,
-    input   wire [1 :0] d_rresp,
-    input   wire        d_rlast,
-    input   wire        d_rvalid,
-    output  wire        d_rready,
-    input   wire [3 :0] d_bid,
-    input   wire [1 :0] d_bresp,
-    input   wire        d_bvalid,
-    output  wire        d_bready,
+    output  wire [3 :0] arid,
+    output  wire [31:0] araddr,
+    output  wire [7 :0] arlen,
+    output  wire [2 :0] arsize,
+    output  wire [1 :0] arburst,
+    output  wire [1 :0] arlock,
+    output  wire [3 :0] arcache,
+    output  wire [2 :0] arprot,
+    output  wire        arvalid,
+    input   wire        arready,
+
+    input   wire [3 :0] rid,
+    input   wire [31:0] rdata,
+    input   wire [1 :0] rresp,
+    input   wire        rlast,
+    input   wire        rvalid,
+    output  wire        rready,
+
+    input   wire [3 :0] bid,
+    input   wire [1 :0] bresp,
+    input   wire        bvalid,
+    output  wire        bready,
 
     output  wire [31:0] debug_wb_pc_1,
     output  wire [3 :0] debug_wb_rf_wen_1,
@@ -89,6 +56,36 @@ module myCPU (
     output  wire [31:0] debug_wb_rf_wdata_2
 );
 
+    wire [31:0] i_araddr;
+    wire [7 :0] i_arlen;
+    wire        i_arvalid;
+    wire        i_arready;
+    wire [31:0] i_rdata;
+    wire        i_rlast;
+    wire        i_rvalid;
+    wire        i_rready;
+
+    wire [31:0] d_awaddr;
+    wire [7 :0] d_awlen;
+    wire [2 :0] d_awsize;
+    wire        d_awvalid;
+    wire        d_awready;
+    wire [31:0] d_wdata;
+    wire [3 :0] d_wstrb;
+    wire        d_wlast;
+    wire        d_wvalid;
+    wire        d_wready;
+    wire [31:0] d_araddr;
+    wire [7 :0] d_arlen;
+    wire [2 :0] d_arsize;
+    wire        d_arvalid;
+    wire        d_arready;
+    wire [31:0] d_rdata;
+    wire        d_rlast;
+    wire        d_rvalid;
+    wire        d_rready;
+    wire        d_bvalid;
+    wire        d_bready;
 
     wire        sram_inst_ena;
     wire [31:0] sram_inst_vaddr;
@@ -155,35 +152,14 @@ module myCPU (
         .cpu_instr_data_2ok     (sram_inst_ok_2         ),
         .stall_all              (i_cache_stall_req      ),
 
-        .awid                   (i_awid                 ),
-        .awaddr                 (i_awaddr               ),
-        .awlen                  (i_awlen                ),
-        .awsize                 (i_awsize               ),
-        .awburst                (i_awburst              ),    
-        .awvalid                (i_awvalid              ),    
-        .awready                (i_awready              ),    
-        .wdata                  (i_wdata                ),
-        .wstrb                  (i_wstrb                ),
-        .wlast                  (i_wlast                ),
-        .wvalid                 (i_wvalid               ),
-        .wready                 (i_wready               ),
-        .arid                   (i_arid                 ),
         .araddr                 (i_araddr               ),
         .arlen                  (i_arlen                ),
-        .arsize                 (i_arsize               ),
-        .arburst                (i_arburst              ),    
-        .arvalid                (i_arvalid              ),    
-        .arready                (i_arready              ),    
-        .rid                    (i_rid                  ),
+        .arvalid                (i_arvalid              ),
+        .arready                (i_arready              ),
         .rdata                  (i_rdata                ),
-        .rresp                  (i_rresp                ),
         .rlast                  (i_rlast                ),
         .rvalid                 (i_rvalid               ),
-        .rready                 (i_rready               ),
-        .bid                    (i_bid                  ),
-        .bresp                  (i_bresp                ),
-        .bvalid                 (i_bvalid               ),
-        .bready                 (i_bready               )
+        .rready                 (i_rready               )
     );
 
     d_cache d_cache0 (
@@ -200,11 +176,9 @@ module myCPU (
         .cpu_rdata              (sram_data_rdata        ),
         .cpu_d_cache_stall      (d_cache_stall_req      ),
         
-        .axi_awid               (d_awid                 ),
         .axi_awaddr             (d_awaddr               ),
         .axi_awlen              (d_awlen                ),
         .axi_awsize             (d_awsize               ),
-        .axi_awburst            (d_awburst              ),
         .axi_awvalid            (d_awvalid              ),
         .axi_awready            (d_awready              ),
         .axi_wdata              (d_wdata                ),
@@ -212,23 +186,87 @@ module myCPU (
         .axi_wlast              (d_wlast                ),
         .axi_wvalid             (d_wvalid               ),
         .axi_wready             (d_wready               ),
-        .axi_arid               (d_arid                 ),
         .axi_araddr             (d_araddr               ),
         .axi_arlen              (d_arlen                ),
         .axi_arsize             (d_arsize               ),
-        .axi_arburst            (d_arburst              ),
         .axi_arvalid            (d_arvalid              ),
         .axi_arready            (d_arready              ),
-        .axi_rid                (d_rid                  ),
         .axi_rdata              (d_rdata                ),
-        .axi_rresp              (d_rresp                ),
         .axi_rlast              (d_rlast                ),
         .axi_rvalid             (d_rvalid               ),
         .axi_rready             (d_rready               ),
-        .axi_bid                (d_bid                  ),
-        .axi_bresp              (d_bresp                ),
         .axi_bvalid             (d_bvalid               ),
         .axi_bready             (d_bready               )
+    );
+
+    arbiter arbiter0 (
+        .i_araddr               (i_araddr               ),
+        .i_arlen                (i_arlen                ),
+        .i_arvalid              (i_arvalid              ),
+        .i_arready              (i_arready              ),
+        .i_rdata                (i_rdata                ),
+        .i_rlast                (i_rlast                ),
+        .i_rvalid               (i_rvalid               ),
+        .i_rready               (i_rready               ),
+
+        .d_araddr               (d_araddr               ),
+        .d_arlen                (d_arlen                ),
+        .d_arsize               (d_arsize               ),
+        .d_arvalid              (d_arvalid              ),
+        .d_arready              (d_arready              ),
+        .d_rdata                (d_rdata                ),
+        .d_rlast                (d_rlast                ),
+        .d_rvalid               (d_rvalid               ),
+        .d_rready               (d_rready               ),
+        .d_awaddr               (d_awaddr               ),
+        .d_awlen                (d_awlen                ),
+        .d_awsize               (d_awsize               ),
+        .d_awvalid              (d_awvalid              ),
+        .d_awready              (d_awready              ),
+        .d_wdata                (d_wdata                ),
+        .d_wstrb                (d_wstrb                ),
+        .d_wlast                (d_wlast                ),
+        .d_wvalid               (d_wvalid               ),
+        .d_wready               (d_wready               ),
+        .d_bvalid               (d_bvalid               ),
+        .d_bready               (d_bready               ),
+
+        .arid                   (arid                   ),
+        .araddr                 (araddr                 ),
+        .arlen                  (arlen                  ),
+        .arsize                 (arsize                 ),
+        .arburst                (arburst                ),
+        .arlock                 (arlock                 ),
+        .arcache                (arcache                ),
+        .arprot                 (arprot                 ),
+        .arvalid                (arvalid                ),
+        .arready                (arready                ),
+        .rid                    (rid                    ),
+        .rdata                  (rdata                  ),
+        .rresp                  (rresp                  ),
+        .rlast                  (rlast                  ),
+        .rvalid                 (rvalid                 ),
+        .rready                 (rready                 ),
+        .awid                   (awid                   ),
+        .awaddr                 (awaddr                 ),
+        .awlen                  (awlen                  ),
+        .awsize                 (awsize                 ),
+        .awburst                (awburst                ),
+        .awlock                 (awlock                 ),
+        .awcache                (awcache                ),
+        .awprot                 (awprot                 ),
+        .awvalid                (awvalid                ),
+        .awready                (awready                ),
+        .wid                    (wid                    ),
+        .wdata                  (wdata                  ),
+        .wstrb                  (wstrb                  ),
+        .wlast                  (wlast                  ),
+        .wvalid                 (wvalid                 ),
+        .wready                 (wready                 ),
+        .bid                    (bid                    ),
+        .bresp                  (bresp                  ),
+        .bvalid                 (bvalid                 ),
+        .bready                 (bready                 )
     );
 
 endmodule
