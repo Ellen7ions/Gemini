@@ -7,6 +7,8 @@ module mmu_data #(
     input   wire                        en,
     input   wire                        ls_sel,
     input   wire [              31:0]   vaddr,
+    output  wire                        uncached,
+    output  wire                        psyaddr_ena,
     output  wire [              31:0]   psyaddr,
     output  wire                        is_tlb_refill_tlbl,
     output  wire                        is_tlb_refill_tlbs,
@@ -18,6 +20,7 @@ module mmu_data #(
     input   wire                        is_tlbwi,
     
     // r cp0
+    input   wire [              31:0]   r_cp0_Config,
     input   wire [              31:0]   r_cp0_Index,
     input   wire [              31:0]   r_cp0_EntryHi,
     input   wire [              31:0]   r_cp0_EntryLo0,
@@ -96,6 +99,14 @@ module mmu_data #(
     assign s_vpn        = is_tlbp ? r_cp0_EntryHi[31:13] : vaddr[31:13];
     assign s_asid       = r_cp0_EntryHi[7:0];
     assign s_odd        = vaddr[12];
+
+    assign uncached     =
+        (vaddr[31:29] == 3'b101) |
+        (~vaddr[31] | vaddr[31] & vaddr[30]) & (s_c != 3'd3) |
+        (vaddr[31:29] == 3'b100) & (r_cp0_Config[2:0] != 3'd3);
+
+    assign psyaddr_ena  =
+        direct_psyena | s_found & s_v;
 
     assign psyaddr =
         {32{ direct_psyena}} & direct_psyaddr |

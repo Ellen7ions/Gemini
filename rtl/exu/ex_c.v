@@ -298,6 +298,10 @@ module ex_c (
             ex_w_cp0_data       = {id2_rt_data[31:13], 5'h0, id2_rt_data[7:0]};
         end
 
+        {5'd16, 3'd0}: begin
+            ex_w_cp0_data       = {29'd0, id2_rt_data[2:0]};
+        end
+
         default: begin
             ex_w_cp0_data       = 32'h0;
         end

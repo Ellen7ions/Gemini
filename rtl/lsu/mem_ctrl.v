@@ -17,11 +17,14 @@ module mem_ctrl (
     output  wire [31:0]     mem2c_r_data,
 
     output  wire            data_ram_en,
+    output  wire [3 :0]     data_load_type,
     output  wire [3 :0]     data_ram_wen,
     output  wire [31:0]     data_ram_addr,
     output  wire [31:0]     data_ram_wdata,
     input   wire [31:0]     data_ram_rdata
 );
+
+    assign data_load_type = exc_ls_sel;
 
     assign data_ram_en  =
         exc_ls_ena & ~exc_has_exception & ~mem2c_has_exception & ~exc_refetch;

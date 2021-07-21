@@ -15,7 +15,10 @@ module gemini (
     input   wire        i_cache_stall_req,
     output  wire        sram_data_ena,
     output  wire [3 :0] sram_data_wen,
-    output  wire [31:0] sram_data_addr,
+    output  wire [3 :0] sram_load_type,
+    output  wire        sram_uncached,
+    output  wire [31:0] sram_data_vaddr,
+    output  wire [31:0] sram_data_psyaddr,
     output  wire [31:0] sram_data_wdata,
     input   wire [31:0] sram_data_rdata,
     input   wire        d_cache_stall_req,
@@ -419,6 +422,11 @@ module gemini (
     wire            lsu1c_is_int_i;
     wire            lsu1c_is_i_refill_tlbl_i;
     wire            lsu1c_is_i_invalid_tlbl_i;
+    wire            lsu1c_is_d_refill_tlbl_o;
+    wire            lsu1c_is_d_invalid_tlbl_o;
+    wire            lsu1c_is_d_refill_tlbs_o;
+    wire            lsu1c_is_d_invalid_tlbs_o;
+    wire            lsu1c_is_modify_o;
     wire            lsu1c_is_d_refill_tlbl_i;
     wire            lsu1c_is_d_invalid_tlbl_i;
     wire            lsu1c_is_d_refill_tlbs_i;
@@ -546,6 +554,7 @@ module gemini (
     wire [31:0]     cp0_entryhi;
     wire [31:0]     cp0_entrylo0;
     wire [31:0]     cp0_entrylo1;
+    wire [31:0]     cp0_config;
 
     issue_id2c issue_id2c0 (
         .clk                (clk                ),
@@ -797,7 +806,6 @@ module gemini (
         .ex_pc_o                (exc_pc_o               ),
         .ex_alu_res_o           (exc_alu_res_o          ),
         .ex_ls_addr_o           (exc_ls_addr_o          ),
-        .ex_psyaddr_o           (exc_psyaddr_o          ),
         .ex_w_hilo_ena_o        (exc_w_hilo_ena_o       ),
         .ex_hi_res_o            (exc_hi_res_o           ),
         .ex_lo_res_o            (exc_lo_res_o           ),
@@ -813,11 +821,6 @@ module gemini (
         .ex_is_int_o            (exc_is_int_o           ),
         .ex_is_i_refill_tlbl_o  (exc_is_i_refill_tlbl_o ),
         .ex_is_i_invalid_tlbl_o (exc_is_i_invalid_tlbl_o),
-        .ex_is_d_refill_tlbl_o  (exc_is_d_refill_tlbl_o ),
-        .ex_is_d_invalid_tlbl_o (exc_is_d_invalid_tlbl_o),
-        .ex_is_d_refill_tlbs_o  (exc_is_d_refill_tlbs_o ),
-        .ex_is_d_invalid_tlbs_o (exc_is_d_invalid_tlbs_o),
-        .ex_is_modify_o         (exc_is_modify_o        ),
         .ex_is_refetch_o        (exc_is_refetch_o       ),
         .ex_is_tlbp_o           (exc_is_tlbp_o          ),
         .ex_is_tlbr_o           (exc_is_tlbr_o          ),
@@ -836,7 +839,7 @@ module gemini (
         .ex_pc_i                (exc_pc_i               ),
         .ex_alu_res_i           (exc_alu_res_i          ),
         .ex_ls_addr_i           (exc_ls_addr_i          ),
-        .ex_psyaddr_i           (exc_psyaddr_i          ),
+        .ex_psyaddr_i           (),
         .ex_w_hilo_ena_i        (exc_w_hilo_ena_i       ),
         .ex_hi_res_i            (exc_hi_res_i           ),
         .ex_lo_res_i            (exc_lo_res_i           ),
@@ -852,11 +855,6 @@ module gemini (
         .ex_is_int_i            (exc_is_int_i           ),
         .ex_is_i_refill_tlbl_i  (exc_is_i_refill_tlbl_i ),
         .ex_is_i_invalid_tlbl_i (exc_is_i_invalid_tlbl_i),
-        .ex_is_d_refill_tlbl_i  (exc_is_d_refill_tlbl_i ),
-        .ex_is_d_invalid_tlbl_i (exc_is_d_invalid_tlbl_i),
-        .ex_is_d_refill_tlbs_i  (exc_is_d_refill_tlbs_i ),
-        .ex_is_d_invalid_tlbs_i (exc_is_d_invalid_tlbs_i),
-        .ex_is_modify_i         (exc_is_modify_i        ),
         .ex_is_refetch_i        (exc_is_refetch_i       ),
         .ex_is_tlbp_i           (exc_is_tlbp_i          ),
         .ex_is_tlbr_i           (exc_is_tlbr_i          ),
@@ -898,47 +896,47 @@ module gemini (
     );
 
     ex_lsu1c lsu1_lsu2c0 (
-        .clk                    (clk                    ),
-        .rst                    (rst                    ),
-        .flush                  (lsu1_lsu2_flush        ),
-        .exception_flush        (lsu1_lsu2_exp_flush    ),
-        .stall                  (lsu1_lsu2_stall        ),
-        .ex_pc_o                (exc_pc_i               ),
-        .ex_alu_res_o           (exc_alu_res_i          ),
-        .ex_ls_addr_o           (exc_ls_addr_i          ),
-        .ex_w_hilo_ena_o        (exc_w_hilo_ena_i       ),
-        .ex_hi_res_o            (exc_hi_res_i           ),
-        .ex_lo_res_o            (exc_lo_res_i           ),
-        .ex_in_delay_slot_o     (exc_in_delay_slot_i    ),
-        .ex_is_eret_o           (exc_is_eret_i          ),
-        .ex_is_syscall_o        (exc_is_syscall_i       ),
-        .ex_is_break_o          (exc_is_break_i         ),
-        .ex_is_inst_adel_o      (exc_is_inst_adel_i     ),
-        .ex_is_data_adel_o      (exc_is_data_adel_i     ),
-        .ex_is_data_ades_o      (exc_is_data_ades_i     ),
-        .ex_is_overflow_o       (exc_is_overflow_i      ),
-        .ex_is_ri_o             (exc_is_ri_i            ),
-        .ex_is_int_o            (exc_is_int_i           ),
-        .ex_is_i_refill_tlbl_o  (exc_is_i_refill_tlbl_i ),
-        .ex_is_i_invalid_tlbl_o (exc_is_i_invalid_tlbl_i),
-        .ex_is_d_refill_tlbl_o  (exc_is_d_refill_tlbl_i ),
-        .ex_is_d_invalid_tlbl_o (exc_is_d_invalid_tlbl_i),
-        .ex_is_d_refill_tlbs_o  (exc_is_d_refill_tlbs_i ),
-        .ex_is_d_invalid_tlbs_o (exc_is_d_invalid_tlbs_i),
-        .ex_is_modify_o         (exc_is_modify_i        ),
-        .ex_is_refetch_o        (exc_is_refetch_i       ),
-        .ex_is_tlbr_o           (exc_is_tlbr_i          ),
-        .ex_is_tlbwi_o          (exc_is_tlbwi_i         ),
-        .ex_has_exception_o     (exc_has_exception_i    ),
-        .ex_w_reg_ena_o         (exc_w_reg_ena_i        ),
-        .ex_w_reg_dst_o         (exc_w_reg_dst_i        ),
-        .ex_ls_ena_o            (exc_ls_ena_i           ),
-        .ex_ls_sel_o            (exc_ls_sel_i           ),
-        .ex_wb_reg_sel_o        (exc_wb_reg_sel_i       ),
-        .ex_rt_data_o           (exc_rt_data_i          ),
-        .ex_w_cp0_ena_o         (exc_w_cp0_ena_i        ),
-        .ex_w_cp0_addr_o        (exc_w_cp0_addr_i       ),
-        .ex_w_cp0_data_o        (exc_w_cp0_data_i       ),
+        .clk                    (clk                      ),
+        .rst                    (rst                      ),
+        .flush                  (lsu1_lsu2_flush          ),
+        .exception_flush        (lsu1_lsu2_exp_flush      ),
+        .stall                  (lsu1_lsu2_stall          ),
+        .ex_pc_o                (exc_pc_i                 ),
+        .ex_alu_res_o           (exc_alu_res_i            ),
+        .ex_ls_addr_o           (exc_ls_addr_i            ),
+        .ex_w_hilo_ena_o        (exc_w_hilo_ena_i         ),
+        .ex_hi_res_o            (exc_hi_res_i             ),
+        .ex_lo_res_o            (exc_lo_res_i             ),
+        .ex_in_delay_slot_o     (exc_in_delay_slot_i      ),
+        .ex_is_eret_o           (exc_is_eret_i            ),
+        .ex_is_syscall_o        (exc_is_syscall_i         ),
+        .ex_is_break_o          (exc_is_break_i           ),
+        .ex_is_inst_adel_o      (exc_is_inst_adel_i       ),
+        .ex_is_data_adel_o      (exc_is_data_adel_i       ),
+        .ex_is_data_ades_o      (exc_is_data_ades_i       ),
+        .ex_is_overflow_o       (exc_is_overflow_i        ),
+        .ex_is_ri_o             (exc_is_ri_i              ),
+        .ex_is_int_o            (exc_is_int_i             ),
+        .ex_is_i_refill_tlbl_o  (exc_is_i_refill_tlbl_i   ),
+        .ex_is_i_invalid_tlbl_o (exc_is_i_invalid_tlbl_i  ),
+        .ex_is_d_refill_tlbl_o  (lsu1c_is_d_refill_tlbl_o ),
+        .ex_is_d_invalid_tlbl_o (lsu1c_is_d_refill_tlbs_o ),
+        .ex_is_d_refill_tlbs_o  (lsu1c_is_d_invalid_tlbl_o),
+        .ex_is_d_invalid_tlbs_o (lsu1c_is_d_invalid_tlbs_o),
+        .ex_is_modify_o         (lsu1c_is_modify_o        ),
+        .ex_is_refetch_o        (exc_is_refetch_i         ),
+        .ex_is_tlbr_o           (exc_is_tlbr_i            ),
+        .ex_is_tlbwi_o          (exc_is_tlbwi_i           ),
+        .ex_has_exception_o     (exc_has_exception_i      ),
+        .ex_w_reg_ena_o         (exc_w_reg_ena_i          ),
+        .ex_w_reg_dst_o         (exc_w_reg_dst_i          ),
+        .ex_ls_ena_o            (exc_ls_ena_i             ),
+        .ex_ls_sel_o            (exc_ls_sel_i             ),
+        .ex_wb_reg_sel_o        (exc_wb_reg_sel_i         ),
+        .ex_rt_data_o           (exc_rt_data_i            ),
+        .ex_w_cp0_ena_o         (exc_w_cp0_ena_i          ),
+        .ex_w_cp0_addr_o        (exc_w_cp0_addr_i         ),
+        .ex_w_cp0_data_o        (exc_w_cp0_data_i         ),
 
         .ex_pc_i                (lsu1c_pc_i               ),
         .ex_alu_res_i           (lsu1c_alu_res_i          ),
@@ -1065,6 +1063,7 @@ module gemini (
     wire        is_tlbp;
     wire        is_tlbr;
     wire        is_tlbwi;
+    wire [31:0] r_cp0_Config;
     wire [31:0] r_cp0_Index;
     wire [31:0] r_cp0_EntryHi;
     wire [31:0] r_cp0_EntryLo0;
@@ -1086,6 +1085,7 @@ module gemini (
     wire        inst_tlb_invalid_tlbl;
 
     wire        data_ena;
+    wire [3 :0] data_load_type;
     wire [3 :0] data_wea;
     wire [31:0] data_addr;
     wire [31:0] data_wdata;
@@ -1105,6 +1105,7 @@ module gemini (
         .is_tlbp                (is_tlbp                ),
         .is_tlbr                (is_tlbr                ),
         .is_tlbwi               (is_tlbwi               ),
+        .r_cp0_Config           (r_cp0_Config           ),
         .r_cp0_Index            (r_cp0_Index            ),
         .r_cp0_EntryHi          (r_cp0_EntryHi          ),
         .r_cp0_EntryLo0         (r_cp0_EntryLo0         ),
@@ -1126,23 +1127,17 @@ module gemini (
         .inst_tlb_refill_tlbl   (inst_tlb_refill_tlbl   ),
         .inst_tlb_invalid_tlbl  (inst_tlb_invalid_tlbl  ),
 
-        // ex
-        .ex_ls_ena              (exc_ls_ena_o           ),
-        .ex_ls_or               (exc_ls_or_o            ),
-        .ex_vaddr               (exc_ls_addr_o          ),
-        .ex_psyaddr             (exc_psyaddr_o          ),
-        .ex_tlb_refill_tlbl     (exc_is_d_refill_tlbl_o ),
-        .ex_tlb_refill_tlbs     (exc_is_d_refill_tlbs_o ),
-        .ex_tlb_invalid_tlbl    (exc_is_d_invalid_tlbl_o),
-        .ex_tlb_invalid_tlbs    (exc_is_d_invalid_tlbs_o),
-        .ex_tlb_modify          (exc_is_modify_o        ),
-
-        // lsu1-mem_ctrl
-        .lsu1_ena               (data_ena               ),
+        .lsu1_ls_ena            (data_ena               ),
+        .lsu1_load_type         (data_load_type         ),
         .lsu1_wea               (data_wea               ),
-        .lsu1_psyaddr           (data_addr              ),
         .lsu1_wdata             (data_wdata             ),
-        .lsu1_rdata             (data_rdata             ),
+        .lsu1_vaddr             (data_addr              ),
+        .lsu1_tlb_refill_tlbl   (lsu1c_is_d_refill_tlbl_o ),
+        .lsu1_tlb_refill_tlbs   (lsu1c_is_d_refill_tlbs_o ),
+        .lsu1_tlb_invalid_tlbl  (lsu1c_is_d_invalid_tlbl_o),
+        .lsu1_tlb_invalid_tlbs  (lsu1c_is_d_invalid_tlbs_o),
+        .lsu1_tlb_modify        (lsu1c_is_modify_o        ),
+        .lsu1_rdata             (data_rdata               ),
 
         .sram_inst_ena          (sram_inst_ena          ),
         .sram_inst_vaddr        (sram_inst_vaddr        ),
@@ -1153,7 +1148,10 @@ module gemini (
         .sram_inst_ok_2         (sram_inst_ok_2         ),
         .sram_data_ena          (sram_data_ena          ),
         .sram_data_wen          (sram_data_wen          ),
-        .sram_data_addr         (sram_data_addr         ),
+        .sram_load_type         (sram_load_type         ),
+        .sram_uncached          (sram_uncached          ),
+        .sram_data_vaddr        (sram_data_vaddr        ),
+        .sram_data_psyaddr      (sram_data_psyaddr      ),
         .sram_data_wdata        (sram_data_wdata        ),
         .sram_data_rdata        (sram_data_rdata        )
     );
@@ -1165,6 +1163,7 @@ module gemini (
     assign r_cp0_EntryHi        = cp0_entryhi;    
     assign r_cp0_EntryLo0       = cp0_entrylo0;    
     assign r_cp0_EntryLo1       = cp0_entrylo1;
+    assign r_cp0_Config         = cp0_config;
 
     npc npc_cp (
         .id2_rs_data        (id2c_rs_data_i     ),
@@ -1805,7 +1804,7 @@ module gemini (
 
     mem_ctrl mem_ctrl0 (
         .exc_ls_ena                 (exc_ls_ena_i & ~ex_lsu1_stall),
-        .exc_ls_addr                (exc_psyaddr_i          ),
+        .exc_ls_addr                (exc_ls_addr_i          ),
         .exc_rt_data                (exc_rt_data_i          ),
         .exc_ls_sel                 (exc_ls_sel_i           ),
         .exc_has_exception          (exc_has_exception_i    ),
@@ -1814,11 +1813,12 @@ module gemini (
         .mem2c_has_exception        (lsu1c_has_exception_i  ),        
         .mem2c_r_data               (memc_data_rdata        ),
         
-        .data_ram_en                (data_ena               ),    
-        .data_ram_wen               (data_wea               ),    
-        .data_ram_addr              (data_addr              ),    
-        .data_ram_wdata             (data_wdata             ),    
-        .data_ram_rdata             (data_rdata             )             
+        .data_ram_en                (data_ena               ),
+        .data_load_type             (data_load_type         ),
+        .data_ram_wen               (data_wea               ),
+        .data_ram_addr              (data_addr              ),
+        .data_ram_wdata             (data_wdata             ),
+        .data_ram_rdata             (data_rdata             )            
     );
 
     exception_ctrl exception_ctrl0 (
@@ -1885,9 +1885,10 @@ module gemini (
 
         .epc                        (cp0_epc            ),
         .index                      (cp0_index          ),
-        .entryhi                    (cp0_entryhi        ),    
-        .entrylo0                   (cp0_entrylo0       ),    
+        .entryhi                    (cp0_entryhi        ),
+        .entrylo0                   (cp0_entrylo0       ),
         .entrylo1                   (cp0_entrylo1       ),
+        .config_                    (cp0_config         ),
 
         .cp0_has_int                (cp0_has_int        ),
         .cp0_cls_exl                (cp0_cls_exl        ),

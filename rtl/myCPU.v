@@ -12,12 +12,12 @@ module myCPU (
     // input   wire        sram_inst_ok_1,
     // input   wire        sram_inst_ok_2,
     // input   wire        i_cache_stall_req,
-    // output  wire        sram_data_ena,
-    // output  wire [3 :0] sram_data_wen,
-    // output  wire [31:0] sram_data_addr,
-    // output  wire [31:0] sram_data_wdata,
-    // input   wire [31:0] sram_data_rdata,
-    // input   wire        d_cache_stall_req,
+    output  wire        sram_data_ena,
+    output  wire [3 :0] sram_data_wen,
+    output  wire [31:0] sram_data_addr,
+    output  wire [31:0] sram_data_wdata,
+    input   wire [31:0] sram_data_rdata,
+    input   wire        d_cache_stall_req,
 
     output  wire [3 :0] awid,
     output  wire [31:0] awaddr,
@@ -68,12 +68,17 @@ module myCPU (
     wire        sram_inst_ok_2;
     wire        i_cache_stall_req;
 
-    wire        sram_data_ena;
-    wire [3 :0] sram_data_wen;
-    wire [31:0] sram_data_addr;
-    wire [31:0] sram_data_wdata;
-    wire [31:0] sram_data_rdata;
-    wire        d_cache_stall_req;
+    // wire        sram_data_ena;
+    // wire [3 :0] sram_data_wen;
+    // wire [3 :0] sram_load_type;
+    // wire        sram_uncached;
+    // wire [31:0] sram_data_vaddr;
+    wire [31:0] sram_data_psyaddr;
+    // wire [31:0] sram_data_wdata;
+    // wire [31:0] sram_data_rdata;
+    // wire        d_cache_stall_req;
+
+    assign sram_data_addr = sram_data_psyaddr;
 
     gemini gemini0 (
         .clk                    (clk                    ),
@@ -91,10 +96,13 @@ module myCPU (
 
         .sram_data_ena          (sram_data_ena          ),
         .sram_data_wen          (sram_data_wen          ),
-        .sram_data_addr         (sram_data_addr         ),
+        .sram_load_type         (sram_load_type         ),
+        .sram_uncached          (sram_uncached          ),
+        .sram_data_vaddr        (sram_data_vaddr        ),
+        .sram_data_psyaddr      (sram_data_psyaddr      ),
         .sram_data_wdata        (sram_data_wdata        ),    
         .sram_data_rdata        (sram_data_rdata        ),
-        .d_cache_stall_req      (d_cache_stall_req      ),
+        .d_cache_stall_req      (1'b0                   ),
 
         .debug_wb_pc_1          (debug_wb_pc_1          ),
         .debug_wb_rf_wen_1      (debug_wb_rf_wen_1      ),
@@ -153,8 +161,9 @@ module myCPU (
         .clk                    (clk                    ),
         .rst                    (rst                    ),
         
-        .cpu_en                 (sram_data_ena          ),
-        .cpu_wen                (sram_data_wen          ),
+        .cpu_en                 (),
+        .cpu_wen                (),
+        .cpu_uncached           (),
         .cpu_load_type          (),
         .cpu_vaddr              (),
         .cpu_psyaddr            (),

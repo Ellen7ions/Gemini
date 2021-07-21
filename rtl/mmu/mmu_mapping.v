@@ -10,6 +10,7 @@ module mmu_mapping #(
     input   wire        is_tlbr,
     input   wire        is_tlbwi,
 
+    input   wire [31:0] r_cp0_Config,
     input   wire [31:0] r_cp0_Index,
     input   wire [31:0] r_cp0_EntryHi,
     input   wire [31:0] r_cp0_EntryLo0,
@@ -31,22 +32,17 @@ module mmu_mapping #(
     output  wire        inst_tlb_refill_tlbl,
     output  wire        inst_tlb_invalid_tlbl,
 
-    // from ex
-    input   wire        ex_ls_ena,
-    input   wire        ex_ls_or,
-    input   wire [31:0] ex_vaddr,
-    output  wire [31:0] ex_psyaddr,
-    output  wire        ex_tlb_refill_tlbl,
-    output  wire        ex_tlb_refill_tlbs,
-    output  wire        ex_tlb_invalid_tlbl,
-    output  wire        ex_tlb_invalid_tlbs,
-    output  wire        ex_tlb_modify,
-
-    // from lsu1
-    input   wire        lsu1_ena,
+    input   wire        lsu1_ls_ena,
+    input   wire [3 :0] lsu1_load_type,
     input   wire [3 :0] lsu1_wea,
-    input   wire [31:0] lsu1_psyaddr,
     input   wire [31:0] lsu1_wdata,
+    input   wire        lsu1_ls_or,
+    input   wire [31:0] lsu1_vaddr,
+    output  wire        lsu1_tlb_refill_tlbl,
+    output  wire        lsu1_tlb_refill_tlbs,
+    output  wire        lsu1_tlb_invalid_tlbl,
+    output  wire        lsu1_tlb_invalid_tlbs,
+    output  wire        lsu1_tlb_modify,
     output  wire [31:0] lsu1_rdata,     // send to lsu2
 
     // sram
@@ -60,7 +56,10 @@ module mmu_mapping #(
 
     output  wire        sram_data_ena,
     output  wire [3 :0] sram_data_wen,
-    output  wire [31:0] sram_data_addr,
+    output  wire [3 :0] sram_load_type,
+    output  wire        sram_uncached,
+    output  wire [31:0] sram_data_vaddr,
+    output  wire [31:0] sram_data_psyaddr,
     output  wire [31:0] sram_data_wdata,
     input   wire [31:0] sram_data_rdata
 );
@@ -111,6 +110,8 @@ module mmu_mapping #(
     wire                        inst_psyaddr_ena;
     wire [              31:0]   inst_psyaddr;
     wire                        data_psyaddr_ena;
+    wire                        data_uncached;
+    wire [              31:0]   data_psyaddr;
 
     assign sram_inst_ena    =   inst_psyaddr_ena & inst_ena;
     assign sram_inst_vaddr  =   inst_addr_next_pc;
@@ -120,9 +121,12 @@ module mmu_mapping #(
     assign inst_ok_1        =   sram_inst_ok_1;
     assign inst_ok_2        =   sram_inst_ok_2;
 
-    assign sram_data_ena    =   lsu1_ena;
-    assign sram_data_addr   =   lsu1_psyaddr;
+    assign sram_data_ena    =   data_psyaddr_ena & lsu1_ls_ena;
     assign sram_data_wen    =   lsu1_wea;
+    assign sram_load_type   =   lsu1_load_type;
+    assign sram_uncached    =   data_uncached;
+    assign sram_data_vaddr  =   lsu1_vaddr;
+    assign sram_data_psyaddr=   data_psyaddr;
     assign sram_data_wdata  =   lsu1_wdata;
     assign lsu1_rdata       =   sram_data_rdata;
 
@@ -146,20 +150,23 @@ module mmu_mapping #(
     );
 
     mmu_data #(TLBNUM) data_map (
-        .en                 (ex_ls_ena              ),
-        .ls_sel             (ex_ls_or               ),
-        .vaddr              (ex_vaddr               ),
-        .psyaddr            (ex_psyaddr             ),
-        .is_tlb_refill_tlbl (ex_tlb_refill_tlbl     ),    
-        .is_tlb_refill_tlbs (ex_tlb_refill_tlbs     ),    
-        .is_tlb_invalid_tlbl(ex_tlb_invalid_tlbl    ),        
-        .is_tlb_invalid_tlbs(ex_tlb_invalid_tlbs    ),        
-        .is_tlb_modify      (ex_tlb_modify          ),
+        .en                 (lsu1_ls_ena            ),
+        .ls_sel             (|lsu1_wea              ),
+        .vaddr              (lsu1_vaddr             ),
+        .uncached           (data_uncached          ),
+        .psyaddr_ena        (data_psyaddr_ena       ),
+        .psyaddr            (data_psyaddr           ),
+        .is_tlb_refill_tlbl (lsu1_tlb_refill_tlbl   ),    
+        .is_tlb_refill_tlbs (lsu1_tlb_refill_tlbs   ),    
+        .is_tlb_invalid_tlbl(lsu1_tlb_invalid_tlbl  ),        
+        .is_tlb_invalid_tlbs(lsu1_tlb_invalid_tlbs  ),        
+        .is_tlb_modify      (lsu1_tlb_modify        ),
 
         .is_tlbp            (is_tlbp                ),
         .is_tlbr            (is_tlbr                ),
         .is_tlbwi           (is_tlbwi               ),
         
+        .r_cp0_Config       (r_cp0_Config           ),
         .r_cp0_Index        (r_cp0_Index            ),
         .r_cp0_EntryHi      (r_cp0_EntryHi          ),
         .r_cp0_EntryLo0     (r_cp0_EntryLo0         ),
