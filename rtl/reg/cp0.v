@@ -21,6 +21,7 @@ module cp0 (
     output  wire [31:0] entryhi,
     output  wire [31:0] entrylo0,
     output  wire [31:0] entrylo1,
+    output  wire [31:0] config_,
 
     output  wire        cp0_has_int,
 
@@ -54,12 +55,15 @@ module cp0 (
     reg [31:0]  EntryHi;
     reg [31:0]  EntryLo0;
     reg [31:0]  EntryLo1;
+    reg [31:0]  Config;
+    reg [31:0]  Config1;
 
     assign epc          = EPC;
     assign index        = Index;
     assign entryhi      = EntryHi;
     assign entrylo0     = EntryLo0;
     assign entrylo1     = EntryLo1;
+    assign config_      = Config;
     assign cp0_has_int  = ((Cause[15:8] & Status[15:8]) != 8'h0) & Status[0] & ~Status[1];
 
     always @(posedge clk) begin
@@ -70,6 +74,8 @@ module cp0 (
             Status      <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
             Cause       <= 32'd0;
             Index       <= 32'd0;
+            Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd2};
+            Config1     <= {1'b0, 6'd16, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
         end else begin
             if (Compare != 32'h0 && Count[32:1] == Compare)
                 Cause[30]   <= 1'b1;
@@ -143,6 +149,10 @@ module cp0 (
                     EntryHi         <= {w_data[31:13], 5'h0, w_data[7:0]};
                 end
 
+                {5'd16, 3'd0}: begin
+                    Config[2:0]     <= w_data[2:0];
+                end
+
                 default: begin
                     
                 end
@@ -195,6 +205,14 @@ module cp0 (
 
                 {5'd10, 3'd0}: begin
                     r_data       = EntryHi; 
+                end
+
+                {5'd16, 3'd0}: begin
+                    r_data      = Config;
+                end
+
+                {5'd16, 3'd1}: begin
+                    r_data      = Config1;
                 end
 
                 default: begin
