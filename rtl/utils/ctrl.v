@@ -51,7 +51,7 @@ module ctrl (
             b_ctrl_flush_req;
     
     assign ii_id2_stall =
-            i_cache_stall_req | issue_stall | (pc_stall & fifo_flush) | forwardc_req | forwardp_req | exc_stall_req | lsu1_tlb_stall_req;
+            i_cache_stall_req | d_cache_stall_req | issue_stall | (pc_stall & fifo_flush) | forwardc_req | forwardp_req | exc_stall_req | lsu1_tlb_stall_req;
     
     assign id2_ex_flush =
             b_ctrl_flush_req & with_delaysolt | forwardc_req | forwardp_req;

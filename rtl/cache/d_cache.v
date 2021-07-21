@@ -18,7 +18,7 @@ module d_cache #(
     input   wire [31:0] cpu_psyaddr,
     input   wire [31:0] cpu_wdata,
     output  wire [31:0] cpu_rdata,
-    output  reg  [31:0] cpu_d_cache_stall,
+    output  reg         cpu_d_cache_stall,
 
     output  wire [31:0] axi_awaddr,
     output  wire [7 :0] axi_awlen,
@@ -72,6 +72,16 @@ module d_cache #(
     reg  [2 :0] slave_state;
     reg  [2 :0] slave_next_state;
 
+    always @(posedge clk) begin
+        if (rst) begin
+            master_state    <= IDLE_STATE;
+            slave_state     <= IDLE_STATE;
+        end else begin
+            master_state    <= master_next_state;
+            slave_state     <= slave_next_state;
+        end
+    end
+
 
     // instances
     wire [WAY      -1:0]        dirty_ena   ;
@@ -92,9 +102,6 @@ module d_cache #(
     wire [31         :0]        bank_dina   ;
     wire [32*WORD_NUM-1 :0]     bank_douta  [WAY-1:0];
 
-    wire [WAY*WORD_NUM-1:0]     refill_en   ;
-    wire [3          :0]        refill_wea  ;
-    wire [INDEX_LOG-1:0]        refill_addra;
     wire [31         :0]        refill_dina ;
 
     genvar i, j;
@@ -129,7 +136,7 @@ module d_cache #(
                 .wea    (bank_wea                   ),
                 .addra  (bank_addra                 ),
                 .dina   (bank_dina                  ),
-                .douta  (bank_douta [i][j*WORD_NUM+:32])
+                .douta  (bank_douta [i][j*32+:32]   )
                 );             
             end
         end
@@ -179,6 +186,7 @@ module d_cache #(
     request_buffer request_buffer0 (
         .clk        (clk                ),
         .rst        (rst                ),
+        .stall      (cpu_d_cache_stall  ),
         
         .en_i       (cpu_en             ),
         .wen_i      (cpu_wen            ),
@@ -414,6 +422,8 @@ module d_cache #(
         axi_arsize          = 3'h0;
         axi_arvalid         = 1'b0;
 
+        axi_rready          = 1'b0;
+
         is_lookup           = 1'b0;
         is_replace          = 1'b0;
         is_refill           = 1'b0;
@@ -424,7 +434,7 @@ module d_cache #(
             lfsr_stall      = 1'b0;
             if (~cpu_en | cpu_en & hit_write_conflict) begin
                 master_next_state = IDLE_STATE;
-                cpu_d_cache_stall = 1'b1; 
+                cpu_d_cache_stall = cpu_en; 
             end else begin
                 master_next_state = LOOKUP_STATE;
                 is_lookup         = 1'b1;
@@ -483,7 +493,7 @@ module d_cache #(
                 };
             end
 
-            if (axi_arready) begin
+            if (axi_arready | uncached_reg) begin
                 master_next_state   = REFILL_STATE;
             end else begin
                 master_next_state   = REPLACE_STATE;
@@ -498,7 +508,7 @@ module d_cache #(
                 is_refill       = 1'b1;
             else 
                 is_uncached_refill = 1'b1;
-            if (axi_rvalid & axi_rlast) begin
+            if (axi_rvalid & axi_rlast | uncached_reg & |wen_reg) begin
                 master_next_state   = IDLE_STATE;
             end else begin
                 master_next_state   = REFILL_STATE;
@@ -513,6 +523,7 @@ module d_cache #(
     end
 
     always @(*) begin
+        is_hit_write    = 1'b0;
         case (slave_state)
         IDLE_STATE: begin
             if (wbuffer_en_i) begin

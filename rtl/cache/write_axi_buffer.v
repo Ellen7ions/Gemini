@@ -8,7 +8,7 @@ module write_axi_buffer #(
 
     input   wire                        en,
     input   wire                        uncached,
-    input   wire                        addr,
+    input   wire [31                :0] addr,
     input   wire [2                 :0] size,
     input   wire [3                 :0] wstrb,
     input   wire [31                :0] data,
@@ -30,7 +30,7 @@ module write_axi_buffer #(
 );
 
     reg                        uncached_reg;
-    reg                        addr_reg;
+    reg [31                :0] addr_reg;
     reg [3                 :0] size_reg;
     reg [3                 :0] wstrb_reg;
     reg [31                :0] data_reg;
@@ -44,13 +44,19 @@ module write_axi_buffer #(
     reg [1:0] next_state;
 
     reg [3:0] counter;
-    reg       finished; 
+    reg [3:0] next_counter;
+    reg       finished;
+    reg       next_finished;
 
     always @(posedge clk) begin
         if (rst) begin
-            cur_state <= IDLE;
+            cur_state   <= IDLE;
+            finished    <= 1'b1;
+            counter     <= 4'h0;
         end else begin
-            cur_state <= next_state;
+            cur_state   <= next_state;
+            finished    <= next_finished;
+            counter     <= next_counter;
         end
     end
 
@@ -66,14 +72,15 @@ module write_axi_buffer #(
         axi_wlast   = 1'b0;
         axi_wvalid  = 1'b0;
         axi_bready  = 1'b1;
-        finished    = 1'b1;
+        next_finished   = 1'b1;
+        next_counter    = 4'h0;
         case (cur_state)
         IDLE: begin
             if (en) begin
                 next_state  = WAIT_ADDR;
                 axi_awaddr  = addr;
-                axi_awlen   = uncached_reg ? 8'h0 : LINE_SIZE / 4 - 1;
-                axi_awsize  = size_reg;
+                axi_awlen   = uncached ? 8'h0 : LINE_SIZE / 4 - 1;
+                axi_awsize  = size;
                 axi_awvalid = 1'b1;
             end else begin
                 next_state = IDLE; 
@@ -81,32 +88,31 @@ module write_axi_buffer #(
         end
 
         WAIT_ADDR: begin
+            axi_awvalid = 1'b1;
+            axi_awaddr  = addr_reg;
+            axi_awlen   = uncached_reg ? 8'h0 : LINE_SIZE / 4 - 1;
+            axi_awsize  = size_reg;
             if (axi_awready) begin
                 next_state  = WAIT_DATA;
-                counter     = 4'd0;
-                axi_wdata   = uncached_reg ? data_reg  : cache_line_reg[counter * 32 +: 32];
-                axi_wstrb   = uncached_reg ? wstrb_reg : 4'b1111;
-                axi_wlast   = uncached_reg ? 1'b1 : 1'b0;
-                axi_wvalid  = 1'b1;
-                finished    = 1'b0;
+                next_counter= 4'd0;
+                next_finished   = 1'b0;
             end else begin
                 next_state  = WAIT_ADDR;
-                axi_awaddr  = addr;
-                axi_awlen   = uncached_reg ? 8'h0 : LINE_SIZE / 4 - 1;
-                axi_awsize  = size_reg;
-                axi_awvalid = 1'b1;
             end
         end
 
         WAIT_DATA: begin
-            if (axi_wready & ~finished) begin
-                counter = counter + 4'h1;
-                finished= counter == LINE_SIZE/4 | uncached_reg;
-            end
             axi_wdata   = uncached_reg ? data_reg  : cache_line_reg[counter * 32 +: 32];
             axi_wstrb   = uncached_reg ? wstrb_reg : 4'b1111;
-            axi_wlast   = uncached_reg ? 1'b1 : counter == (LINE_SIZE/4 - 1);
+            axi_wlast   = ~finished & (uncached_reg | ~uncached_reg & (counter == (LINE_SIZE/4 - 1)));
             axi_wvalid  = ~finished;
+            if (axi_wready & ~finished) begin
+                next_counter    = counter + 4'h1;
+                next_finished   = counter == LINE_SIZE/4 | uncached_reg;
+            end else begin
+                next_counter    = counter;
+                next_finished   = finished;
+            end
             if (finished & axi_bready & axi_bvalid)
                 next_state = IDLE;
             else

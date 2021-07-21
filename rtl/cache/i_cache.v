@@ -195,9 +195,9 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
             case(hit_tag)
                 2'b01:begin
                     cpu_instr_data_t_next = cache_block_out_v1[offset_cpu];
-                    cpu_instr_data_1ok_next = 1'b1;
+                    cpu_instr_data_1ok_next = ~stall_all;
                     if(~offset_cpu[0])begin
-                        cpu_instr_data_2ok_next = 1'b1;
+                        cpu_instr_data_2ok_next = ~stall_all;
                         cpu_instr_data_t_next2 = cache_block_out_v1[offset_data2];
                     end else begin
                         cpu_instr_data_2ok_next = 1'b0;
@@ -206,10 +206,10 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                 end
                 2'b10:begin
                     cpu_instr_data_t_next = cache_block_out_v2[offset_cpu];
-                    cpu_instr_data_1ok_next = 1'b1;
+                    cpu_instr_data_1ok_next = ~stall_all;
                     if(~offset_cpu[0])begin
                         cpu_instr_data_t_next2 = cache_block_out_v2[offset_data2];
-                        cpu_instr_data_2ok_next = 1'b1;
+                        cpu_instr_data_2ok_next = ~stall_all;
                     end else begin
                         cpu_instr_data_2ok_next = 1'b0;
                         cpu_instr_data_t_next2 = cache_block_out_v2[offset_data2];
@@ -226,6 +226,8 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
 
 //output ↑
 
+    reg is_refilling;
+
     always @(posedge clk) begin
         if(rst) begin
             cur_state <= READ_IDLE;
@@ -234,7 +236,8 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
         end
         else begin
             cur_state <= next_state;
-            offset_cur <= next_offset;
+            if (is_refilling)
+                offset_cur <= next_offset;
             LRU_sel <= LRU_sel_next;
         end
     end
@@ -283,6 +286,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
 
     integer i;
     always @(*) begin
+        is_refilling = 1'b0;
         if(rst)begin
             araddr <= 32'h0000_0000;
             arlen <= 8'b0000_0000;
@@ -316,6 +320,7 @@ data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data
                     arlen <= 8'b0000_0000;
                     arvalid <= 1'b0;
                     if (rvalid) begin
+                        is_refilling = 1'b1;
                         case(LRU_sel_next)
                             2'b10:begin
                                 write_tag_en[0] <= 3'b111;

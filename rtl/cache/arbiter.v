@@ -2,7 +2,7 @@
 
 module arbiter (
     input   wire [31:0] i_araddr,
-    input   wire [3 :0] i_arlen,
+    input   wire [7 :0] i_arlen,
     input   wire        i_arvalid,
     output  wire        i_arready,
     output  wire [31:0] i_rdata,
@@ -11,7 +11,7 @@ module arbiter (
     input   wire        i_rready,
 
     input   wire [31:0] d_araddr,
-    input   wire [3 :0] d_arlen,
+    input   wire [7 :0] d_arlen,
     input   wire [2 :0] d_arsize,
     input   wire        d_arvalid,
     output  wire        d_arready,
@@ -20,7 +20,7 @@ module arbiter (
     output  wire        d_rvalid,
     input   wire        d_rready,
     input   wire [31:0] d_awaddr,
-    input   wire [3 :0] d_awlen,
+    input   wire [7 :0] d_awlen,
     input   wire [2 :0] d_awsize,
     input   wire        d_awvalid,
     output  wire        d_awready,
@@ -34,7 +34,7 @@ module arbiter (
 
     output  wire [3 :0] arid,
     output  wire [31:0] araddr,
-    output  wire [3 :0] arlen,
+    output  wire [7 :0] arlen,
     output  wire [2 :0] arsize,
     output  wire [1 :0] arburst,
     output  wire [1 :0] arlock,
@@ -50,7 +50,7 @@ module arbiter (
     output  wire        rready,
     output  wire [3 :0] awid,
     output  wire [31:0] awaddr,
-    output  wire [3 :0] awlen,
+    output  wire [7 :0] awlen,
     output  wire [2 :0] awsize,
     output  wire [1 :0] awburst,
     output  wire [1 :0] awlock,
@@ -83,8 +83,8 @@ module arbiter (
 
     assign  d_arready   = arready & raddr_sel;
     assign  d_rdata     = raddr_sel ? rdata : 32'h0;
-    assign  i_rlast     = raddr_sel ? rlast : 1'b0;
-    assign  i_rvalid    = raddr_sel ? rvalid: 1'b0;
+    assign  d_rlast     = raddr_sel ? rlast : 1'b0;
+    assign  d_rvalid    = raddr_sel ? rvalid: 1'b0;
 
     assign  arid        = {3'h0, raddr_sel};
     assign  araddr      = raddr_sel ? d_araddr  : i_araddr;

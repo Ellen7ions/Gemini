@@ -3,6 +3,8 @@
 module request_buffer (
     input   wire        clk,
     input   wire        rst,
+    input   wire        stall,
+
     input   wire        en_i,
     input   wire [3 :0] wen_i,
     input   wire        uncached_i,
@@ -28,7 +30,7 @@ module request_buffer (
             psyaddr_o   <= 32'h0;
             wdata_o     <= 32'h0;
             uncached_o  <= 1'b0;
-        end else begin
+        end else if (!stall) begin
             en_o        <= en_i;
             wen_o       <= wen_i;
             uncached_o  <= uncached_i;
