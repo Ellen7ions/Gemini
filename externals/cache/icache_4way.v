@@ -105,7 +105,7 @@ module icache_new #(
         end
     end
 
-
+    reg araddr_finish;
 //way 2  cache_line_size 32bytes   cache_line_num = 256   
 //cpu info
     reg [31:0] cpu_instr_addr_pc;
@@ -368,13 +368,13 @@ data_cache_4v_real data_cachev4_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write
                 end
 
                 READ_ADDR:begin
-                    next_state = arready? READ_DATA :READ_ADDR;
+                    next_state  =  arvalid/*araddr_finish && rvalid*/? READ_DATA :READ_ADDR;
                     next_offset = 3'b000;
                 end
 
                 READ_DATA:begin
                     next_state = rlast? READ_IDLE :READ_DATA;
-                    next_offset = rlast? 3'b000 : offset_cur + 1;
+                    next_offset = rlast? 3'b000 : rvalid? offset_cur + 1 : offset_cur;
                 end
             endcase
         end
@@ -424,100 +424,113 @@ data_cache_4v_real data_cachev4_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write
                     araddr <= 32'h0000_0000;
                     arlen <= 8'b0000_0000;
                     arvalid <= 1'b0;
-                    case(LRU_sel_next[2])
-                        1'b0:begin
-                            case(LRU_sel_next[0])
-                                1'b0:begin
-                                    write_tag_en[0] <= 3'b111;
-                                    write_tag_en[1] <= 3'b000;
-                                    write_tag_en[2] <= 3'b000;
-                                    write_tag_en[3] <= 3'b000;
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        if(i != offset_cur) begin
-                                        write_data_bank_en_v1[i] <= 4'b0000;
+                    if(rvalid) begin
+                        case(LRU_sel_next[2])
+                            1'b0:begin
+                                case(LRU_sel_next[0])
+                                    1'b0:begin
+                                        write_tag_en[0] <= 3'b111;
+                                        write_tag_en[1] <= 3'b000;
+                                        write_tag_en[2] <= 3'b000;
+                                        write_tag_en[3] <= 3'b000;
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            if(i != offset_cur) begin
+                                            write_data_bank_en_v1[i] <= 4'b0000;
+                                            end
                                         end
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v4[i] <= 4'b0000;
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v2[i] <= 4'b0000;
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v3[i] <= 4'b0000;
-                                    end
-                                    write_data_bank_en_v1[offset_cur] <= 4'b1111;
-                                end
-                                1'b1: begin
-                                    write_tag_en[0] <= 3'b000;
-                                    write_tag_en[1] <= 3'b111;
-                                    write_tag_en[2] <= 3'b000;
-                                    write_tag_en[3] <= 3'b000;
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        if(i != offset_cur) begin
-                                        write_data_bank_en_v2[i] <= 4'b0000;
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v4[i] <= 4'b0000;
                                         end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v2[i] <= 4'b0000;
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v3[i] <= 4'b0000;
+                                        end
+                                        write_data_bank_en_v1[offset_cur] <= 4'b1111;
                                     end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v1[i] <= 4'b0000;
+                                    1'b1: begin
+                                        write_tag_en[0] <= 3'b000;
+                                        write_tag_en[1] <= 3'b111;
+                                        write_tag_en[2] <= 3'b000;
+                                        write_tag_en[3] <= 3'b000;
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            if(i != offset_cur) begin
+                                            write_data_bank_en_v2[i] <= 4'b0000;
+                                            end
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v1[i] <= 4'b0000;
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v4[i] <= 4'b0000;
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v3[i] <= 4'b0000;
+                                        end
+                                        write_data_bank_en_v2[offset_cur] <= 4'b1111;
                                     end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v4[i] <= 4'b0000;
+                                endcase
+                            end
+                            1'b1:begin
+                                case(LRU_sel_next[1])
+                                    1'b1:begin
+                                        write_tag_en[0] <= 3'b000;
+                                        write_tag_en[1] <= 3'b000;
+                                        write_tag_en[2] <= 3'b000;
+                                        write_tag_en[3] <= 3'b111;
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            if(i != offset_cur) begin
+                                            write_data_bank_en_v4[i] <= 4'b0000;
+                                            end
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v1[i] <= 4'b0000;
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v2[i] <= 4'b0000;
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v3[i] <= 4'b0000;
+                                        end
+                                        write_data_bank_en_v4[offset_cur] <= 4'b1111;
                                     end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v3[i] <= 4'b0000;
+                                    1'b0: begin
+                                        write_tag_en[0] <= 3'b000;
+                                        write_tag_en[1] <= 3'b000;
+                                        write_tag_en[2] <= 3'b111;
+                                        write_tag_en[3] <= 3'b000;
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            if(i != offset_cur) begin
+                                            write_data_bank_en_v3[i] <= 4'b0000;
+                                            end
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v1[i] <= 4'b0000;
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v4[i] <= 4'b0000;
+                                        end
+                                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                                            write_data_bank_en_v2[i] <= 4'b0000;
+                                        end
+                                        write_data_bank_en_v3[offset_cur] <= 4'b1111;
                                     end
-                                    write_data_bank_en_v2[offset_cur] <= 4'b1111;
-                                end
-                            endcase
+                                endcase
+                            end
+                        endcase
+                    end else begin
+                        write_tag_en[0] <= 3'b000;
+                        write_tag_en[1] <= 3'b000;
+                        write_tag_en[2] <= 3'b000;
+                        write_tag_en[3] <= 3'b000;
+                        for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
+                            write_data_bank_en_v1[i] <= 4'b0000;
+                            write_data_bank_en_v2[i] <= 4'b0000;
+                            write_data_bank_en_v3[i] <= 4'b0000;
+                            write_data_bank_en_v4[i] <= 4'b0000;
                         end
-                        1'b1:begin
-                            case(LRU_sel_next[1])
-                                1'b1:begin
-                                    write_tag_en[0] <= 3'b000;
-                                    write_tag_en[1] <= 3'b000;
-                                    write_tag_en[2] <= 3'b000;
-                                    write_tag_en[3] <= 3'b111;
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        if(i != offset_cur) begin
-                                        write_data_bank_en_v4[i] <= 4'b0000;
-                                        end
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v1[i] <= 4'b0000;
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v2[i] <= 4'b0000;
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v3[i] <= 4'b0000;
-                                    end
-                                    write_data_bank_en_v4[offset_cur] <= 4'b1111;
-                                end
-                                1'b0: begin
-                                    write_tag_en[0] <= 3'b000;
-                                    write_tag_en[1] <= 3'b000;
-                                    write_tag_en[2] <= 3'b111;
-                                    write_tag_en[3] <= 3'b000;
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        if(i != offset_cur) begin
-                                        write_data_bank_en_v3[i] <= 4'b0000;
-                                        end
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v1[i] <= 4'b0000;
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v4[i] <= 4'b0000;
-                                    end
-                                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                        write_data_bank_en_v2[i] <= 4'b0000;
-                                    end
-                                    write_data_bank_en_v3[offset_cur] <= 4'b1111;
-                                end
-                            endcase
-                        end
-                    endcase
+                    end
                 end
                 default:begin
                     write_tag_en[0] <= 3'b000;
@@ -538,7 +551,6 @@ data_cache_4v_real data_cachev4_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write
         end
     end
     reg flag_cache_miss;
-
     reg [63:0] cache_replace_count;
     reg [63:0] cache_miss_count;
     reg [63:0] cache_total_count;
