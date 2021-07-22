@@ -293,9 +293,9 @@ module i_cache #(
             end
             if (is_uncached_refill & (write_line_counter == 1)) begin
                 miss_refill_data2   <= axi_rdata;
-                miss_ok_2           <= 1'b1;
+                miss_ok_2           <= ~offset_reg[0];
             end
-        end else begin
+        end else if (master_state == LOOKUP_STATE) begin
             miss_ok_1 <= 1'b0;
             miss_ok_2 <= 1'b0;
         end
