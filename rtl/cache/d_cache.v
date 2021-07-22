@@ -187,7 +187,8 @@ module d_cache #(
     request_buffer request_buffer0 (
         .clk        (clk                ),
         .rst        (rst                ),
-        .stall      (cpu_d_cache_stall  ),
+        .stall      (cpu_d_cache_stall  |
+                    ~cpu_en),
         
         .en_i       (cpu_en             ),
         .wen_i      (cpu_wen            ),
@@ -279,7 +280,7 @@ module d_cache #(
     wire miss                           = (hit_sel == 2'b00) | uncached_reg;
 
     reg  [OFFSET_LOG-1:0] write_line_counter;
-
+    wire [WORD_NUM  -1:0] refill_offset_sel;
 
     // REFILL
     wire [31:0] refill_wen32        = 
@@ -304,7 +305,7 @@ module d_cache #(
         if (rst) begin
             write_line_counter <= {OFFSET_LOG{1'b0}};
         end else if (master_state == REFILL_STATE && axi_rvalid) begin
-            write_line_counter <= write_line_counter + {OFFSET_LOG{1'b1}};
+            write_line_counter <= write_line_counter + 1;
         end else begin
             write_line_counter <= {OFFSET_LOG{1'b0}};
         end
@@ -362,7 +363,7 @@ module d_cache #(
         is_hit_write | is_refill & |wen_reg;
 
 
-    assign wbuffer_en_i         = ~miss & |wen_reg & uncached_reg;
+    assign wbuffer_en_i         = ~miss & |wen_reg & ~uncached_reg;
     assign wbuffer_hit_sel_i    = hit_sel;
     assign wbuffer_wen_i        = wen_reg;
     assign wbuffer_index_i      = index_reg;

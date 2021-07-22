@@ -190,15 +190,6 @@ module i_cache #(
     };
     wire miss                           = (hit_sel == 2'b00) | uncached_reg;
 
-    reg  miss_reg;
-    always @(posedge clk) begin
-        if (rst | master_state == IDLE_STATE) begin
-            miss_reg <= 1'b0;
-        end else if (master_state == LOOKUP_STATE) begin
-            miss_reg <= miss;
-        end
-    end
-
     reg  [OFFSET_LOG-1:0] write_line_counter;
     wire [WORD_NUM  -1:0] refill_offset_sel;
     // REFILL
@@ -277,16 +268,7 @@ module i_cache #(
             miss_refill_data2   <= 32'h0;
             miss_ok_1           <= 1'b0;
             miss_ok_2           <= 1'b0;
-        end else if(is_refill | is_uncached_refill) begin
-            if (is_refill & (write_line_counter == offset_reg)) begin
-                miss_refill_data1   <= axi_rdata;
-                miss_ok_1           <= 1'b1;
-            end
-            if (is_refill & (write_line_counter == (offset_reg + 1))) begin
-                miss_refill_data2   <= axi_rdata;
-                miss_ok_2           <= ~offset_reg[0];
-            end
-            
+        end else if(is_uncached_refill) begin
             if (is_uncached_refill & (write_line_counter == 0)) begin
                 miss_refill_data1   <= axi_rdata;
                 miss_ok_1           <= 1'b1;
