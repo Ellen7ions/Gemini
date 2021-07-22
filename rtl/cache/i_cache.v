@@ -137,7 +137,8 @@ module i_cache #(
     request_buffer request_buffer0 (
         .clk        (clk                ),
         .rst        (rst                ),
-        .stall      (cpu_i_cache_stall  ),
+        .stall      (cpu_i_cache_stall  | 
+                    ~cpu_en),
         
         .en_i       (cpu_en             ),
         .wen_i      (),
@@ -199,7 +200,7 @@ module i_cache #(
     end
 
     reg  [OFFSET_LOG-1:0] write_line_counter;
-
+    wire [WORD_NUM  -1:0] refill_offset_sel;
     // REFILL
     decoder decoder2_4 (
         .in     (write_line_counter ),
@@ -236,24 +237,23 @@ module i_cache #(
 
     assign tagv_ena             = 
         {WAY{is_lookup}} |
-        {lfsr_sel_reg, ~lfsr_sel_reg} & {WAY{is_replace | is_refill}};
+        {lfsr_sel_reg, ~lfsr_sel_reg} & {WAY{is_refill}};
     assign tagv_wea             = 
         is_refill;
     assign tagv_addra           = 
         {INDEX_LOG{is_lookup}} & cpu_index |
-        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+        {INDEX_LOG{is_refill}} & index_reg;
     assign tagv_dina            =
         {tag_reg, 1'b1};
 
     assign bank_ena             = 
-        {cpu_offset_sel, cpu_offset_sel} & {WAY*WORD_NUM{is_lookup}} |
-        {{WORD_NUM{lfsr_sel_reg}}, {WORD_NUM{~lfsr_sel_reg}}} & {WAY*WORD_NUM{is_replace}}  |
+        {WAY*WORD_NUM{is_lookup}} |
         {{4{lfsr_sel_reg}} & refill_offset_sel, {4{~lfsr_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
     assign bank_wea             = 
         {4{is_refill}} & 4'b1111;
     assign bank_addra           = 
         {INDEX_LOG{is_lookup}} & cpu_index |
-        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+        {INDEX_LOG{is_refill}} & index_reg;
     assign bank_dina            =
         {32{is_refill}} & refill_dina;
 
