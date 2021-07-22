@@ -9,5 +9,5 @@ module mmu_direct (
     assign direct_psyena    =
         vaddr[31] & ~vaddr[30];
     assign direct_psyaddr   =
-        {3'b0, vaddr[28:0]};
+        {3'b000, vaddr[28:0]};
 endmodule
