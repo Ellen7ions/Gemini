@@ -5,7 +5,9 @@ module mmu_inst #(
     ) (
     input   wire                        en,
     input   wire [              31:0]   vaddr,
+    input   wire [              31:0]   r_cp0_Config,
     input   wire [              31:0]   r_cp0_EntryHi,
+    output  wire                        uncached,
     output  wire                        psyaddr_ena,
     output  wire [              31:0]   psyaddr,
     output  wire                        is_tlb_refill_tlbl,
@@ -30,6 +32,11 @@ module mmu_inst #(
         .direct_psyena  (direct_psyena ),
         .direct_psyaddr (direct_psyaddr)
     );
+
+    assign uncached     =
+        (vaddr[31:29] == 3'b101) |
+        (~vaddr[31] | vaddr[31] & vaddr[30]) & (s_c != 3'd3) |
+        (vaddr[31:29] == 3'b100) & (r_cp0_Config[2:0] != 3'd3);
 
     assign is_tlb_refill_tlbl   =
         (en & ~direct_psyena) & ~s_found;

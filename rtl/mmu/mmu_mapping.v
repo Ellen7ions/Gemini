@@ -36,7 +36,6 @@ module mmu_mapping #(
     input   wire [3 :0] lsu1_load_type,
     input   wire [3 :0] lsu1_wea,
     input   wire [31:0] lsu1_wdata,
-    input   wire        lsu1_ls_or,
     input   wire [31:0] lsu1_vaddr,
     output  wire        lsu1_tlb_refill_tlbl,
     output  wire        lsu1_tlb_refill_tlbs,
@@ -47,6 +46,7 @@ module mmu_mapping #(
 
     // sram
     output  wire        sram_inst_ena,
+    output  wire        sram_inst_uncached,
     output  wire [31:0] sram_inst_vaddr,
     output  wire [31:0] sram_inst_psyaddr,
     input   wire [31:0] sram_inst_rdata_1,
@@ -113,7 +113,10 @@ module mmu_mapping #(
     wire                        data_uncached;
     wire [              31:0]   data_psyaddr;
 
+    wire                        inst_uncached;
+
     assign sram_inst_ena    =   inst_psyaddr_ena & inst_ena;
+    assign sram_inst_uncached = inst_uncached;
     assign sram_inst_vaddr  =   inst_addr_next_pc;
     assign sram_inst_psyaddr=   inst_psyaddr;
     assign inst_rdata_1     =   sram_inst_rdata_1;
@@ -133,6 +136,8 @@ module mmu_mapping #(
     mmu_inst #(TLBNUM) inst_map (
         .en                 (inst_ena               ),
         .vaddr              (inst_addr_next_pc      ),
+        .uncached           (inst_uncached          ),
+        .r_cp0_Config       (r_cp0_Config           ),
         .r_cp0_EntryHi      (r_cp0_EntryHi          ),
         .psyaddr_ena        (inst_psyaddr_ena       ),
         .psyaddr            (inst_psyaddr           ),

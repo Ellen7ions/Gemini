@@ -6,6 +6,7 @@ module gemini (
     input   wire [5 :0] interrupt,
     
     output  wire        sram_inst_ena,
+    output  wire        sram_inst_uncached,
     output  wire [31:0] sram_inst_vaddr,
     output  wire [31:0] sram_inst_psyaddr,
     input   wire [31:0] sram_inst_rdata_1,
@@ -1140,6 +1141,7 @@ module gemini (
         .lsu1_rdata             (data_rdata               ),
 
         .sram_inst_ena          (sram_inst_ena          ),
+        .sram_inst_uncached     (sram_inst_uncached     ),
         .sram_inst_vaddr        (sram_inst_vaddr        ),
         .sram_inst_psyaddr      (sram_inst_psyaddr      ),
         .sram_inst_rdata_1      (sram_inst_rdata_1      ),
@@ -1179,8 +1181,6 @@ module gemini (
         .exception_pc       (exception_pc       ),
         .id_pc              (id2c_pc_i          ),
         .pc                 (pc_cur_pc          ),
-        .inst_rdata_1_ok    (inst_ok_1          ),
-        .inst_rdata_2_ok    (inst_ok_2          ),
         .next_pc            (npc_next_pc        )
     );
 
@@ -1200,9 +1200,9 @@ module gemini (
     assign inst_addr_next_pc    = pc_cur_pc;
 
     assign fifo_w_data_1    = 
-            {66{inst_ok_1}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg        , inst_rdata_1};
+            {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg        , inst_rdata_1};
     assign fifo_w_data_2    = 
-            {66{inst_ok_2}} & {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg + 32'h4, inst_rdata_2};
+            {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg + 32'h4, inst_rdata_2};
 
     i_fifo i_fifo_cp (
         .clk                (clk                ),

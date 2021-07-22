@@ -19,8 +19,6 @@ module npc (
     input   wire [31:0] id_pc,
     
     input   wire [31:0] pc,
-    input   wire        inst_rdata_1_ok,
-    input   wire        inst_rdata_2_ok,
 
     output  reg  [31:0] next_pc
 );

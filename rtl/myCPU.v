@@ -57,6 +57,7 @@ module myCPU (
 );
 
     wire [31:0] i_araddr;
+    wire [1 :0] i_arburst;
     wire [7 :0] i_arlen;
     wire        i_arvalid;
     wire        i_arready;
@@ -88,6 +89,7 @@ module myCPU (
     wire        d_bready;
 
     wire        sram_inst_ena;
+    wire        sram_inst_uncached;
     wire [31:0] sram_inst_vaddr;
     wire [31:0] sram_inst_psyaddr;
     wire [31:0] sram_inst_rdata_1;
@@ -112,10 +114,11 @@ module myCPU (
         .interrupt              (interrupt              ),
         
         .sram_inst_ena          (sram_inst_ena          ),
+        .sram_inst_uncached     (sram_inst_uncached     ),
         .sram_inst_vaddr        (sram_inst_vaddr        ),
         .sram_inst_psyaddr      (sram_inst_psyaddr      ),
         .sram_inst_rdata_1      (sram_inst_rdata_1      ),    
-        .sram_inst_rdata_2      (sram_inst_rdata_2      ),    
+        .sram_inst_rdata_2      (sram_inst_rdata_2      ),
         .sram_inst_ok_1         (sram_inst_ok_1         ),
         .sram_inst_ok_2         (sram_inst_ok_2         ),
         .i_cache_stall_req      (i_cache_stall_req      ),
@@ -143,23 +146,25 @@ module myCPU (
     i_cache i_cache0 (
         .clk                    (clk                    ),
         .rst                    (rst                    ),
-        .cpu_instr_ena          (sram_inst_ena          ),
-        .cpu_instr_vaddr        (sram_inst_vaddr        ),
-        .cpu_instr_psyaddr      (sram_inst_psyaddr      ),
-        .cpu_instr_data         (sram_inst_rdata_1      ),
-        .cpu_instr_data2        (sram_inst_rdata_2      ),
-        .cpu_instr_data_1ok     (sram_inst_ok_1         ),
-        .cpu_instr_data_2ok     (sram_inst_ok_2         ),
-        .stall_all              (i_cache_stall_req      ),
+        .cpu_en                 (sram_inst_ena          ),
+        .cpu_uncached           (sram_inst_uncached     ),
+        .cpu_vaddr              (sram_inst_vaddr        ),
+        .cpu_psyaddr            (sram_inst_psyaddr      ),
+        .cpu_rdata1             (sram_inst_rdata_1      ),
+        .cpu_rdata2             (sram_inst_rdata_2      ),
+        .cpu_ok_1               (sram_inst_ok_1         ),
+        .cpu_ok_2               (sram_inst_ok_2         ),
+        .cpu_i_cache_stall      (i_cache_stall_req      ),
 
-        .araddr                 (i_araddr               ),
-        .arlen                  (i_arlen                ),
-        .arvalid                (i_arvalid              ),
-        .arready                (i_arready              ),
-        .rdata                  (i_rdata                ),
-        .rlast                  (i_rlast                ),
-        .rvalid                 (i_rvalid               ),
-        .rready                 (i_rready               )
+        .axi_araddr             (i_araddr               ),
+        .axi_arburst            (i_arburst              ),
+        .axi_arlen              (i_arlen                ),
+        .axi_arvalid            (i_arvalid              ),
+        .axi_arready            (i_arready              ),
+        .axi_rdata              (i_rdata                ),
+        .axi_rlast              (i_rlast                ),
+        .axi_rvalid             (i_rvalid               ),
+        .axi_rready             (i_rready               )
     );
 
     d_cache d_cache0 (
@@ -201,6 +206,7 @@ module myCPU (
 
     arbiter arbiter0 (
         .i_araddr               (i_araddr               ),
+        .i_arburst              (i_arburst              ),
         .i_arlen                (i_arlen                ),
         .i_arvalid              (i_arvalid              ),
         .i_arready              (i_arready              ),

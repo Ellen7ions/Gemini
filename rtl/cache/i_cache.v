@@ -21,383 +21,387 @@
 
 
 module i_cache #(
-        parameter ADDR_WIDTH = 32,
-        parameter CACHE_LINE_SIZE = 8,
-        parameter CACHE_WAY_SIZE = 2,
-        parameter CACHE_LINE_NUM = 256
-    )(
+    parameter WAY       = 2,
+    parameter LINE_SIZE = 16,
+    parameter LINE_NUM  = 256
+)(
         input   wire        clk,
         input   wire        rst, 
 
-        input   wire        cpu_instr_ena,
+        input   wire        cpu_en,
+        input   wire        cpu_uncached,
+        input   wire [31:0] cpu_vaddr,
+        input   wire [31:0] cpu_psyaddr,    
 
-        input   wire [31:0] cpu_instr_vaddr,
-        input   wire [31:0] cpu_instr_psyaddr,    
+        output  wire [31:0] cpu_rdata1,
+        output  wire [31:0] cpu_rdata2,
+        output  wire        cpu_ok_1,
+        output  wire        cpu_ok_2,
+        output  reg         cpu_i_cache_stall,
 
-        output  wire [31:0] cpu_instr_data,
-        output  wire [31:0] cpu_instr_data2,
-        output  wire        cpu_instr_data_1ok,
-        output  wire        cpu_instr_data_2ok,
-        output  wire        stall_all,
+        output  reg  [31:0] axi_araddr,
+        output  reg  [7 :0] axi_arlen,
+        output  reg  [1 :0] axi_arburst,
+        output  reg         axi_arvalid,
+        input   wire        axi_arready,
+        input   wire [31:0] axi_rdata,
+        input   wire        axi_rlast,
+        input   wire        axi_rvalid,
+        output  reg         axi_rready
+);
 
-        output  reg  [31:0] araddr,
-        output  reg  [7 :0] arlen,
-        output  reg         arvalid,
-        input   wire        arready,
-        input   wire [31:0] rdata,
-        input   wire        rlast,
-        input   wire        rvalid,
-        output  wire        rready
-    );
 
-    assign rready = 1'b1;  //always accept data from ram(slaver) so far.
-    localparam Byte_c = 2;
-    localparam INDEX_WIDTH = $clog2(CACHE_LINE_NUM);  //index_width = 8
-    localparam OFFSET_WIDTH =$clog2(CACHE_LINE_SIZE);  //offset width = 3
-    localparam TAG_WIDTH = ADDR_WIDTH - INDEX_WIDTH - OFFSET_WIDTH - Byte_c;  //tag width = 19
+    //  parameters
     
+    localparam OFFSET_LOG   = $clog2(LINE_SIZE / 4);
+    localparam WORD_NUM     = LINE_SIZE / 4;
+    localparam INDEX_LOG    = $clog2(LINE_NUM);
+    localparam WAY_LOG      = $clog2(WAY);
+    localparam TAG_INDEX    = 32 - 2 - OFFSET_LOG - INDEX_LOG;
+
+    localparam [2 :0] IDLE_STATE   = 0;
+    localparam [2 :0] LOOKUP_STATE = 1;
+    localparam [2 :0] MISS_STATE   = 2;
+    localparam [2 :0] REPLACE_STATE= 3;
+    localparam [2 :0] REFILL_STATE = 4;
+    localparam [2 :0] WRITE_STATE  = 5;
+
     initial begin
-        if(TAG_WIDTH <= 0) begin
-            $error("Wrong Tag Width!");
+        if (LINE_SIZE * LINE_NUM != 4 * 1024) begin
+            $display("ERROR! NOT 4K PAGE SIZE!");
             $finish;
         end
     end
 
+    // wires and regs
 
-//way 2  cache_line_size 32bytes   cache_line_num = 256   
-//cpu info
-    reg[31:0]   cpu_instr_psyaddr_reg;
-    reg[31:0]   cpu_instr_vaddr_reg;
+    reg  [2 :0] master_state;
+    reg  [2 :0] master_next_state;
+
     always @(posedge clk) begin
-        if(rst)begin
-            cpu_instr_psyaddr_reg   <= 32'h0;
-            cpu_instr_vaddr_reg     <= 32'h0; 
+        if (rst) begin
+            master_state <= IDLE_STATE; 
         end else begin
-            if(!stall_all && cpu_instr_ena) begin
-                cpu_instr_psyaddr_reg   <= cpu_instr_psyaddr;
-                cpu_instr_vaddr_reg     <= cpu_instr_vaddr;
+            master_state <= master_next_state;
+        end
+    end
+
+    // instances
+
+    wire [WAY      -1:0]        tagv_ena    ;
+    wire                        tagv_wea    ;
+    wire [INDEX_LOG-1:0]        tagv_addra  ;
+    wire [20         :0]        tagv_dina   ;
+    wire [20         :0]        tagv_douta  [WAY-1:0];
+
+    wire [WAY*WORD_NUM-1:0]     bank_ena    ;
+    wire [3          :0]        bank_wea    ;
+    wire [INDEX_LOG-1:0]        bank_addra  ;
+    wire [31         :0]        bank_dina   ;
+    wire [32*WORD_NUM-1 :0]     bank_douta  [WAY-1:0];
+
+    wire [31         :0]        refill_dina ;
+
+    genvar i, j;
+    generate
+        for (i = 0; i < WAY; i = i + 1) begin: tagv
+            TAGV tagv_inst (
+                .clka   (clk            ),
+                .ena    (tagv_ena[i]    ),
+                .wea    (tagv_wea       ),
+                .addra  (tagv_addra     ),
+                .dina   (tagv_dina      ),
+                .douta  (tagv_douta[i]  )
+            );
+        end
+
+        for (i = 0; i < WAY; i = i + 1) begin: data
+            for (j = 0; j < LINE_SIZE / 4; j = j + 1) begin: bank
+                DATA bank_inst (
+                .clka   (clk                        ),
+                .ena    (bank_ena   [i*WORD_NUM+j]  ),
+                .wea    (bank_wea                   ),
+                .addra  (bank_addra                 ),
+                .dina   (bank_dina                  ),
+                .douta  (bank_douta [i][j*32+:32]   )
+                );             
             end
         end
-    end
+    endgenerate
 
-    wire [TAG_WIDTH-1   :0] tag_cpu     = cpu_instr_psyaddr_reg [ADDR_WIDTH-1 : 2 + OFFSET_WIDTH + INDEX_WIDTH];
-    wire [INDEX_WIDTH-1 :0] index_cpu   = cpu_instr_vaddr       [2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH];
-    wire [OFFSET_WIDTH-1:0] offset_cpu  = cpu_instr_vaddr_reg   [2+OFFSET_WIDTH-1 : 2];
+    wire        en_reg;
+    wire        uncached_reg;
+    wire [31:0] vaddr_reg;
+    wire [31:0] psyaddr_reg;
 
-//tag part
-    wire [INDEX_WIDTH -1 :0] tag_ram_addr;
-    wire [23:0] cache_tag_in;
-    wire [23:0] cache_tag_out [CACHE_WAY_SIZE -1 :0];
-    reg  [2:0]  write_tag_en[CACHE_WAY_SIZE-1:0];
-    assign  tag_ram_addr = stall_all ? cpu_instr_vaddr_reg[2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH] : index_cpu;
-    //[18:0]
-    assign  cache_tag_in = {5'b00001,tag_cpu};
+    request_buffer request_buffer0 (
+        .clk        (clk                ),
+        .rst        (rst                ),
+        .stall      (cpu_i_cache_stall  ),
+        
+        .en_i       (cpu_en             ),
+        .wen_i      (),
+        .uncached_i (cpu_uncached       ),
+        .load_type_i(),
+        .vaddr_i    (cpu_vaddr          ),
+        .psyaddr_i  (cpu_psyaddr        ),
+        .wdata_i    (),
 
-//data part
-    wire [INDEX_WIDTH-1:0] instr_ram_data_index;
-    wire [31:0] cache_block_in;
-    wire [31:0] cache_block_out_v1[CACHE_LINE_SIZE-1:0]; //  [7:0]
-    wire [31:0] cache_block_out_v2[CACHE_LINE_SIZE-1:0];
-    reg  [3 :0] write_data_bank_en_v1[CACHE_LINE_SIZE-1:0];
-    reg  [3 :0] write_data_bank_en_v2[CACHE_LINE_SIZE-1:0];
-    assign instr_ram_data_index = stall_all ? cpu_instr_vaddr_reg[2+OFFSET_WIDTH+INDEX_WIDTH-1 : 2+OFFSET_WIDTH] : index_cpu;
-    assign cache_block_in       = rdata;
+        .en_o       (en_reg             ),
+        .wen_o      (),
+        .uncached_o (uncached_reg       ),
+        .load_type_o(),
+        .vaddr_o    (vaddr_reg          ),
+        .psyaddr_o  (psyaddr_reg        ),
+        .wdata_o    ()
+    );
 
+    wire [WAY_LOG-1:0]  lfsr_sel;
+    reg  [WAY_LOG-1:0]  lfsr_sel_reg;
+    reg                 lfsr_stall;
+    LFSR #(WAY_LOG) lfsr0 (
+        .clk        (clk                ),
+        .rst        (rst                ),
+        .out        (lfsr_sel           )
+    );
 
-//tag ram
-    instr_ram_tag_Part tag_ramv1 (.clka(clk),.ena(cpu_instr_ena),.wea(write_tag_en[0]),.addra(tag_ram_addr),.dina(cache_tag_in),.douta(cache_tag_out[0]));
-    instr_ram_tag_Part tag_ramv2 (.clka(clk),.ena(cpu_instr_ena),.wea(write_tag_en[1]),.addra(tag_ram_addr),.dina(cache_tag_in),.douta(cache_tag_out[1]));
-
-//data ram
-data_cache_4v data_cachev1_bank0 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[0]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[0]));
-data_cache_4v data_cachev1_bank1 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[1]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[1]));
-data_cache_4v data_cachev1_bank2 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[2]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[2]));
-data_cache_4v data_cachev1_bank3 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[3]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[3]));
-data_cache_4v data_cachev1_bank4 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[4]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[4]));
-data_cache_4v data_cachev1_bank5 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[5]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[5]));
-data_cache_4v data_cachev1_bank6 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[6]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[6]));
-data_cache_4v data_cachev1_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v1[7]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v1[7]));
-
-data_cache_4v data_cachev2_bank0 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[0]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[0]));
-data_cache_4v data_cachev2_bank1 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[1]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[1]));
-data_cache_4v data_cachev2_bank2 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[2]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[2]));
-data_cache_4v data_cachev2_bank3 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[3]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[3]));
-data_cache_4v data_cachev2_bank4 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[4]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[4]));
-data_cache_4v data_cachev2_bank5 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[5]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[5]));
-data_cache_4v data_cachev2_bank6 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[6]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[6]));
-data_cache_4v data_cachev2_bank7 (.clka(clk),.ena(cpu_instr_ena),.wea(write_data_bank_en_v2[7]),.addra(instr_ram_data_index),.dina(cache_block_in),.douta(cache_block_out_v2[7]));
-
-//hit miss and so on
-    wire [1:0] hit_tag;
-    reg miss;
-
-    /*assign hit_tag = (cache_tag_out[0][20] == 1'b1 && cache_tag_out[0][19:0] == tag_cpu)? 2'b01 
-                        :(cache_tag_out[1][20] == 1'b1 && cache_tag_out[1][19:0] == tag_cpu)? 2'b10 : 2'b00;*/
-
-    assign hit_tag = (cache_tag_out[0][19] == 1'b1 && cache_tag_out[0][18:0] == tag_cpu)? 2'b01 
-                        :(cache_tag_out[1][19] == 1'b1 && cache_tag_out[1][18:0] == tag_cpu)? 2'b10 : 2'b00;
-    reg Before_clk;
-    always @(posedge clk) begin
-        if(rst) begin
-            Before_clk <= 1'b0;
-        end else begin
-            Before_clk <= 1'b1;
+    always @(posedge clk ) begin
+        if (rst) begin
+            lfsr_sel_reg <= {WAY_LOG{1'b0}};
+        end else if (~lfsr_stall) begin
+            lfsr_sel_reg <= lfsr_sel;
         end
     end
 
+    // logic
+
+    wire [INDEX_LOG -1:0] cpu_index     = cpu_vaddr[2+OFFSET_LOG+INDEX_LOG-1:2+OFFSET_LOG];
+    wire [OFFSET_LOG-1:0] cpu_offset    = cpu_vaddr[2+OFFSET_LOG-1          :2];
+    
+    wire [INDEX_LOG -1:0] index_reg     = vaddr_reg[2+OFFSET_LOG+INDEX_LOG-1:2+OFFSET_LOG];
+    wire [OFFSET_LOG-1:0] offset_reg    = vaddr_reg[2+OFFSET_LOG-1          :2];
+
+    wire [TAG_INDEX -1:0] tag_reg       = psyaddr_reg[31:2+OFFSET_LOG+INDEX_LOG];
+
+    wire [WAY       -1:0] hit_sel       = {
+        (tag_reg == tagv_douta[1][TAG_INDEX:1]) & tagv_douta[1][0],
+        (tag_reg == tagv_douta[0][TAG_INDEX:1]) & tagv_douta[0][0]
+    };
+    wire miss                           = (hit_sel == 2'b00) | uncached_reg;
+
+    reg  miss_reg;
+    always @(posedge clk) begin
+        if (rst | master_state == IDLE_STATE) begin
+            miss_reg <= 1'b0;
+        end else if (master_state == LOOKUP_STATE) begin
+            miss_reg <= miss;
+        end
+    end
+
+    reg  [OFFSET_LOG-1:0] write_line_counter;
+
+    // REFILL
+    decoder decoder2_4 (
+        .in     (write_line_counter ),
+        .out    (refill_offset_sel  )
+    );
+    assign refill_dina              = axi_rdata;
+
+    reg is_lookup;
+    reg is_replace;
+    reg is_refill;
+    reg is_uncached_refill;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            write_line_counter <= {OFFSET_LOG{1'b0}};
+        end else if (master_state == REFILL_STATE && axi_rvalid) begin
+            write_line_counter <= write_line_counter + 1;
+        end else begin
+            write_line_counter <= {OFFSET_LOG{1'b0}};
+        end
+    end
+
+
+    wire [WORD_NUM-1:0] cpu_offset_sel;
+    wire [WORD_NUM-1:0] offset_reg_sel;
+    decoder decoder0 (
+        .in     (cpu_offset     ),
+        .out    (cpu_offset_sel )
+    );
+    decoder decoder1 (
+        .in     (offset_reg     ),
+        .out    (offset_reg_sel )
+    );
+
+    assign tagv_ena             = 
+        {WAY{is_lookup}} |
+        {lfsr_sel_reg, ~lfsr_sel_reg} & {WAY{is_replace | is_refill}};
+    assign tagv_wea             = 
+        is_refill;
+    assign tagv_addra           = 
+        {INDEX_LOG{is_lookup}} & cpu_index |
+        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+    assign tagv_dina            =
+        {tag_reg, 1'b1};
+
+    assign bank_ena             = 
+        {cpu_offset_sel, cpu_offset_sel} & {WAY*WORD_NUM{is_lookup}} |
+        {{WORD_NUM{lfsr_sel_reg}}, {WORD_NUM{~lfsr_sel_reg}}} & {WAY*WORD_NUM{is_replace}}  |
+        {{4{lfsr_sel_reg}} & refill_offset_sel, {4{~lfsr_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
+    assign bank_wea             = 
+        {4{is_refill}} & 4'b1111;
+    assign bank_addra           = 
+        {INDEX_LOG{is_lookup}} & cpu_index |
+        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+    assign bank_dina            =
+        {32{is_refill}} & refill_dina;
+
+
+    reg [31:0]  miss_refill_data1;
+    reg [31:0]  miss_refill_data2;
+    reg         miss_ok_1;
+    reg         miss_ok_2;
+
+    assign      cpu_ok_1 = miss ? miss_ok_1 : 1'b1;
+    assign      cpu_ok_2 = miss ? miss_ok_2 : ~offset_reg[0];
+
+    // assign cpu_ok_1 = 1'b1;
+    // assign cpu_ok_2 = 1'b1;
+
+    reg         miss_uncached_counter;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            miss_refill_data1   <= 32'h0;
+            miss_refill_data2   <= 32'h0;
+            miss_ok_1           <= 1'b0;
+            miss_ok_2           <= 1'b0;
+        end else if(is_refill | is_uncached_refill) begin
+            if (is_refill & (write_line_counter == offset_reg)) begin
+                miss_refill_data1   <= axi_rdata;
+                miss_ok_1           <= 1'b1;
+            end
+            if (is_refill & (write_line_counter == (offset_reg + 1))) begin
+                miss_refill_data2   <= axi_rdata;
+                miss_ok_2           <= ~offset_reg[0];
+            end
+            
+            if (is_uncached_refill & (write_line_counter == 0)) begin
+                miss_refill_data1   <= axi_rdata;
+                miss_ok_1           <= 1'b1;
+            end
+            if (is_uncached_refill & (write_line_counter == 1)) begin
+                miss_refill_data2   <= axi_rdata;
+                miss_ok_2           <= 1'b1;
+            end
+        end else begin
+            miss_ok_1 <= 1'b0;
+            miss_ok_2 <= 1'b0;
+        end
+    end
+    
+    assign {cpu_rdata2, cpu_rdata1} = 
+        ~miss ? 
+            ~offset_reg[0] ? 
+                bank_douta[1][offset_reg*32+:64] & {64{hit_sel[1]}} | bank_douta[0][offset_reg*32+:64] & {64{hit_sel[0]}} :
+                {{32'h0}, bank_douta[1][offset_reg*32+:32] & {32{hit_sel[1]}} | bank_douta[0][offset_reg*32+:32] & {32{hit_sel[0]}}}
+            : {miss_refill_data2, miss_refill_data1};
+
     always @(*) begin
-        if(rst) begin
-            miss = 1'b0;
-        end else if(Before_clk == 1'b0) begin
-            miss = 1'b0;
-        end else if(cpu_instr_ena) begin
-                if(hit_tag[0]==1'b0 && hit_tag[1] == 1'b0)begin
-                    miss = 1'b1;
-                end else begin
-                    miss = 1'b0;
-                end
+        lfsr_stall          = 1'b0;
+        master_next_state   = IDLE_STATE;
+        cpu_i_cache_stall   = 1'b0;
+
+        is_lookup           = 1'b0;
+        is_replace          = 1'b0;
+        is_refill           = 1'b0;
+        is_uncached_refill  = 1'b0;
+
+        axi_araddr          = 32'h0;
+        axi_arburst         = 2'b00;
+        axi_arlen           = 8'h0;
+        axi_arvalid         = 1'b0;
+        axi_rready          = 1'b1;
+
+        miss_uncached_counter = 1'b0;
+        case (master_state)
+        IDLE_STATE: begin
+            lfsr_stall      = 1'b0;
+            if (~cpu_en) begin
+                master_next_state = IDLE_STATE;
+                cpu_i_cache_stall = 1'b0; 
             end else begin
-                miss = 1'b0;
-            end
-    end
-
-//LRU_sel
-    reg [1:0] LRU_sel;
-    reg [1:0] LRU_sel_next;
-
-//status
-    wire [ADDR_WIDTH -1 : 0] cache_line_addr;
-    wire axi_ena = rst? 1'b0 : miss;  //axi_ena
-
-    localparam [1:0] READ_IDLE = 2'b00;
-    localparam [1:0] READ_ADDR = 2'b01;
-    localparam [1:0] READ_DATA = 2'b11;
-    reg        [1:0] cur_state, next_state;
-    reg        [2:0] next_offset, offset_cur;
-
-    assign stall_all = (rst)? 1'b0: (Before_clk == 1'b0)? 1'b0 : (next_state == READ_ADDR || next_state == READ_DATA 
-                                                                    || cur_state == READ_ADDR || cur_state ==READ_DATA )? 1'b1 :1'b0;
-//output ↓
-    reg [31:0] cpu_instr_data_t_next;
-    reg [31:0] cpu_instr_data_t_next2;
-    reg cpu_instr_data_1ok_next;
-    reg cpu_instr_data_2ok_next;
-    wire [2:0] offset_data2;
-    assign offset_data2 = (offset_cpu < 3'b111)? offset_cpu + 1 :offset_cpu;
-
-    always @(*) begin
-        if(rst || miss)begin
-            cpu_instr_data_t_next = 32'h0000_0000;
-            cpu_instr_data_t_next2 =32'h0000_0000;
-            cpu_instr_data_1ok_next = 1'b0;
-            cpu_instr_data_2ok_next = 1'b0;
-        end else begin
-            case(hit_tag)
-                2'b01:begin
-                    cpu_instr_data_t_next = cache_block_out_v1[offset_cpu];
-                    cpu_instr_data_1ok_next = ~stall_all;
-                    if(~offset_cpu[0])begin
-                        cpu_instr_data_2ok_next = ~stall_all;
-                        cpu_instr_data_t_next2 = cache_block_out_v1[offset_data2];
-                    end else begin
-                        cpu_instr_data_2ok_next = 1'b0;
-                        cpu_instr_data_t_next2 = cache_block_out_v1[offset_data2];
-                    end
-                end
-                2'b10:begin
-                    cpu_instr_data_t_next = cache_block_out_v2[offset_cpu];
-                    cpu_instr_data_1ok_next = ~stall_all;
-                    if(~offset_cpu[0])begin
-                        cpu_instr_data_t_next2 = cache_block_out_v2[offset_data2];
-                        cpu_instr_data_2ok_next = ~stall_all;
-                    end else begin
-                        cpu_instr_data_2ok_next = 1'b0;
-                        cpu_instr_data_t_next2 = cache_block_out_v2[offset_data2];
-                    end
-                end
-            endcase
+                master_next_state = LOOKUP_STATE;
+                is_lookup         = 1'b1;
+                cpu_i_cache_stall = 1'b0; 
+            end 
         end
-    end
 
-    assign cpu_instr_data  = cpu_instr_data_t_next;
-    assign cpu_instr_data2 = cpu_instr_data_t_next2;
-    assign cpu_instr_data_1ok = cpu_instr_data_1ok_next;
-    assign cpu_instr_data_2ok = cpu_instr_data_2ok_next;
-
-//output ↑
-
-    reg is_refilling;
-
-    always @(posedge clk) begin
-        if(rst) begin
-            cur_state <= READ_IDLE;
-            offset_cur <= 3'b000;
-            LRU_sel <= 2'b00;
-        end
-        else begin
-            cur_state <= next_state;
-            if (is_refilling)
-                offset_cur <= next_offset;
-            LRU_sel <= LRU_sel_next;
-        end
-    end
-
-    always @(*) begin
-        if(rst) begin
-            next_state = READ_IDLE;
-            next_offset = 3'b000;
-            LRU_sel_next = 2'b00;
-        end else begin
-            case(cur_state)
-                READ_IDLE:begin
-                    if(Before_clk == 1'b0) begin
-                        next_state = READ_IDLE;
-                        LRU_sel_next = 2'b01;
-                    end else if(~cpu_instr_ena) begin
-                        next_state = READ_IDLE;
-                        if(hit_tag == 2'b01) begin
-                            LRU_sel_next  = 2'b01;
-                        end else if (hit_tag == 2'b10) begin
-                            LRU_sel_next = 2'b10;
-                        end else begin
-                            LRU_sel_next = LRU_sel;
-                        end
-                    end else if(axi_ena) begin
-                        next_state = READ_ADDR;
-                    end else begin
-                        next_state = READ_IDLE;
-                    end
-                end
-
-                READ_ADDR:begin
-                    next_state = arready? READ_DATA :READ_ADDR;
-                    next_offset = 3'b000;
-                end
-
-                READ_DATA:begin
-                    next_state = rlast? READ_IDLE :READ_DATA;
-                    next_offset = rlast? 3'b000 : offset_cur + 1;
-                end
-            endcase
-        end
-    end
-
-    assign cache_line_addr = {cpu_instr_psyaddr_reg[ADDR_WIDTH-1 : OFFSET_WIDTH+2],{(OFFSET_WIDTH + Byte_c){1'b0}}};
-
-    integer i;
-    always @(*) begin
-        is_refilling = 1'b0;
-        if(rst)begin
-            araddr <= 32'h0000_0000;
-            arlen <= 8'b0000_0000;
-            arvalid <= 1'b0;
-        end else begin
-            case (cur_state)
-                READ_IDLE:begin
-                    write_tag_en[0] <= 3'b000;
-                    write_tag_en[1] <= 3'b000;
-                    for (i = 0;i<CACHE_LINE_SIZE;i= i+1)begin
-                        write_data_bank_en_v1[i] <= 4'b0000;
-                        write_data_bank_en_v2[i] <= 4'b0000;
-                    end
-                    araddr <= 32'h0000_0000;
-                    arlen <= 8'b0000_0000;
-                    arvalid <= 1'b0;
-                end
-                READ_ADDR:begin
-                    write_tag_en[0] <= 3'b000;
-                    write_tag_en[1] <= 3'b000;
-                    for (i = 0;i<CACHE_LINE_SIZE;i= i+1)begin
-                        write_data_bank_en_v1[i] <= 4'b0000;
-                        write_data_bank_en_v2[i] <= 4'b0000;
-                    end
-                    araddr <= cache_line_addr;
-                    arlen <= CACHE_LINE_SIZE - 1;
-                    arvalid <= 1'b1;
-                end
-                READ_DATA:begin
-                    araddr <= 32'h0000_0000;
-                    arlen <= 8'b0000_0000;
-                    arvalid <= 1'b0;
-                    if (rvalid) begin
-                        is_refilling = 1'b1;
-                        case(LRU_sel_next)
-                            2'b10:begin
-                                write_tag_en[0] <= 3'b111;
-                                write_tag_en[1] <= 3'b000;
-                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                    if(i != offset_cur) begin
-                                    write_data_bank_en_v1[i] <= 4'b0000;
-                                    end
-                                end
-                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                    write_data_bank_en_v2[i] <= 4'b0000;
-                                end
-                                write_data_bank_en_v1[offset_cur] <= 4'b1111;
-                            end
-                            2'b01:begin
-                                write_tag_en[0] <= 3'b000;
-                                write_tag_en[1] <= 3'b111;
-                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                    if(i != offset_cur) begin
-                                    write_data_bank_en_v2[i] <= 4'b0000;
-                                    end
-                                end
-                                for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                                    write_data_bank_en_v1[i] <= 4'b0000;
-                                end
-                                write_data_bank_en_v2[offset_cur] <= 4'b1111;
-                            end
-                        endcase
-                    end else begin
-                         write_tag_en[0] <= 3'b000;
-                        write_tag_en[1] <= 3'b000;
-                        for (i = 0;i<CACHE_LINE_SIZE;i= i+1)begin
-                            write_data_bank_en_v1[i] <= 4'b0000;
-                            write_data_bank_en_v2[i] <= 4'b0000;
-                        end
-                    end
-                    
-                end
-                default:begin
-                    write_tag_en[0] <= 3'b000;
-                    write_tag_en[1] <= 3'b000;
-                    for (i = 0 ;i<CACHE_LINE_SIZE;i = i+1) begin
-                        write_data_bank_en_v1[i] <= 4'b0000;
-                        write_data_bank_en_v2[i] <= 4'b0000;
-                    end
-                    araddr <= 32'h0000_0000;
-                    arlen <= 8'b0000_0000;
-                    arvalid <= 1'b0;
-                end
-            endcase
-        end
-    end
-    reg flag_cache_miss;
-
-    reg [63:0] cache_replace_count;
-    reg [63:0] cache_miss_count;
-    reg [63:0] cache_total_count;
-
-    always @(posedge clk) begin
-        if(rst) begin
-            flag_cache_miss     <=  0;
-            cache_miss_count    <=  0;
-            cache_total_count   <=  0;
-            cache_replace_count <= 0;
-        end else begin
-            if( miss && flag_cache_miss == 1'b0) begin
-                if((LRU_sel_next == 2'b10 && cache_tag_out[0][19] == 1'b1) ||(LRU_sel_next == 2'b01 && cache_tag_out[1][19] == 1'b1))begin
-                    cache_replace_count <= cache_replace_count + 1;
-                end
-                flag_cache_miss <= 1'b1;
-                cache_miss_count <= cache_miss_count + 1;
-            end else if(flag_cache_miss == 1'b1 && (!miss)) begin
-                flag_cache_miss <= 1'b0;
-            end
-            if(cpu_instr_ena && ~stall_all)begin
-                cache_total_count <= cache_total_count +1;
+        LOOKUP_STATE: begin
+            lfsr_stall      = 1'b0;
+            if (~miss & ~cpu_en) begin
+                master_next_state = IDLE_STATE;
+                cpu_i_cache_stall = 1'b0;
+            end else if (~miss & cpu_en) begin
+                master_next_state = LOOKUP_STATE;
+                is_lookup         = 1'b1;
+                cpu_i_cache_stall = 1'b0;
+            end else begin
+                master_next_state = MISS_STATE;
+                cpu_i_cache_stall = 1'b1;
             end
         end
+
+        MISS_STATE: begin
+            cpu_i_cache_stall       = 1'b1;
+            lfsr_stall              = 1'b0;
+            master_next_state   = REPLACE_STATE;
+            lfsr_stall          = 1'b1;
+            is_replace          = 1'b1;
+            
+            axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
+            axi_arburst         = ~uncached_reg ? 2'b10 : 2'b01;
+            axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 1;
+            axi_arvalid         = 1'b1;
+        end
+
+        REPLACE_STATE: begin
+            cpu_i_cache_stall       = 1'b1;
+            lfsr_stall              = 1'b1;
+            
+            axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
+            axi_arburst         = ~uncached_reg ? 2'b10 : 2'b01;
+            axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 1;
+            axi_arvalid         = 1'b1;
+            if (axi_arready) begin
+                master_next_state   = REFILL_STATE;
+            end else begin
+                master_next_state   = REPLACE_STATE;
+            end
+        end
+
+        REFILL_STATE: begin
+            axi_rready              = 1'b1;
+            lfsr_stall              = 1'b1;
+            cpu_i_cache_stall       = 1'b1;
+            if (axi_rvalid & ~uncached_reg)
+                is_refill           = 1'b1;
+            else if (axi_rvalid & uncached_reg) begin
+                is_uncached_refill  = 1'b1;
+            end
+            if (axi_rvalid & axi_rlast) begin
+                master_next_state   = IDLE_STATE;
+            end else begin
+                master_next_state   = REFILL_STATE;
+            end
+        end
+        
+        default: begin
+            
+        end
+
+        endcase
     end
+
 endmodule

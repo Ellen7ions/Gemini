@@ -1,7 +1,11 @@
 `timescale 1ns / 1ps
 
 module arbiter (
+    input   wire        clk,
+    input   wire        rst,
+
     input   wire [31:0] i_araddr,
+    input   wire [1 :0] i_arburst,
     input   wire [7 :0] i_arlen,
     input   wire        i_arvalid,
     output  wire        i_arready,
@@ -77,26 +81,26 @@ module arbiter (
     assign  rdata_sel   = rid[0];
 
     assign  i_arready   = arready & ~raddr_sel;
-    assign  i_rdata     = ~raddr_sel ? rdata : 32'h0;
-    assign  i_rlast     = ~raddr_sel ? rlast : 1'b0;
-    assign  i_rvalid    = ~raddr_sel ? rvalid: 1'b0;
+    assign  i_rdata     = ~rdata_sel ? rdata : 32'h0;
+    assign  i_rlast     = ~rdata_sel ? rlast : 1'b0;
+    assign  i_rvalid    = ~rdata_sel ? rvalid: 1'b0;
 
     assign  d_arready   = arready & raddr_sel;
-    assign  d_rdata     = raddr_sel ? rdata : 32'h0;
-    assign  d_rlast     = raddr_sel ? rlast : 1'b0;
-    assign  d_rvalid    = raddr_sel ? rvalid: 1'b0;
+    assign  d_rdata     = rdata_sel ? rdata : 32'h0;
+    assign  d_rlast     = rdata_sel ? rlast : 1'b0;
+    assign  d_rvalid    = rdata_sel ? rvalid: 1'b0;
 
     assign  arid        = {3'h0, raddr_sel};
     assign  araddr      = raddr_sel ? d_araddr  : i_araddr;
     assign  arlen       = raddr_sel ? d_arlen   : i_arlen;
     assign  arsize      = raddr_sel ? d_arsize  : 2'b10;
-    assign  arburst     = 2'b10;
+    assign  arburst     = raddr_sel ? 2'b10 : i_arburst;
     assign  arlock      = 2'h0;
     assign  arcache     = 4'h0;
     assign  arprot      = 3'h0;
     assign  arvalid     = raddr_sel ? d_arvalid : i_arvalid;
 
-    assign  rready      = raddr_sel ? d_rready  : i_rready;
+    assign  rready      = rdata_sel ? d_rready  : i_rready;
 
     assign  awid        = 4'd0;
     assign  awaddr      = d_awaddr;

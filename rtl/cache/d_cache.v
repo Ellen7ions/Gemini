@@ -178,6 +178,7 @@ module d_cache #(
 
     wire        en_reg;
     wire [3 :0] wen_reg;
+    wire        uncached_reg;
     wire [3 :0] load_type_reg;
     wire [31:0] vaddr_reg;
     wire [31:0] psyaddr_reg;
@@ -422,7 +423,7 @@ module d_cache #(
         axi_arsize          = 3'h0;
         axi_arvalid         = 1'b0;
 
-        axi_rready          = 1'b0;
+        axi_rready          = 1'b1;
 
         is_lookup           = 1'b0;
         is_replace          = 1'b0;
@@ -467,16 +468,20 @@ module d_cache #(
                 lfsr_stall          = 1'b1;
                 is_replace          = 1'b1;
                 
-                axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
-                axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
-                axi_arsize          = ~uncached_reg ? 3'b010 : _size;
-                axi_arvalid         = ~uncached_reg | uncached_reg & (wen_reg == 4'h0);
+                // axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
+                // axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
+                // axi_arsize          = ~uncached_reg ? 3'b010 : _size;
+                // axi_arvalid         = ~uncached_reg | uncached_reg & (wen_reg == 4'h0);
             end
         end
 
         REPLACE_STATE: begin
             cpu_d_cache_stall       = 1'b1;
             lfsr_stall              = 1'b1;
+            axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
+            axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
+            axi_arsize          = ~uncached_reg ? 3'b010 : _size;
+            axi_arvalid         = ~uncached_reg ? 1'b1 : ~(|wen_reg);
             if (~replace_flag) begin
                 replace_flag = 1'b1;
                 axi_buffer_en       = dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & |wen_reg;
@@ -493,7 +498,7 @@ module d_cache #(
                 };
             end
 
-            if (axi_arready | uncached_reg) begin
+            if (axi_arready | uncached_reg & (|wen_reg)) begin
                 master_next_state   = REFILL_STATE;
             end else begin
                 master_next_state   = REPLACE_STATE;
@@ -506,7 +511,7 @@ module d_cache #(
             cpu_d_cache_stall       = 1'b1;
             if (axi_rvalid & ~uncached_reg)
                 is_refill       = 1'b1;
-            else 
+            else if (axi_rvalid & uncached_reg)
                 is_uncached_refill = 1'b1;
             if (axi_rvalid & axi_rlast | uncached_reg & |wen_reg) begin
                 master_next_state   = IDLE_STATE;
