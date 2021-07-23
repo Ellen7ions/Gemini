@@ -108,7 +108,7 @@ module write_axi_buffer #(
             axi_wvalid  = ~finished;
             if (axi_wready & ~finished) begin
                 next_counter    = counter + 4'h1;
-                next_finished   = counter == LINE_SIZE/4 | uncached_reg;
+                next_finished   = next_counter == LINE_SIZE/4 | uncached_reg;
             end else begin
                 next_counter    = counter;
                 next_finished   = finished;

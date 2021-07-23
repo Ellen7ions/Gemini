@@ -57,6 +57,7 @@ module d_cache #(
     localparam [2 :0] REPLACE_STATE= 3;
     localparam [2 :0] REFILL_STATE = 4;
     localparam [2 :0] WRITE_STATE  = 5;
+    localparam [2 :0] WAIT_STATE   = 6;
 
     initial begin
         if (LINE_SIZE * LINE_NUM != 4 * 1024) begin
@@ -97,8 +98,8 @@ module d_cache #(
     wire [20         :0]        tagv_douta  [WAY-1:0];
 
     wire [WAY*WORD_NUM-1:0]     bank_ena    ;
-    wire [3          :0]        bank_wea    ;
-    wire [INDEX_LOG-1:0]        bank_addra  ;
+    wire [4  *WORD_NUM-1:0]     bank_wea    ;
+    wire [INDEX_LOG*WORD_NUM-1:0]bank_addra  ;
     wire [31         :0]        bank_dina   ;
     wire [32*WORD_NUM-1 :0]     bank_douta  [WAY-1:0];
 
@@ -133,8 +134,8 @@ module d_cache #(
                 DATA bank_inst (
                 .clka   (clk                        ),
                 .ena    (bank_ena   [i*WORD_NUM+j]  ),
-                .wea    (bank_wea                   ),
-                .addra  (bank_addra                 ),
+                .wea    (bank_wea   [j*4+:4] ),
+                .addra  (bank_addra [j*INDEX_LOG+:INDEX_LOG]),
                 .dina   (bank_dina                  ),
                 .douta  (bank_douta [i][j*32+:32]   )
                 );             
@@ -271,7 +272,7 @@ module d_cache #(
     wire [TAG_INDEX -1:0] tag_reg       = psyaddr_reg[31:2+OFFSET_LOG+INDEX_LOG];
 
     wire hit_write_conflict             = 
-        wbuffer_en_reg & (wbuffer_offset_reg == cpu_offset) | ~uncached_reg & wbuffer_en_i & (wbuffer_offset_i == cpu_offset);
+        wbuffer_en_reg & (wbuffer_offset_reg == cpu_offset) | wbuffer_en_i & (wbuffer_offset_i == cpu_offset);
     
     wire [WAY       -1:0] hit_sel       = {
         (tag_reg == tagv_douta[1][TAG_INDEX:1]) & tagv_douta[1][0],
@@ -296,6 +297,7 @@ module d_cache #(
             refill_store_data : axi_rdata;
 
     reg is_lookup;
+    reg is_wait_lookup;
     reg is_hit_write;
     reg is_replace;
     reg is_refill;
@@ -314,6 +316,7 @@ module d_cache #(
 
     wire [WORD_NUM-1:0] cpu_offset_sel;
     wire [WORD_NUM-1:0] offset_reg_sel;
+    wire [WORD_NUM-1:0] wbuffer_offset_reg_sel;
     decoder decoder0 (
         .in     (cpu_offset     ),
         .out    (cpu_offset_sel )
@@ -322,31 +325,56 @@ module d_cache #(
         .in     (offset_reg     ),
         .out    (offset_reg_sel )
     );
+    decoder decoder2 (
+        .in     (wbuffer_offset_reg     ),
+        .out    (wbuffer_offset_reg_sel )
+    );
 
     assign tagv_ena             = 
-        {WAY{is_lookup}} |
+        {WAY{is_lookup | is_wait_lookup}} |
         {lfsr_sel_reg, ~lfsr_sel_reg} & {WAY{is_replace | is_refill}};
     assign tagv_wea             = 
         is_refill;
     assign tagv_addra           = 
         {INDEX_LOG{is_lookup}} & cpu_index |
-        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+        {INDEX_LOG{is_wait_lookup| is_replace | is_refill}} & index_reg;
     assign tagv_dina            =
         {tag_reg, 1'b1};
 
     assign bank_ena             = 
         {cpu_offset_sel, cpu_offset_sel} & {WAY*WORD_NUM{is_lookup}} |
-        {wbuffer_offset_reg & {WORD_NUM{wbuffer_hit_sel_reg[1]}},
-         wbuffer_offset_reg & {WORD_NUM{wbuffer_hit_sel_reg[0]}}} & {WAY*WORD_NUM{is_hit_write}} |
+        {offset_reg_sel, offset_reg_sel} & {WAY*WORD_NUM{is_wait_lookup}} |
+        {wbuffer_offset_reg_sel & {WORD_NUM{wbuffer_hit_sel_reg[1]}},
+         wbuffer_offset_reg_sel & {WORD_NUM{wbuffer_hit_sel_reg[0]}}} & {WAY*WORD_NUM{is_hit_write}} |
         {{WORD_NUM{lfsr_sel_reg}}, {WORD_NUM{~lfsr_sel_reg}}} & {WAY*WORD_NUM{is_replace}}  |
         {{4{lfsr_sel_reg}} & refill_offset_sel, {4{~lfsr_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
     assign bank_wea             = 
-        {4{is_hit_write}} & wbuffer_wen_reg | 
-        {4{is_refill}} & 4'b1111;
+        {
+            wbuffer_wen_reg & {4{is_hit_write & wbuffer_offset_reg_sel[3]}},
+            wbuffer_wen_reg & {4{is_hit_write & wbuffer_offset_reg_sel[2]}},
+            wbuffer_wen_reg & {4{is_hit_write & wbuffer_offset_reg_sel[1]}},
+            wbuffer_wen_reg & {4{is_hit_write & wbuffer_offset_reg_sel[0]}}
+        } |
+        {WORD_NUM*4{is_refill}};
     assign bank_addra           = 
-        {INDEX_LOG{is_lookup}} & cpu_index |
-        {INDEX_LOG{is_hit_write}} & wbuffer_index_reg |
-        {INDEX_LOG{is_replace | is_refill}} & index_reg;
+        {
+            cpu_index & {INDEX_LOG{is_lookup & cpu_offset_sel[3]}},
+            cpu_index & {INDEX_LOG{is_lookup & cpu_offset_sel[2]}},
+            cpu_index & {INDEX_LOG{is_lookup & cpu_offset_sel[1]}},
+            cpu_index & {INDEX_LOG{is_lookup & cpu_offset_sel[0]}}
+        } |
+        {
+            wbuffer_index_reg & {INDEX_LOG{is_hit_write & wbuffer_offset_reg_sel[3]}},
+            wbuffer_index_reg & {INDEX_LOG{is_hit_write & wbuffer_offset_reg_sel[2]}},
+            wbuffer_index_reg & {INDEX_LOG{is_hit_write & wbuffer_offset_reg_sel[1]}},
+            wbuffer_index_reg & {INDEX_LOG{is_hit_write & wbuffer_offset_reg_sel[0]}}
+        } |
+        {   
+            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}},
+            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}},
+            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}},
+            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}}
+        } ;
     assign bank_dina            =
         {32{is_hit_write}} & wbuffer_wdata_reg |
         {32{is_refill}} & refill_dina;
@@ -363,7 +391,7 @@ module d_cache #(
         is_hit_write | is_refill & |wen_reg;
 
 
-    assign wbuffer_en_i         = ~miss & |wen_reg & ~uncached_reg;
+    assign wbuffer_en_i         = (master_state == LOOKUP_STATE) & ~miss & |wen_reg & ~uncached_reg;
     assign wbuffer_hit_sel_i    = hit_sel;
     assign wbuffer_wen_i        = wen_reg;
     assign wbuffer_index_i      = index_reg;
@@ -427,6 +455,7 @@ module d_cache #(
         axi_rready          = 1'b1;
 
         is_lookup           = 1'b0;
+        is_wait_lookup      = 1'b0;
         is_replace          = 1'b0;
         is_refill           = 1'b0;
         is_uncached_refill  = 1'b0;
@@ -434,28 +463,38 @@ module d_cache #(
         case (master_state)
         IDLE_STATE: begin
             lfsr_stall      = 1'b0;
-            if (~cpu_en | cpu_en & hit_write_conflict) begin
-                master_next_state = IDLE_STATE;
-                cpu_d_cache_stall = cpu_en; 
+            if (~cpu_en) begin
+                master_next_state = IDLE_STATE; 
+            end else if (cpu_wen == 4'h0 & hit_write_conflict) begin
+                master_next_state = WAIT_STATE;
             end else begin
                 master_next_state = LOOKUP_STATE;
                 is_lookup         = 1'b1;
-                cpu_d_cache_stall = 1'b0; 
             end 
         end
 
         LOOKUP_STATE: begin
             lfsr_stall      = 1'b0;
-            if (~miss & (~cpu_en | cpu_en & hit_write_conflict)) begin
+            if (~miss & ~cpu_en) begin
                 master_next_state = IDLE_STATE;
-                cpu_d_cache_stall = 1'b1;
+            end else if (~miss & cpu_en & (cpu_wen == 4'h0) & hit_write_conflict) begin
+                master_next_state = WAIT_STATE;
             end else if (~miss & cpu_en) begin
                 master_next_state = LOOKUP_STATE;
                 is_lookup         = 1'b1;
-                cpu_d_cache_stall = 1'b0;
             end else begin
                 master_next_state = MISS_STATE;
                 cpu_d_cache_stall = 1'b1;
+            end
+        end
+
+        WAIT_STATE: begin
+            cpu_d_cache_stall       = 1'b1;
+            if (hit_write_conflict) begin
+                master_next_state   = WAIT_STATE;
+            end else begin
+                master_next_state   = LOOKUP_STATE;
+                is_wait_lookup      = 1'b1;
             end
         end
 
@@ -529,29 +568,7 @@ module d_cache #(
     end
 
     always @(*) begin
-        is_hit_write    = 1'b0;
-        case (slave_state)
-        IDLE_STATE: begin
-            if (wbuffer_en_i) begin
-                slave_next_state = WRITE_STATE;
-            end else begin
-                slave_next_state = IDLE_STATE;
-            end
-        end
-
-        WRITE_STATE: begin
-            is_hit_write = 1'b1;
-            if (wbuffer_en_reg) begin
-                slave_next_state = WRITE_STATE;
-            end else begin
-                slave_next_state = IDLE_STATE;
-            end
-        end 
-
-        default: begin
-            
-        end
-        endcase 
+        is_hit_write    = wbuffer_en_reg;
     end
 
 endmodule
