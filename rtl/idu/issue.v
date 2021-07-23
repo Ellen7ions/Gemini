@@ -148,7 +148,12 @@ module issue (
                         id1_is_ls_2         |
                         id1_is_ri_2         |
                         id1_is_check_ov_2   |
-                        id1_is_inst_adel_2
+                        id1_is_inst_adel_2  |
+                        id1_is_tlbwi_1      |
+                        id1_is_tlbp_1       |
+                        id1_is_tlbr_1       |
+                        id1_is_i_refill_tlbl_2  |
+                        id1_is_i_invalid_tlbl_2
                     );
                 // if () begin
                 //     p_data_2 = 1'b0;
