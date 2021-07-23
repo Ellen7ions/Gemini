@@ -209,7 +209,7 @@ module i_cache #(
             write_line_counter <= {OFFSET_LOG{1'b0}};
         end else if (master_state == REFILL_STATE && axi_rvalid) begin
             write_line_counter <= write_line_counter + 1;
-        end else begin
+        end else if (master_state != REFILL_STATE) begin
             write_line_counter <= {OFFSET_LOG{1'b0}};
         end
     end
@@ -284,7 +284,7 @@ module i_cache #(
     end
     
     assign {cpu_rdata2, cpu_rdata1} = 
-        ~miss ? 
+        ~uncached_reg ? 
             ~offset_reg[0] ? 
                 bank_douta[1][offset_reg*32+:64] & {64{hit_sel[1]}} | bank_douta[0][offset_reg*32+:64] & {64{hit_sel[0]}} :
                 {{32'h0}, bank_douta[1][offset_reg*32+:32] & {32{hit_sel[1]}} | bank_douta[0][offset_reg*32+:32] & {32{hit_sel[0]}}}
@@ -341,11 +341,6 @@ module i_cache #(
             master_next_state   = REPLACE_STATE;
             lfsr_stall          = 1'b1;
             is_replace          = 1'b1;
-            
-            axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
-            axi_arburst         = ~uncached_reg ? 2'b10 : 2'b01;
-            axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 1;
-            axi_arvalid         = 1'b1;
         end
 
         REPLACE_STATE: begin

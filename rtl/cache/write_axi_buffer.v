@@ -88,10 +88,6 @@ module write_axi_buffer #(
         end
 
         WAIT_ADDR: begin
-            axi_awvalid = 1'b1;
-            axi_awaddr  = addr_reg;
-            axi_awlen   = uncached_reg ? 8'h0 : LINE_SIZE / 4 - 1;
-            axi_awsize  = size_reg;
             if (axi_awready) begin
                 next_state  = WAIT_DATA;
                 next_counter= 4'd0;

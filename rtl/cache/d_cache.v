@@ -308,7 +308,7 @@ module d_cache #(
             write_line_counter <= {OFFSET_LOG{1'b0}};
         end else if (master_state == REFILL_STATE && axi_rvalid) begin
             write_line_counter <= write_line_counter + 1;
-        end else begin
+        end else if (master_state != REFILL_STATE) begin
             write_line_counter <= {OFFSET_LOG{1'b0}};
         end
     end

@@ -7,7 +7,7 @@ module myCPU (
 
     output  wire [3 :0] awid,
     output  wire [31:0] awaddr,
-    output  wire [7 :0] awlen,
+    output  wire [3 :0] awlen,
     output  wire [2 :0] awsize,
     output  wire [1 :0] awburst,
     output  wire [1 :0] awlock,
@@ -25,7 +25,7 @@ module myCPU (
 
     output  wire [3 :0] arid,
     output  wire [31:0] araddr,
-    output  wire [7 :0] arlen,
+    output  wire [3 :0] arlen,
     output  wire [2 :0] arsize,
     output  wire [1 :0] arburst,
     output  wire [1 :0] arlock,
