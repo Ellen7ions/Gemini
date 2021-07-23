@@ -315,7 +315,7 @@ module i_cache #(
                 cpu_i_cache_stall = 1'b0; 
             end else begin
                 master_next_state = LOOKUP_STATE;
-                is_lookup         = 1'b1;
+                is_lookup         = ~cpu_uncached;
                 cpu_i_cache_stall = 1'b0; 
             end 
         end
@@ -327,7 +327,7 @@ module i_cache #(
                 cpu_i_cache_stall = 1'b0;
             end else if (~miss & cpu_en) begin
                 master_next_state = LOOKUP_STATE;
-                is_lookup         = 1'b1;
+                is_lookup         = ~cpu_uncached;
                 cpu_i_cache_stall = 1'b0;
             end else begin
                 master_next_state = MISS_STATE;
@@ -384,6 +384,24 @@ module i_cache #(
         end
 
         endcase
+    end
+
+    reg [31:0] total_counter;
+    reg [31:0] miss_counter;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            total_counter   <= 32'h0;
+            miss_counter    <= 32'h0;
+        end else begin
+            if (is_lookup) begin
+                total_counter <= total_counter + 32'h1;
+            end
+
+            if (master_state == LOOKUP_STATE & miss & ~uncached_reg) begin
+                miss_counter <= miss_counter + 32'h1;
+            end
+        end
     end
 
 endmodule

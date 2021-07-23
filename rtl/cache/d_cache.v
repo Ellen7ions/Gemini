@@ -469,7 +469,7 @@ module d_cache #(
                 master_next_state = WAIT_STATE;
             end else begin
                 master_next_state = LOOKUP_STATE;
-                is_lookup         = 1'b1;
+                is_lookup         = ~cpu_uncached;
             end 
         end
 
@@ -481,7 +481,7 @@ module d_cache #(
                 master_next_state = WAIT_STATE;
             end else if (~miss & cpu_en) begin
                 master_next_state = LOOKUP_STATE;
-                is_lookup         = 1'b1;
+                is_lookup         = ~cpu_uncached;
             end else begin
                 master_next_state = MISS_STATE;
                 cpu_d_cache_stall = 1'b1;
@@ -569,6 +569,24 @@ module d_cache #(
 
     always @(*) begin
         is_hit_write    = wbuffer_en_reg;
+    end
+
+    reg [31:0] total_counter;
+    reg [31:0] miss_counter;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            total_counter   <= 32'h0;
+            miss_counter    <= 32'h0;
+        end else begin
+            if (is_lookup) begin
+                total_counter <= total_counter + 32'h1;
+            end
+
+            if (master_state == LOOKUP_STATE & miss & ~uncached_reg) begin
+                miss_counter <= miss_counter + 32'h1;
+            end
+        end
     end
 
 endmodule
