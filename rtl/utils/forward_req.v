@@ -13,7 +13,7 @@ module forward_req (
 );
 
     assign forward_req_o    =
-        (ex_ls_ena      & ex_w_reg_ena      & (ex_w_reg_dst     == id_rs || ex_w_reg_dst == id_rt)) |
-        (lsu1_ls_ena    & lsu1_w_reg_ena    & (ex_w_reg_dst     == id_rs || ex_w_reg_dst == id_rt)) ;
+        (ex_ls_ena      & ex_w_reg_ena      & (ex_w_reg_dst     == id_rs || ex_w_reg_dst    == id_rt)) |
+        (lsu1_ls_ena    & lsu1_w_reg_ena    & (lsu1_w_reg_dst   == id_rs || lsu1_w_reg_dst  == id_rt)) ;
 
 endmodule
