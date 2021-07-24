@@ -274,6 +274,9 @@ module d_cache #(
     wire hit_write_conflict             = 
         wbuffer_en_reg & (wbuffer_offset_reg == cpu_offset) | wbuffer_en_i & (wbuffer_offset_i == cpu_offset);
     
+    wire hit_write_conflict_wait        =
+        wbuffer_en_reg & (wbuffer_offset_reg == offset_reg) | wbuffer_en_i & (wbuffer_offset_i == offset_reg);
+
     wire [WAY       -1:0] hit_sel       = {
         (tag_reg == tagv_douta[1][TAG_INDEX:1]) & tagv_douta[1][0],
         (tag_reg == tagv_douta[0][TAG_INDEX:1]) & tagv_douta[0][0]
@@ -370,10 +373,10 @@ module d_cache #(
             wbuffer_index_reg & {INDEX_LOG{is_hit_write & wbuffer_offset_reg_sel[0]}}
         } |
         {   
-            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}},
-            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}},
-            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}},
-            index_reg & {INDEX_LOG{is_wait_lookup | is_refill | is_replace}}
+            index_reg & {INDEX_LOG{is_wait_lookup & offset_reg_sel[3] | is_refill | is_replace}},
+            index_reg & {INDEX_LOG{is_wait_lookup & offset_reg_sel[2] | is_refill | is_replace}},
+            index_reg & {INDEX_LOG{is_wait_lookup & offset_reg_sel[1] | is_refill | is_replace}},
+            index_reg & {INDEX_LOG{is_wait_lookup & offset_reg_sel[0] | is_refill | is_replace}}
         } ;
     assign bank_dina            =
         {32{is_hit_write}} & wbuffer_wdata_reg |
@@ -490,7 +493,7 @@ module d_cache #(
 
         WAIT_STATE: begin
             cpu_d_cache_stall       = 1'b1;
-            if (hit_write_conflict) begin
+            if (hit_write_conflict_wait) begin
                 master_next_state   = WAIT_STATE;
             end else begin
                 master_next_state   = LOOKUP_STATE;
