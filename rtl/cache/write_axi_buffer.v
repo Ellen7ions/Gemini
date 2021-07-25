@@ -56,7 +56,9 @@ module write_axi_buffer #(
         end else begin
             cur_state   <= next_state;
             finished    <= next_finished;
-            counter     <= next_counter;
+            if (!next_finished) begin
+                counter <= next_counter;
+            end
         end
     end
 
@@ -80,7 +82,7 @@ module write_axi_buffer #(
                 next_state  = WAIT_ADDR;
                 axi_awaddr  = addr;
                 axi_awlen   = uncached ? 8'h0 : LINE_SIZE / 4 - 1;
-                axi_awsize  = size;
+                axi_awsize  = uncached ? size : 3'b010;
                 axi_awvalid = 1'b1;
             end else begin
                 next_state = IDLE; 
