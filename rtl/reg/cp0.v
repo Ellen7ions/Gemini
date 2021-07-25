@@ -67,17 +67,18 @@ module cp0 (
     assign cp0_has_int  = ((Cause[15:8] & Status[15:8]) != 8'h0) & Status[0] & ~Status[1];
 
     always @(posedge clk) begin
-        Count   <= Count + 32'h1;
-        Cause[15:10]<= {Cause[30] | interrupt[5], interrupt[4: 0]};
-
         if (rst) begin
             Status      <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
+            Count       <= 32'h0;
             Cause       <= 32'd0;
             Index       <= 32'd0;
             EntryHi     <= 32'h0;
             Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd3};   // kseg0 3'd3=cached, 3'd2=uncached
             Config1     <= {1'b0, 6'd16, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
         end else begin
+            Count           <= Count + 32'h1;
+            Cause[15:10]    <= {Cause[30] | interrupt[5], interrupt[4: 0]};
+
             if (Compare != 32'h0 && Count[32:1] == Compare)
                 Cause[30]   <= 1'b1;
 
