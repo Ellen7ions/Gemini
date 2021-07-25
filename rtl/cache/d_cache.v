@@ -468,7 +468,7 @@ module d_cache #(
             lfsr_stall      = 1'b0;
             if (~cpu_en) begin
                 master_next_state = IDLE_STATE; 
-            end else if (cpu_wen == 4'h0 & hit_write_conflict) begin
+            end else if (hit_write_conflict) begin
                 master_next_state = WAIT_STATE;
             end else begin
                 master_next_state = LOOKUP_STATE;
@@ -480,7 +480,7 @@ module d_cache #(
             lfsr_stall      = 1'b0;
             if (~miss & ~cpu_en) begin
                 master_next_state = IDLE_STATE;
-            end else if (~miss & cpu_en & (cpu_wen == 4'h0) & hit_write_conflict) begin
+            end else if (~miss & cpu_en & hit_write_conflict) begin
                 master_next_state = WAIT_STATE;
             end else if (~miss & cpu_en) begin
                 master_next_state = LOOKUP_STATE;
@@ -503,7 +503,7 @@ module d_cache #(
 
         MISS_STATE: begin
             cpu_d_cache_stall       = 1'b1;
-            lfsr_stall              = 1'b0;
+            lfsr_stall              = 1'b1;
             if (~axi_buffer_free) begin
                 master_next_state   = MISS_STATE;
             end else begin

@@ -57,10 +57,14 @@ module gemini (
     wire [2 :0]     forwardp_hi;
     wire [2 :0]     forwardp_lo;
 
+    wire            id2c_r_ena_1;
+    wire            id2c_r_ena_2;
     wire [4 :0]     id2c_r_addr_1;
     wire [4 :0]     id2c_r_addr_2;
     wire [31:0]     id2c_r_data_1;
     wire [31:0]     id2c_r_data_2;
+    wire            id2p_r_ena_1;
+    wire            id2p_r_ena_2;
     wire [4 :0]     id2p_r_addr_1;
     wire [4 :0]     id2p_r_addr_2;
     wire [31:0]     id2p_r_data_1;
@@ -1369,6 +1373,8 @@ module gemini (
     );
 
     forward_req forwardc_req0 (
+        .rs_ena             (id2c_r_ena_1       ),
+        .rt_ena             (id2c_r_ena_2       ),
         .id_rs              (id2c_rs_o          ),
         .id_rt              (id2c_rt_o          ),
         .ex_ls_ena          (exc_ls_ena_o       ),
@@ -1381,6 +1387,8 @@ module gemini (
     );
 
     forward_req forwardp_req0 (
+        .rs_ena             (id2p_r_ena_1       ),
+        .rt_ena             (id2p_r_ena_2       ),
         .id_rs              (id2p_rs_o          ),
         .id_rt              (id2p_rt_o          ),
         .ex_ls_ena          (exc_ls_ena_o       ),
@@ -1430,6 +1438,8 @@ module gemini (
         .lsu2c_r_data       (memc_r_data_o      ),
         .lsu2p_alu_res      (lsu1p_alu_res_i    ),
 
+        .reg_r_ena_1        (id2c_r_ena_1       ),
+        .reg_r_ena_2        (id2c_r_ena_2       ),
         .reg_r_addr_1       (id2c_r_addr_1      ),
         .reg_r_addr_2       (id2c_r_addr_2      ),
         .reg_r_data_1       (id2c_r_data_1      ),
@@ -1522,6 +1532,8 @@ module gemini (
         .lsu2c_r_data       (memc_r_data_o      ),
         .lsu2p_alu_res      (lsu1p_alu_res_i    ),
 
+        .reg_r_ena_1        (id2p_r_ena_1       ),
+        .reg_r_ena_2        (id2p_r_ena_2       ),
         .reg_r_addr_1       (id2p_r_addr_1      ),
         .reg_r_addr_2       (id2p_r_addr_2      ),
         .reg_r_data_1       (id2p_r_data_1      ),

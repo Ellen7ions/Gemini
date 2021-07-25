@@ -43,6 +43,8 @@ module idu_2 (
     input  wire [31:0]      lsu2p_alu_res,
 
     // regfile
+    output wire             reg_r_ena_1,
+    output wire             reg_r_ena_2,
     output wire [4 :0]      reg_r_addr_1,
     output wire [4 :0]      reg_r_addr_2,
     input  wire [31:0]      reg_r_data_1,
@@ -252,6 +254,29 @@ module idu_2 (
 
     // internal signals
     wire sign_ext;
+
+    wire read_rs = 
+        op_code_is_addi | op_code_is_addiu  | op_code_is_slti   | op_code_is_sltiu  | op_code_is_andi   | 
+        op_code_is_lui  | op_code_is_ori    | op_code_is_xori   | 
+        op_code_is_bgtz     & (id1_rt == `BGEZ_RT_CODE)     | 
+        op_code_is_regimm   & (id1_rt == `BGEZ_RT_CODE)     |
+        op_code_is_blez     | 
+        op_code_is_regimm   & (id1_rt == `BLTZ_RT_CODE)     | 
+        op_code_is_regimm   & (id1_rt == `BGEZAL_RT_CODE)   |
+        op_code_is_regimm   & (id1_rt == `BLTZAL_RT_CODE)   |
+        op_code_is_lb       | op_code_is_lbu    | op_code_is_lh     | op_code_is_lhu | op_code_is_lw | 
+        op_code_is_lwl      | op_code_is_lwr    ;
+
+    wire read_both =
+        inst_is_special | op_code_is_beq    | op_code_is_bne    | 
+        op_code_is_sb   | op_code_is_sh     | op_code_is_sw     |
+        op_code_is_swl  | op_code_is_swr;
+
+    assign reg_r_ena_1 = 
+        read_both | read_rs;
+    
+    assign reg_r_ena_2 =
+        read_both;
 
     assign reg_r_addr_1 = id1_rs;
     assign reg_r_addr_2 = id1_rt;
