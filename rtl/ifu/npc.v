@@ -5,7 +5,7 @@
 module npc (
     input   wire        clk,
     input   wire        rst,
-    // input   wire        stall,
+    input   wire        stall,
 
     // input   wire        id_take_jmp,
     input   wire [31:0] id2_rs_data,
@@ -106,21 +106,21 @@ module npc (
   // If there is no branch predictor, 
   // the probability of successful branch prediction is 15%
   // 
-  // reg [31:0] b_total_counter;
-  // reg [31:0] b_pred_miss_counter;
+  reg [31:0] b_total_counter;
+  reg [31:0] b_pred_miss_counter;
 
-  // always @(posedge clk) begin
-  //   if (rst) begin
-  //     b_total_counter <= 32'h0;
-  //     b_pred_miss_counter  <= 32'h0;
-  //   end else if (~stall) begin
-  //     if (id2_is_jr | id2_is_branch | id2_is_j_imme) begin
-  //       b_total_counter <= b_total_counter + 32'h1;
-  //     end
-  //     if (id2_take_jmp) begin
-  //       b_pred_miss_counter <= b_pred_miss_counter + 32'h1;
-  //     end
-  //   end
-  // end
+  always @(posedge clk) begin
+    if (rst) begin
+      b_total_counter <= 32'h0;
+      b_pred_miss_counter  <= 32'h0;
+    end else if (~stall) begin
+      // if (id2_is_jr | id2_is_branch | id2_is_j_imme) begin
+        b_total_counter <= b_total_counter + 32'h1;
+      // end
+      if (flush_req) begin
+        b_pred_miss_counter <= b_pred_miss_counter + 32'h1;
+      end
+    end
+  end
 
 endmodule

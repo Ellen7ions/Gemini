@@ -1195,7 +1195,7 @@ module gemini (
     npc npc_cp (
         .clk                (clk),
         .rst                (rst),
-        // .stall              (pc_stall),
+        .stall              (pc_stall),
 
         .id2_rs_data        (id2c_rs_data_i     ),
         .id2_rt_data        (id2c_rt_data_i     ),
