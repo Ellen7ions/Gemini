@@ -36,16 +36,20 @@ module gemini (
 
     wire            id2c_take_jmp_o;
     wire            id2c_take_jmp_i;
+    wire            id2c_pred_taken_i;
+    wire [31:0]     id2c_pred_target_i;
     wire [31:0]     id2c_jmp_target_o;
     wire [31:0]     id2c_jmp_target_i;
 
     // pipeline regs
     wire [31:0]     pc_cur_pc;
+    wire            pc_pred_taken;
+    wire [31:0]     pc_pred_target;
     wire [31:0]     npc_next_pc;
     wire            p_data_1;
     wire            p_data_2;
-    wire [65:0]     fifo_r_data_1;
-    wire [65:0]     fifo_r_data_2;
+    wire [98:0]     fifo_r_data_1;
+    wire [98:0]     fifo_r_data_2;
     wire            fifo_r_data_1_ok;
     wire            fifo_r_data_2_ok;
     wire [2 :0]     forwardc_rs;
@@ -70,8 +74,8 @@ module gemini (
     wire [31:0]     id2p_r_data_1;
     wire [31:0]     id2p_r_data_2;
 
-    wire [65:0]     fifo_w_data_1;
-    wire [65:0]     fifo_w_data_2;
+    wire [98:0]     fifo_w_data_1;
+    wire [98:0]     fifo_w_data_2;
 
     wire            exc_tlb_stall_req;
 
@@ -184,6 +188,8 @@ module gemini (
     wire [4 :0]     id1c_w_reg_dst_o;
     wire [15:0]     id1c_imme_o;
     wire [25:0]     id1c_j_imme_o;
+    wire            id1c_pred_taken_o;
+    wire [31:0]     id1c_pred_target_o;
     wire            id1c_is_branch_o;
     wire            id1c_is_j_imme_o;
     wire            id1c_is_jr_o;
@@ -204,6 +210,8 @@ module gemini (
     wire [4 :0]     id1c_w_reg_dst_i;
     wire [15:0]     id1c_imme_i;
     wire [25:0]     id1c_j_imme_i;
+    wire            id1c_pred_taken_i;
+    wire [31:0]     id1c_pred_target_i;
     wire            id1c_is_branch_i;
     wire            id1c_is_j_imme_i;
     wire            id1c_is_jr_i;
@@ -582,6 +590,8 @@ module gemini (
         .id1_w_reg_dst_o    (id1c_w_reg_dst_o   ),
         .id1_imme_o         (id1c_imme_o        ),
         .id1_j_imme_o       (id1c_j_imme_o      ),
+        .id1_pred_taken_o   (id1c_pred_taken_o  ),
+        .id1_pred_target_o  (id1c_pred_target_o ),
         .id1_is_branch_o    (id1c_is_branch_o   ),
         .id1_is_j_imme_o    (id1c_is_j_imme_o   ),
         .id1_is_jr_o        (id1c_is_jr_o       ),
@@ -608,6 +618,8 @@ module gemini (
         .id1_w_reg_dst_i    (id1c_w_reg_dst_i   ),
         .id1_imme_i         (id1c_imme_i        ),
         .id1_j_imme_i       (id1c_j_imme_i      ),
+        .id1_pred_taken_i   (id1c_pred_taken_i  ),
+        .id1_pred_target_i  (id1c_pred_target_i ),
         .id1_is_branch_i    (id1c_is_branch_i   ),
         .id1_is_j_imme_i    (id1c_is_j_imme_i   ),
         .id1_is_jr_i        (id1c_is_jr_i       ),
@@ -653,7 +665,7 @@ module gemini (
         .id1_inst_i         (id1p_inst_i        ),
         .id1_rs_i           (id1p_rs_i          ),
         .id1_rt_i           (id1p_rt_i          ),
-        .id1_rd_i           (id1p_rd_i          ),
+        .id1_rd_i           (fid1p_rd_i          ),
         .id1_sa_i           (id1p_sa_i          ),
         .id1_w_reg_ena_i    (id1p_w_reg_ena_i   ),
         .id1_w_reg_dst_i    (id1p_w_reg_dst_i   ),
@@ -681,6 +693,8 @@ module gemini (
         .id2_is_i_invalid_tlbl_o(id2c_is_i_invalid_tlbl_o),
         .id2_is_refetch_o       (id2c_is_refetch_o       ),
         
+        .id2_pred_taken_o   (id1c_pred_taken_i  ),
+        .id2_pred_target_o  (id1c_pred_target_i ),
         .id2_take_jmp_o     (id2c_take_jmp_o    ),
         .id2_jmp_target_o   (id2c_jmp_target_o  ),
 
@@ -726,6 +740,8 @@ module gemini (
         .id2_is_i_invalid_tlbl_i(id2c_is_i_invalid_tlbl_i),
         .id2_is_refetch_i       (id2c_is_refetch_i       ),
 
+        .id2_pred_taken_i   (id2c_pred_taken_i  ),
+        .id2_pred_target_i  (id2c_pred_target_i ),
         .id2_take_jmp_i     (id2c_take_jmp_i     ),
         .id2_jmp_target_i   (id2c_jmp_target_i   ),
 
@@ -1102,6 +1118,8 @@ module gemini (
     wire        data_tlb_modify;
 
     wire [31:0] pc_reg;
+    wire        pc_pred_taken_reg;
+    wire [31:0] pc_pred_target_reg;
     wire        w_fifo;
 
     mmu_mapping mmu_mapping0 (
@@ -1172,6 +1190,10 @@ module gemini (
     assign r_cp0_Config         = cp0_config;
 
     npc npc_cp (
+        .clk                (clk),
+        .rst                (rst),
+        // .stall              (pc_stall),
+
         .id2_rs_data        (id2c_rs_data_i     ),
         .id2_rt_data        (id2c_rt_data_i     ),
         .id2_is_branch      (id2c_is_branch_i   ),
@@ -1179,12 +1201,16 @@ module gemini (
         .id2_is_j_imme      (id2c_is_j_imme_i   ),
         .id2_branch_sel     (id2c_branch_sel_i  ),
         .id2_jmp_target     (id2c_jmp_target_i  ),
+        .id2_pred_taken     (id2c_pred_taken_i  ),
+        .id2_pred_target    (id2c_pred_target_i ),
         .flush_req          (b_ctrl_flush_req   ),
 
         .exception_pc_ena   (exception_pc_ena   ),
         .exception_pc       (exception_pc       ),
         .id_pc              (id2c_pc_i          ),
         .pc                 (pc_cur_pc          ),
+        .pc_pred_taken      (pc_pred_taken      ),
+        .pc_pred_target     (pc_pred_target     ),
         .next_pc            (npc_next_pc        )
     );
 
@@ -1196,7 +1222,11 @@ module gemini (
         .exception_pc_ena   (exception_pc_ena   ),
         .next_pc            (npc_next_pc        ),
         .pc                 (pc_cur_pc          ),
+        .pc_pred_taken      (pc_pred_taken      ),
+        .pc_pred_target     (pc_pred_target     ),
         .pc_reg             (pc_reg             ),
+        .pc_pred_taken_reg  (pc_pred_taken_reg  ),
+        .pc_pred_target_reg (pc_pred_target_reg ),
         .w_fifo             (w_fifo             )
     );
 
@@ -1204,9 +1234,9 @@ module gemini (
     assign inst_addr_next_pc    = pc_cur_pc;
 
     assign fifo_w_data_1    = 
-            {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg        , inst_rdata_1};
+            {pc_pred_taken_reg, pc_pred_target_reg, inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg        , inst_rdata_1};
     assign fifo_w_data_2    = 
-            {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg + 32'h4, inst_rdata_2};
+            {pc_pred_taken_reg, pc_pred_target_reg, inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg + 32'h4, inst_rdata_2};
 
     i_fifo i_fifo_cp (
         .clk                (clk                ),
@@ -1253,6 +1283,8 @@ module gemini (
         .id1_w_reg_dst_1    (id1c_w_reg_dst_o   ),
         .id1_imme_1         (id1c_imme_o        ),
         .id1_j_imme_1       (id1c_j_imme_o      ),
+        .id1_pred_taken     (id1c_pred_taken_o  ),
+        .id1_pred_target    (id1c_pred_target_o ),
         .id1_is_branch_1    (id1c_is_branch_o   ),
         .id1_is_j_imme_1    (id1c_is_j_imme_o   ),
         .id1_is_jr_1        (id1c_is_jr_o       ),

@@ -19,6 +19,8 @@ module id2_exc (
     input   wire        id2_is_i_invalid_tlbl_o,
     input   wire        id2_is_refetch_o,
 
+    input   wire        id2_pred_taken_o,
+    input   wire [31:0] id2_pred_target_o,
     input   wire        id2_take_jmp_o,
     input   wire [31:0] id2_jmp_target_o,
 
@@ -64,6 +66,8 @@ module id2_exc (
     output  reg         id2_is_i_invalid_tlbl_i,
     output  reg         id2_is_refetch_i,
 
+    output  reg         id2_pred_taken_i,
+    output  reg  [31:0] id2_pred_target_i,
     output  reg         id2_take_jmp_i,
     output  reg  [31:0] id2_jmp_target_i,
 
@@ -134,6 +138,8 @@ module id2_exc (
             id2_is_i_refill_tlbl_i    <=  1'b0;
             id2_is_i_invalid_tlbl_i   <=  1'b0;
             id2_is_refetch_i    <= 1'b0;
+            id2_pred_taken_i    <= 1'b0;
+            id2_pred_target_i   <= 32'h0;
             id2_take_jmp_i      <= 1'b0;
             id2_jmp_target_i    <= 32'h0;
             id2_is_branch_i     <= 1'b0;
@@ -176,6 +182,8 @@ module id2_exc (
             id2_is_i_refill_tlbl_i    <=  id2_is_i_refill_tlbl_o;
             id2_is_i_invalid_tlbl_i   <=  id2_is_i_invalid_tlbl_o;
             id2_is_refetch_i    <= id2_is_refetch_o;
+            id2_pred_taken_i    <= id2_pred_taken_o;
+            id2_pred_target_i   <= id2_pred_target_o;
             id2_take_jmp_i      <= id2_take_jmp_o;
             id2_jmp_target_i    <= id2_jmp_target_o;
             id2_is_branch_i     <= id2_is_branch_o;

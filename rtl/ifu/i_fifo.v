@@ -6,15 +6,15 @@ module i_fifo (
     input   wire        flush,
     input   wire        p_data_1,
     input   wire        p_data_2,
-    output  wire [65:0] r_data_1,
-    output  wire [65:0] r_data_2,
+    output  wire [98:0] r_data_1,
+    output  wire [98:0] r_data_2,
     output  wire        r_data_1_ok,
     output  wire        r_data_2_ok,
     output  wire        fifo_stall_req,
     input   wire        w_ena_1,
     input   wire        w_ena_2,
-    input   wire [65:0] w_data_1,
-    input   wire [65:0] w_data_2
+    input   wire [98:0] w_data_1,
+    input   wire [98:0] w_data_2
 );
     localparam SIZE         = 8;
     localparam INDEX        = $clog2(SIZE);
@@ -24,9 +24,9 @@ module i_fifo (
     localparam [1:0] WAIT_2 = 2'b10;
     reg  [1:0]  cstate;
 
-    reg  [65:0] wait_reg_1, wait_reg_2;
+    reg  [98:0] wait_reg_1, wait_reg_2;
 
-    reg  [65:0] queue[SIZE-1:0];
+    reg  [98:0] queue[SIZE-1:0];
     reg  [INDEX:0] w_ptr, r_ptr;
     wire [INDEX:0] wptr_plus_one;
     wire [INDEX:0] rptr_plus_one;

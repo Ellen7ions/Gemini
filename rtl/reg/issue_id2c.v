@@ -21,6 +21,8 @@ module issue_id2c (
     input   wire [4 :0] id1_w_reg_dst_o,
     input   wire [15:0] id1_imme_o,
     input   wire [25:0] id1_j_imme_o,
+    input   wire        id1_pred_taken_o,
+    input   wire [31:0] id1_pred_target_o,
     input   wire        id1_is_branch_o,
     input   wire        id1_is_j_imme_o,
     input   wire        id1_is_jr_o,
@@ -47,6 +49,8 @@ module issue_id2c (
     output  reg  [4 :0] id1_w_reg_dst_i,
     output  reg  [15:0] id1_imme_i,
     output  reg  [25:0] id1_j_imme_i,
+    output  reg         id1_pred_taken_i,
+    output  reg  [31:0] id1_pred_target_i,
     output  reg         id1_is_branch_i,
     output  reg         id1_is_j_imme_i,
     output  reg         id1_is_jr_i,
@@ -73,6 +77,8 @@ module issue_id2c (
             id1_w_reg_dst_i         <=  5'h0;
             id1_imme_i              <=  16'h0;
             id1_j_imme_i            <=  26'h0;
+            id1_pred_taken_i        <=  1'h0;
+            id1_pred_target_i       <=  32'h0;
             id1_is_branch_i         <=  1'b0;
             id1_is_j_imme_i         <=  1'b0;
             id1_is_jr_i             <=  1'b0;
@@ -101,6 +107,8 @@ module issue_id2c (
             id1_j_imme_i            <=  id1_j_imme_o;    
             id1_is_branch_i         <=  id1_is_branch_o;        
             id1_is_j_imme_i         <=  id1_is_j_imme_o;        
+            id1_pred_taken_i        <=  id1_pred_taken_o;
+            id1_pred_target_i       <=  id1_pred_target_o;
             id1_is_jr_i             <=  id1_is_jr_o;    
             id1_is_ls_i             <=  id1_is_ls_o;
             id1_op_codes_i          <=  id1_op_codes_o;

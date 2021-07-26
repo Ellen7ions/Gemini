@@ -8,7 +8,11 @@ module pc(
     input   wire        exception_pc_ena,
     input   wire [31:0] next_pc,
     output  reg  [31:0] pc,
+    input   wire        pc_pred_taken,
+    input   wire [31:0] pc_pred_target,
     output  reg  [31:0] pc_reg,
+    output  reg         pc_pred_taken_reg,
+    output  reg  [31:0] pc_pred_target_reg,
     output  reg         w_fifo
 );
 
@@ -36,11 +40,15 @@ module pc(
 
     always @(posedge clk ) begin
         if (rst | (flush & !stall) | exception_pc_ena) begin
-            pc_reg  <= 32'hbfc0_0000;
-            w_fifo  <= 1'b0;
+            pc_reg              <= 32'hbfc0_0000;
+            pc_pred_taken_reg   <= 1'h0;
+            pc_pred_target_reg  <= 32'h0;
+            w_fifo              <= 1'b0;
         end else if (!flush & !stall) begin
-            pc_reg  <= pc;
-            w_fifo  <= 1'b1;
+            pc_reg              <= pc;
+            pc_pred_taken_reg   <= pc_pred_taken;
+            pc_pred_target_reg  <= pc_pred_target;
+            w_fifo              <= 1'b1;
         end
     end
 
