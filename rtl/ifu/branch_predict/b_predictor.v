@@ -75,7 +75,7 @@ module b_predictor #(
     assign pht_taken= pht_rdata[1];
 
     // update PHT and BHT
-    assign bht_wen  = update;
+    assign bht_wen  = 1'b1;
     assign bht_waddr= update_pc[12:3];
     assign bht_wdata= act_taken;
 

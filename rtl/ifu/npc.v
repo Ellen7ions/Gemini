@@ -13,11 +13,13 @@ module npc (
     input   wire        id2_is_branch,
     input   wire        id2_is_jr,
     input   wire        id2_is_j_imme,
+    input   wire        id2_in_delay_slot,
     input   wire [3 :0] id2_branch_sel,
     input   wire [31:0] id2_jmp_target,
     input   wire        id2_pred_taken,
     input   wire [31:0] id2_pred_target,
     output  wire        flush_req,
+    output  wire        flush_is_jmp,
 
     input   wire        exception_pc_ena,
     input   wire [31:0] exception_pc,
@@ -58,6 +60,8 @@ module npc (
   wire        pred_taken;
   wire [31:0] pred_target;
 
+  wire [31:0] jmp_target;
+
   b_predictor b_predictor0 (
     .clk            (clk            ),
     .rst            (rst            ),
@@ -73,8 +77,8 @@ module npc (
   always @(*) begin
     if (exception_pc_ena) begin
       next_pc = exception_pc;
-    end else if (id2_take_jmp) begin
-      next_pc = id2_jmp_target;
+    end else if (flush_req) begin
+      next_pc = jmp_target;
     end else if (pred_taken) begin
       next_pc = pred_target;
     end else if (pc[2]) begin
@@ -87,7 +91,17 @@ module npc (
   assign pc_pred_taken = pred_taken;
   assign pc_pred_target= pred_target;
 
-  assign flush_req = id2_take_jmp & (~id2_pred_taken | id2_pred_taken & (id2_pred_target != id2_jmp_target));
+  assign jmp_target=
+    id2_is_branch | id2_is_j_imme | id2_is_jr ?
+      id2_jmp_target : 
+      id_pc + 32'h4;
+
+  assign flush_is_jmp = id2_is_branch | id2_is_j_imme | id2_is_jr;
+
+  assign flush_req = 
+    id2_is_branch | id2_is_j_imme | id2_is_jr ?
+      id2_take_jmp & (~id2_pred_taken | id2_pred_taken & (id2_pred_target != id2_jmp_target)) :
+      id2_pred_taken & ~id2_in_delay_slot;
 
   // If there is no branch predictor, 
   // the probability of successful branch prediction is 15%

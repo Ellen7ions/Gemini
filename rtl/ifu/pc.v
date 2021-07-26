@@ -10,9 +10,13 @@ module pc(
     output  reg  [31:0] pc,
     input   wire        pc_pred_taken,
     input   wire [31:0] pc_pred_target,
+    input   wire        tlb_ref_tlbl,
+    input   wire        tlb_inv_tlbl,
     output  reg  [31:0] pc_reg,
     output  reg         pc_pred_taken_reg,
     output  reg  [31:0] pc_pred_target_reg,
+    output  reg         tlb_ref_tlbl_reg,
+    output  reg         tlb_inv_tlbl_reg,
     output  reg         w_fifo
 );
 
@@ -44,11 +48,15 @@ module pc(
             pc_pred_taken_reg   <= 1'h0;
             pc_pred_target_reg  <= 32'h0;
             w_fifo              <= 1'b0;
+            tlb_ref_tlbl_reg    <= 1'b0;
+            tlb_inv_tlbl_reg    <= 1'b0;
         end else if (!flush & !stall) begin
             pc_reg              <= pc;
             pc_pred_taken_reg   <= pc_pred_taken;
             pc_pred_target_reg  <= pc_pred_target;
             w_fifo              <= 1'b1;
+            tlb_ref_tlbl_reg    <= tlb_ref_tlbl;
+            tlb_inv_tlbl_reg    <= tlb_inv_tlbl;
         end
     end
 

@@ -11,7 +11,6 @@ module BTB (
 );
 
     wire [8 :0] r_tagv;
-    wire [8 :0] r_target;
     wire [7 :0] index = wen ? update_pc[9:2] : pc[9:2];
 
     mem_gen_tagv cache_tagv (
@@ -30,6 +29,6 @@ module BTB (
         .spo    (pred_pc        )  // output wire [31 : 0] spo
     );
 
-    assign btb_miss = r_tagv[0] & (r_tagv[8:1] == pc[17:10]);
+    assign btb_miss = ~r_tagv[0] | r_tagv[0] & (r_tagv[8:1] != pc[17:10]);
 
 endmodule

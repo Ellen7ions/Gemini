@@ -151,6 +151,7 @@ module gemini (
     wire            forwardp_req;
     // wire            id2c_flush_req;
     wire            b_ctrl_flush_req;
+    wire            b_ctrl_is_jmp;
     wire            exc_stall_req;
 
     wire            ii_id2_exception_flush;
@@ -1102,6 +1103,8 @@ module gemini (
     wire [31:0] inst_rdata_2;
     wire        inst_ok_1;
     wire        inst_ok_2;
+    wire        tlb_refill_tlbl_reg;
+    wire        tlb_invalid_tlbl_reg;
     wire        inst_tlb_refill_tlbl;
     wire        inst_tlb_invalid_tlbl;
 
@@ -1199,11 +1202,13 @@ module gemini (
         .id2_is_branch      (id2c_is_branch_i   ),
         .id2_is_jr          (id2c_is_jr_i       ),
         .id2_is_j_imme      (id2c_is_j_imme_i   ),
+        .id2_in_delay_slot  (id2c_in_delay_slot_i),
         .id2_branch_sel     (id2c_branch_sel_i  ),
         .id2_jmp_target     (id2c_jmp_target_i  ),
         .id2_pred_taken     (id2c_pred_taken_i  ),
         .id2_pred_target    (id2c_pred_target_i ),
         .flush_req          (b_ctrl_flush_req   ),
+        .flush_is_jmp       (b_ctrl_is_jmp      ),
 
         .exception_pc_ena   (exception_pc_ena   ),
         .exception_pc       (exception_pc       ),
@@ -1224,9 +1229,13 @@ module gemini (
         .pc                 (pc_cur_pc          ),
         .pc_pred_taken      (pc_pred_taken      ),
         .pc_pred_target     (pc_pred_target     ),
+        .tlb_ref_tlbl       (inst_tlb_refill_tlbl),
+        .tlb_inv_tlbl       (inst_tlb_invalid_tlbl),
         .pc_reg             (pc_reg             ),
         .pc_pred_taken_reg  (pc_pred_taken_reg  ),
         .pc_pred_target_reg (pc_pred_target_reg ),
+        .tlb_ref_tlbl_reg   (tlb_refill_tlbl_reg),
+        .tlb_inv_tlbl_reg   (tlb_invalid_tlbl_reg),
         .w_fifo             (w_fifo             )
     );
 
@@ -1234,9 +1243,9 @@ module gemini (
     assign inst_addr_next_pc    = pc_cur_pc;
 
     assign fifo_w_data_1    = 
-            {pc_pred_taken_reg, pc_pred_target_reg, inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg        , inst_rdata_1};
+            {pc_pred_taken_reg, pc_pred_target_reg, tlb_refill_tlbl_reg ,tlb_invalid_tlbl_reg , pc_reg        , inst_rdata_1};
     assign fifo_w_data_2    = 
-            {pc_pred_taken_reg, pc_pred_target_reg, inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg + 32'h4, inst_rdata_2};
+            {pc_pred_taken_reg, pc_pred_target_reg, tlb_refill_tlbl_reg ,tlb_invalid_tlbl_reg , pc_reg + 32'h4, inst_rdata_2};
 
     i_fifo i_fifo_cp (
         .clk                (clk                ),
@@ -1267,6 +1276,8 @@ module gemini (
 
         .p_data_1           (p_data_1           ),
         .p_data_2           (p_data_2           ),
+
+        .reset_ds           (b_ctrl_flush_req   ),
 
         .cls_refetch        (cls_refetch        ),
 
@@ -2021,6 +2032,7 @@ module gemini (
         .forwardc_req       (forwardc_req       ),
         .forwardp_req       (forwardp_req       ),
         .b_ctrl_flush_req   (b_ctrl_flush_req   ),
+        .b_ctrl_is_jmp      (b_ctrl_is_jmp      ),
         .with_delaysolt     (id2p_in_delay_slot_i),
         .exc_stall_req      (exc_stall_req      ),
         .exception_flush    (exception_flush    ),

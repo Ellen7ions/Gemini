@@ -16,6 +16,8 @@ module issue (
     output  reg         p_data_1,
     output  reg         p_data_2,
 
+    input   wire        reset_ds,
+
     // from mem
     input   wire        cls_refetch,
 
@@ -128,14 +130,14 @@ module issue (
         end
     end
 
-    assign update_in_ds = in_ds & stall | ~in_ds & p_data_1 & inst_jmp_1 & ~p_data_2;
+    assign update_in_ds = reset_ds | in_ds & stall | ~in_ds & p_data_1 & inst_jmp_1 & ~p_data_2;
 
     always @(*) begin
         if (stall) begin
             p_data_1 = 1'b0;
             p_data_2 = 1'b0;
         end else begin
-            if (!fifo_r_data_1_ok | !fifo_r_data_2_ok) begin
+            if (!fifo_r_data_1_ok | !fifo_r_data_2_ok | (inst_jmp_1 & !fifo_r_data_2_ok)) begin
                 p_data_1 = 1'b0;
                 p_data_2 = 1'b0;
             end else begin
@@ -155,7 +157,8 @@ module issue (
                         id1_is_tlbp_1       |
                         id1_is_tlbr_1       |
                         id1_is_i_refill_tlbl_2  |
-                        id1_is_i_invalid_tlbl_2
+                        id1_is_i_invalid_tlbl_2 |
+                        id1_pred_taken
                     );
                 // if () begin
                 //     p_data_2 = 1'b0;

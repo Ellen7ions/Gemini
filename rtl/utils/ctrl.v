@@ -7,6 +7,7 @@ module ctrl (
     input   wire    forwardc_req,
     input   wire    forwardp_req,
     input   wire    b_ctrl_flush_req,
+    input   wire    b_ctrl_is_jmp,
     // the delaysolt issue with the branch inst in c datapath.
     input   wire    with_delaysolt,
     input   wire    exc_stall_req,
@@ -54,7 +55,7 @@ module ctrl (
             i_cache_stall_req | d_cache_stall_req | (pc_stall & fifo_flush) | (forwardc_req | forwardp_req) & (~b_ctrl_flush_req | b_ctrl_flush_req & ~with_delaysolt) | exc_stall_req | lsu1_tlb_stall_req;
     
     assign id2_ex_flush =
-            b_ctrl_flush_req & with_delaysolt | (forwardc_req | forwardp_req) & (~b_ctrl_flush_req | b_ctrl_flush_req & ~with_delaysolt);
+            b_ctrl_flush_req & b_ctrl_is_jmp & with_delaysolt | (forwardc_req | forwardp_req) & (~b_ctrl_flush_req | b_ctrl_flush_req & ~with_delaysolt);
 
     assign id2_ex_stall =
             i_cache_stall_req | d_cache_stall_req | exc_stall_req | lsu1_tlb_stall_req;
