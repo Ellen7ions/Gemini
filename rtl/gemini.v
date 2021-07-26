@@ -1203,6 +1203,7 @@ module gemini (
         .id2_is_jr          (id2c_is_jr_i       ),
         .id2_is_j_imme      (id2c_is_j_imme_i   ),
         .id2_in_delay_slot  (id2c_in_delay_slot_i),
+        .id2_with_delay_slot(id2p_in_delay_slot_i),
         .id2_branch_sel     (id2c_branch_sel_i  ),
         .id2_jmp_target     (id2c_jmp_target_i  ),
         .id2_pred_taken     (id2c_pred_taken_i  ),
@@ -1277,7 +1278,7 @@ module gemini (
         .p_data_1           (p_data_1           ),
         .p_data_2           (p_data_2           ),
 
-        .reset_ds           (b_ctrl_flush_req   ),
+        .reset_ds           (1'b0               ),
 
         .cls_refetch        (cls_refetch        ),
 

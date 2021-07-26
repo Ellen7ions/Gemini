@@ -14,6 +14,7 @@ module npc (
     input   wire        id2_is_jr,
     input   wire        id2_is_j_imme,
     input   wire        id2_in_delay_slot,
+    input   wire        id2_with_delay_slot,
     input   wire [3 :0] id2_branch_sel,
     input   wire [31:0] id2_jmp_target,
     input   wire        id2_pred_taken,
@@ -60,7 +61,6 @@ module npc (
   wire        pred_taken;
   wire [31:0] pred_target;
 
-  wire [31:0] jmp_target;
 
   b_predictor b_predictor0 (
     .clk            (clk            ),
@@ -74,33 +74,34 @@ module npc (
     .act_target     (id2_jmp_target )
   );
 
+  wire [31:0] seq_npc = pc[2] ? pc + 32'h4 : pc + 32'h8;
+  wire id2_is_jmp = id2_is_branch | id2_is_j_imme | id2_is_jr;
+  wire id2_branch_pred_wrong =
+     id2_take_jmp & (~id2_pred_taken | id2_pred_taken & (id2_pred_target != id2_jmp_target)) |
+    ~id2_take_jmp & (id2_pred_taken);
+
   always @(*) begin
     if (exception_pc_ena) begin
       next_pc = exception_pc;
     end else if (flush_req) begin
-      next_pc = jmp_target;
+      next_pc = {32{id2_is_jmp &  id2_take_jmp}} & id2_jmp_target |
+                {32{id2_is_jmp & ~id2_take_jmp}} & {id_pc + 32'h8}|
+                {32{~id2_is_jmp}} & {id_pc + 32'h4};
     end else if (pred_taken) begin
       next_pc = pred_target;
-    end else if (pc[2]) begin
-      next_pc = pc + 32'h4;
     end else begin
-      next_pc = pc + 32'h8;
+      next_pc = seq_npc;
     end
   end
 
   assign pc_pred_taken = pred_taken;
   assign pc_pred_target= pred_target;
 
-  assign jmp_target=
-    id2_is_branch | id2_is_j_imme | id2_is_jr ?
-      id2_jmp_target : 
-      id_pc + 32'h4;
-
   assign flush_is_jmp = id2_is_branch | id2_is_j_imme | id2_is_jr;
 
   assign flush_req = 
-    id2_is_branch | id2_is_j_imme | id2_is_jr ?
-      id2_take_jmp & (~id2_pred_taken | id2_pred_taken & (id2_pred_target != id2_jmp_target)) :
+    id2_is_jmp ?
+      id2_branch_pred_wrong:
       id2_pred_taken & ~id2_in_delay_slot;
 
   // If there is no branch predictor, 
@@ -114,9 +115,9 @@ module npc (
       b_total_counter <= 32'h0;
       b_pred_miss_counter  <= 32'h0;
     end else if (~stall) begin
-      // if (id2_is_jr | id2_is_branch | id2_is_j_imme) begin
+      if (id2_is_jr | id2_is_branch | id2_is_j_imme) begin
         b_total_counter <= b_total_counter + 32'h1;
-      // end
+      end
       if (flush_req) begin
         b_pred_miss_counter <= b_pred_miss_counter + 32'h1;
       end
