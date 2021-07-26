@@ -38,7 +38,7 @@ module b_predictor #(
     ) bht0 (
         .clk        (clk        ),
         .rst        (rst        ),
-        .raddr      (bht_raddr  ),
+        .r_addr     (bht_raddr  ),
         .rdata      (bht_rdata  ),
         .w_addr     (bht_waddr  ),
         .wen        (bht_wen    ),
@@ -52,7 +52,7 @@ module b_predictor #(
     )  pht0 (
         .clk        (clk        ),
         .rst        (rst        ),
-        .raddr      (pht_raddr  ),
+        .r_addr     (pht_raddr  ),
         .rdata      (pht_rdata  ),
         .w_addr     (pht_waddr  ),
         .wen        (pht_wen    ),
