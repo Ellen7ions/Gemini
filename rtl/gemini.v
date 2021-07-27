@@ -46,6 +46,7 @@ module gemini (
     wire            pc_pred_taken;
     wire [31:0]     pc_pred_target;
     wire [31:0]     npc_next_pc;
+    wire            next_fetch_ds;
     wire            p_data_1;
     wire            p_data_2;
     wire [98:0]     fifo_r_data_1;
@@ -1121,6 +1122,7 @@ module gemini (
     wire        data_tlb_modify;
 
     wire [31:0] pc_reg;
+    wire        pc_fetch_ds_reg;
     wire        pc_pred_taken_reg;
     wire [31:0] pc_pred_target_reg;
     wire        w_fifo;
@@ -1195,7 +1197,8 @@ module gemini (
     npc npc_cp (
         .clk                (clk),
         .rst                (rst),
-        .stall              (pc_stall),
+        .stall              (pc_stall           ),
+        .id2_ex_stall       (id2_ex_stall       ),
 
         .id2_rs_data        (id2c_rs_data_i     ),
         .id2_rt_data        (id2c_rt_data_i     ),
@@ -1217,7 +1220,8 @@ module gemini (
         .pc                 (pc_cur_pc          ),
         .pc_pred_taken      (pc_pred_taken      ),
         .pc_pred_target     (pc_pred_target     ),
-        .next_pc            (npc_next_pc        )
+        .next_pc            (npc_next_pc        ),
+        .next_fetch_ds      (next_fetch_ds      )
     );
 
     pc pc_cp (
@@ -1227,12 +1231,14 @@ module gemini (
         .flush              (fifo_flush         ),
         .exception_pc_ena   (exception_pc_ena   ),
         .next_pc            (npc_next_pc        ),
+        .next_fetch_ds      (next_fetch_ds      ),
         .pc                 (pc_cur_pc          ),
         .pc_pred_taken      (pc_pred_taken      ),
         .pc_pred_target     (pc_pred_target     ),
         .tlb_ref_tlbl       (inst_tlb_refill_tlbl),
         .tlb_inv_tlbl       (inst_tlb_invalid_tlbl),
         .pc_reg             (pc_reg             ),
+        .pc_fetch_ds_reg    (pc_fetch_ds_reg    ),
         .pc_pred_taken_reg  (pc_pred_taken_reg  ),
         .pc_pred_target_reg (pc_pred_target_reg ),
         .tlb_ref_tlbl_reg   (tlb_refill_tlbl_reg),
@@ -1260,7 +1266,7 @@ module gemini (
         .r_data_2_ok        (fifo_r_data_2_ok   ),
         .fifo_stall_req     (fifo_stall_req     ),
         .w_ena_1            (inst_ok_1 & ~i_cache_stall_req & w_fifo & ~fifo_stall_req),
-        .w_ena_2            (inst_ok_2 & ~i_cache_stall_req & w_fifo & ~fifo_stall_req),
+        .w_ena_2            (~pc_fetch_ds_reg & inst_ok_2 & ~i_cache_stall_req & w_fifo & ~fifo_stall_req),
         .w_data_1           (fifo_w_data_1      ),
         .w_data_2           (fifo_w_data_2      ) 
     );

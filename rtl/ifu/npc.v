@@ -6,6 +6,7 @@ module npc (
     input   wire        clk,
     input   wire        rst,
     input   wire        stall,
+    input   wire        id2_ex_stall,
 
     // input   wire        id_take_jmp,
     input   wire [31:0] id2_rs_data,
@@ -31,7 +32,8 @@ module npc (
     output  wire        pc_pred_taken,
     output  wire [31:0] pc_pred_target,
 
-    output  reg  [31:0] next_pc
+    output  reg  [31:0] next_pc,
+    output  wire        next_fetch_ds
 );
 
   wire id2_take_jmp;
@@ -65,6 +67,7 @@ module npc (
   b_predictor b_predictor0 (
     .clk            (clk            ),
     .rst            (rst            ),
+    .stall          (id2_ex_stall   ),
     .pc             (pc             ),
     .pred_taken     (pred_taken     ),
     .pred_target    (pred_target    ),
@@ -80,6 +83,23 @@ module npc (
      id2_take_jmp & (~id2_pred_taken | id2_pred_taken & (id2_pred_target != id2_jmp_target)) |
     ~id2_take_jmp & (id2_pred_taken);
 
+  reg [31:0]  saved_pred_pc;
+  reg         saved_valid;
+  
+  always @(posedge clk) begin
+    if (rst | flush_req) begin
+      saved_pred_pc <= 32'h0;
+      saved_valid   <= 1'b0;
+    end else if (~stall) begin
+      if (pred_taken & pc[2] & ~saved_valid) begin
+        saved_pred_pc <= pred_target;
+        saved_valid   <= 1'b1;
+      end else if (saved_valid) begin
+        saved_valid   <= 1'b0;
+      end
+    end
+  end
+
   always @(*) begin
     if (exception_pc_ena) begin
       next_pc = exception_pc;
@@ -87,12 +107,16 @@ module npc (
       next_pc = {32{id2_is_jmp &  id2_take_jmp}} & id2_jmp_target |
                 {32{id2_is_jmp & ~id2_take_jmp}} & {id_pc + 32'h8}|
                 {32{~id2_is_jmp}} & {id_pc + 32'h4};
+    end else if (saved_valid) begin
+      next_pc = saved_pred_pc;
     end else if (pred_taken) begin
-      next_pc = pred_target;
+      next_pc = pc[2] ? pc + 32'h4 : pred_target;
     end else begin
-      next_pc = seq_npc;
+      next_pc = saved_valid ? saved_pred_pc : seq_npc;
     end
   end
+
+  assign next_fetch_ds = pred_taken & pc[2] & ~saved_valid;
 
   assign pc_pred_taken = pred_taken;
   assign pc_pred_target= pred_target;
@@ -114,11 +138,11 @@ module npc (
     if (rst) begin
       b_total_counter <= 32'h0;
       b_pred_miss_counter  <= 32'h0;
-    end else if (~stall) begin
-      if (id2_is_jr | id2_is_branch | id2_is_j_imme) begin
+    end else if (~id2_ex_stall) begin
+      if (id2_is_jmp) begin
         b_total_counter <= b_total_counter + 32'h1;
       end
-      if (flush_req) begin
+      if (flush_req & id2_is_jmp) begin
         b_pred_miss_counter <= b_pred_miss_counter + 32'h1;
       end
     end

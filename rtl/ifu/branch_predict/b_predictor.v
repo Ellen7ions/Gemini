@@ -8,6 +8,7 @@ module b_predictor #(
 ) (
     input   wire        clk, 
     input   wire        rst,
+    input   wire        stall,      // id2_ex stall
     input   wire [31:0] pc,
     output  wire        pred_taken,
     output  wire [31:0] pred_target,
@@ -38,6 +39,7 @@ module b_predictor #(
     ) bht0 (
         .clk        (clk        ),
         .rst        (rst        ),
+        .stall      (stall      ),
         .r_addr     (bht_raddr  ),
         .rdata      (bht_rdata  ),
         .w_addr     (bht_waddr  ),
@@ -63,24 +65,23 @@ module b_predictor #(
     wire [1:0]  pht_next_state;
     wire        pht_taken;
     pred_fsm pred_fsm0 (
-        .clk        (clk            ),
         .if_taken   (act_taken      ),
         .cur_state  (pht_wrdata     ),
         .next_state (pht_next_state )
     );
 
     // predict
-    assign bht_raddr= pc[12:3];
-    assign pht_raddr= bht_rdata ^ pc[12:7];
+    assign bht_raddr= pc[11:2] ^ pc[21:12];
+    assign pht_raddr= bht_rdata ^ pc[7:2];
     assign pht_taken= pht_rdata[1];
 
     // update PHT and BHT
-    assign bht_wen  = 1'b1;
-    assign bht_waddr= update_pc[12:3];
+    assign bht_wen  = update;
+    assign bht_waddr= update_pc[11:2];
     assign bht_wdata= act_taken;
 
     assign pht_wen  = update;
-    assign pht_waddr= bht_wrdata ^ update_pc[12:7];
+    assign pht_waddr= {bht_wrdata, act_taken};
     assign pht_wdata= pht_next_state;
 
     // BTB

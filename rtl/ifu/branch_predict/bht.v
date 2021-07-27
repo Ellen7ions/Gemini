@@ -6,6 +6,7 @@ module BHT #(
 ) (
     input   wire                        clk,
     input   wire                        rst,
+    input   wire                        stall,
     input   wire [$clog2(LINE_NUM)-1:0] r_addr,
     output  wire [WIDTH           -1:0] rdata,
     input   wire [$clog2(LINE_NUM)-1:0] w_addr,
@@ -21,8 +22,8 @@ module BHT #(
             for (i = 0; i < LINE_NUM; i = i + 1) begin
                 bht_reg[i]  <= {WIDTH{1'b0}};
             end
-        end else if (wen) begin
-            bht_reg[w_addr]   <= {bht_reg[w_addr][WIDTH-2:1], wdata};
+        end else if (wen & ~stall) begin
+            bht_reg[w_addr] <= {bht_reg[w_addr][WIDTH-2:0], wdata};
         end
     end
 
