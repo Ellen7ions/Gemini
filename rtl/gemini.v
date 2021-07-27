@@ -1089,6 +1089,9 @@ module gemini (
     wire        inst_tlb_refill_tlbl;
     wire        inst_tlb_invalid_tlbl;
 
+    wire        tlb_refill_tlbl_reg;
+    wire        tlb_invalid_tlbl_reg;
+
     wire        data_ena;
     wire [3 :0] data_load_type;
     wire [3 :0] data_wea;
@@ -1189,24 +1192,28 @@ module gemini (
     );
 
     pc pc_cp (
-        .clk                (clk                ),
-        .rst                (rst                ),
-        .stall              (pc_stall | i_cache_stall_req),
-        .flush              (fifo_flush         ),
-        .exception_pc_ena   (exception_pc_ena   ),
-        .next_pc            (npc_next_pc        ),
-        .pc                 (pc_cur_pc          ),
-        .pc_reg             (pc_reg             ),
-        .w_fifo             (w_fifo             )
+        .clk                    (clk                    ),
+        .rst                    (rst                    ),
+        .stall                  (pc_stall | i_cache_stall_req),
+        .flush                  (fifo_flush             ),
+        .exception_pc_ena       (exception_pc_ena       ),
+        .next_pc                (npc_next_pc            ),
+        .tlb_refill_tlbl_i      (inst_tlb_refill_tlbl   ),
+        .tlb_invalid_tlbl_i     (inst_tlb_invalid_tlbl  ),
+        .pc                     (pc_cur_pc              ),
+        .pc_reg                 (pc_reg                 ),
+        .tlb_refill_tlbl_reg    (tlb_refill_tlbl_reg    ),
+        .tlb_invalid_tlbl_reg   (tlb_invalid_tlbl_reg   ),
+        .w_fifo                 (w_fifo                 )
     );
 
     assign inst_ena             = ~(rst | pc_stall);
     assign inst_addr_next_pc    = pc_cur_pc;
 
     assign fifo_w_data_1    = 
-            {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg        , inst_rdata_1};
+            {tlb_refill_tlbl_reg ,tlb_invalid_tlbl_reg , pc_reg        , inst_rdata_1};
     assign fifo_w_data_2    = 
-            {inst_tlb_refill_tlbl ,inst_tlb_invalid_tlbl , pc_reg + 32'h4, inst_rdata_2};
+            {tlb_refill_tlbl_reg ,tlb_invalid_tlbl_reg , pc_reg + 32'h4, inst_rdata_2};
 
     i_fifo i_fifo_cp (
         .clk                (clk                ),
