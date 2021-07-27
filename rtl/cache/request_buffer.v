@@ -7,6 +7,7 @@ module request_buffer (
 
     input   wire        en_i,
     input   wire [3 :0] wen_i,
+    input   wire [3 :0] _size_i,
     input   wire        uncached_i,
     input   wire [3 :0] load_type_i,
     input   wire [31:0] vaddr_i,
@@ -14,6 +15,7 @@ module request_buffer (
     input   wire [31:0] wdata_i,
     output  reg         en_o,
     output  reg  [3 :0] wen_o,
+    output  reg  [3 :0] _size_o,
     output  reg         uncached_o,
     output  reg  [3 :0] load_type_o,
     output  reg  [31:0] vaddr_o,
@@ -30,6 +32,7 @@ module request_buffer (
             psyaddr_o   <= 32'h0;
             wdata_o     <= 32'h0;
             uncached_o  <= 1'b0;
+            _size_o     <= 5'h0;
         end else if (!stall) begin
             en_o        <= en_i;
             wen_o       <= wen_i;
@@ -38,6 +41,7 @@ module request_buffer (
             vaddr_o     <= vaddr_i;
             psyaddr_o   <= psyaddr_i;
             wdata_o     <= wdata_i;
+            _size_o     <= _size_i;
         end
     end
 

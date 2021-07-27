@@ -184,6 +184,8 @@ module d_cache #(
     wire [31:0] vaddr_reg;
     wire [31:0] psyaddr_reg;
     wire [31:0] wdata_reg;
+    wire [3 :0] _size;
+    wire [3 :0] _size_reg;
 
     request_buffer request_buffer0 (
         .clk        (clk                ),
@@ -193,6 +195,7 @@ module d_cache #(
         
         .en_i       (cpu_en             ),
         .wen_i      (cpu_wen            ),
+        ._size_i    (_size              ),
         .uncached_i (cpu_uncached       ),
         .load_type_i(cpu_load_type      ),
         .vaddr_i    (cpu_vaddr          ),
@@ -201,6 +204,7 @@ module d_cache #(
 
         .en_o       (en_reg             ),
         .wen_o      (wen_reg            ),
+        ._size_o    (_size_reg          ),
         .uncached_o (uncached_reg       ),
         .load_type_o(load_type_reg      ),
         .vaddr_o    (vaddr_reg          ),
@@ -416,23 +420,21 @@ module d_cache #(
             bank_douta[1][offset_reg*32+:32] & {32{hit_sel[1]}} | bank_douta[0][offset_reg*32+:32] & {32{hit_sel[0]}} : 
             miss_refill_data;
 
-    wire [3 :0] _size;
-
     assign _size = 
-        {3{ load_type_reg == `LS_SEL_LB     |
-            load_type_reg == `LS_SEL_LBU    |
-            load_type_reg == `LS_SEL_SB     
+        {3{ cpu_load_type == `LS_SEL_LB     |
+            cpu_load_type == `LS_SEL_LBU    |
+            cpu_load_type == `LS_SEL_SB     
         }} & 3'h0   |
-        {3{ load_type_reg == `LS_SEL_LH     |
-            load_type_reg == `LS_SEL_LHU    |
-            load_type_reg == `LS_SEL_SH     
+        {3{ cpu_load_type == `LS_SEL_LH     |
+            cpu_load_type == `LS_SEL_LHU    |
+            cpu_load_type == `LS_SEL_SH     
         }} & 3'h1   |
-        {3{ load_type_reg == `LS_SEL_LW     |
-            load_type_reg == `LS_SEL_LWL    |
-            load_type_reg == `LS_SEL_LWR    |
-            load_type_reg == `LS_SEL_SW     |
-            load_type_reg == `LS_SEL_SWL    |
-            load_type_reg == `LS_SEL_SWR    
+        {3{ cpu_load_type == `LS_SEL_LW     |
+            cpu_load_type == `LS_SEL_LWL    |
+            cpu_load_type == `LS_SEL_LWR    |
+            cpu_load_type == `LS_SEL_SW     |
+            cpu_load_type == `LS_SEL_SWL    |
+            cpu_load_type == `LS_SEL_SWR    
         }} & 3'h2;
 
     reg replace_flag;
@@ -469,7 +471,13 @@ module d_cache #(
             if (~cpu_en) begin
                 master_next_state = IDLE_STATE; 
             end else if (cpu_uncached) begin
-                master_next_state = axi_buffer_free ? REPLACE_STATE : MISS_STATE;
+                master_next_state   = axi_buffer_free ? |cpu_wen ? IDLE_STATE : REPLACE_STATE : MISS_STATE;
+                axi_buffer_en       = |cpu_wen;
+                axi_buffer_uncached = 1'b1;
+                axi_buffer_size     = _size;
+                axi_buffer_wstrb    = cpu_wen;
+                axi_buffer_addr     = cpu_psyaddr;
+                axi_buffer_data     = cpu_wdata;
             end else if (hit_write_conflict) begin
                 master_next_state = WAIT_STATE;
             end else begin
@@ -483,7 +491,14 @@ module d_cache #(
             if (~miss & ~cpu_en) begin
                 master_next_state = IDLE_STATE;
             end else if (~miss & cpu_uncached) begin
-                master_next_state = axi_buffer_free ? REPLACE_STATE : MISS_STATE;
+                // master_next_state = axi_buffer_free ? REPLACE_STATE : MISS_STATE;
+                master_next_state   = axi_buffer_free ? |cpu_wen ? IDLE_STATE : REPLACE_STATE : MISS_STATE;
+                axi_buffer_en       = |cpu_wen;
+                axi_buffer_uncached = 1'b1;
+                axi_buffer_size     = _size;
+                axi_buffer_wstrb    = cpu_wen;
+                axi_buffer_addr     = cpu_psyaddr;
+                axi_buffer_data     = cpu_wdata;
             end else if (~miss & cpu_en & hit_write_conflict) begin
                 master_next_state = WAIT_STATE;
             end else if (~miss & cpu_en) begin
@@ -527,13 +542,13 @@ module d_cache #(
             lfsr_stall              = 1'b1;
             axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
             axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
-            axi_arsize          = ~uncached_reg ? 3'b010 : _size;
+            axi_arsize          = ~uncached_reg ? 3'b010 : _size_reg;
             axi_arvalid         = ~uncached_reg ? 1'b1 : ~(|wen_reg);
             if (~replace_flag) begin
                 replace_flag = 1'b1;
                 axi_buffer_en       = tagv_douta[lfsr_sel_reg][0] & dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & |wen_reg;
                 axi_buffer_uncached = uncached_reg;
-                axi_buffer_size     = _size;
+                axi_buffer_size     = _size_reg;
                 axi_buffer_wstrb    = wen_reg;
                 axi_buffer_addr     = uncached_reg ? psyaddr_reg : {tagv_douta[lfsr_sel_reg][20:1], index_reg, {(2 + OFFSET_LOG){1'b0}}};
                 axi_buffer_data     = wdata_reg;
@@ -580,11 +595,13 @@ module d_cache #(
 
     reg [31:0] total_counter;
     reg [31:0] miss_counter;
+    reg [31:0] axi_using_counter;
 
     always @(posedge clk) begin
         if (rst) begin
             total_counter   <= 32'h0;
             miss_counter    <= 32'h0;
+            axi_using_counter <= 32'h0;
         end else begin
             if (is_lookup) begin
                 total_counter <= total_counter + 32'h1;
@@ -592,6 +609,10 @@ module d_cache #(
 
             if (master_state == LOOKUP_STATE & miss & ~uncached_reg) begin
                 miss_counter <= miss_counter + 32'h1;
+            end
+
+            if ((master_state == MISS_STATE) & ~axi_buffer_free) begin
+                axi_using_counter <= axi_using_counter + 32'h1;
             end
         end
     end
