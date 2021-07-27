@@ -313,9 +313,11 @@ module i_cache #(
             if (~cpu_en) begin
                 master_next_state = IDLE_STATE;
                 cpu_i_cache_stall = 1'b0; 
+            end else if (cpu_uncached) begin
+                master_next_state = REPLACE_STATE;
             end else begin
                 master_next_state = LOOKUP_STATE;
-                is_lookup         = ~cpu_uncached;
+                is_lookup         = 1'b1;
                 cpu_i_cache_stall = 1'b0; 
             end 
         end
@@ -326,7 +328,7 @@ module i_cache #(
                 master_next_state = IDLE_STATE;
                 cpu_i_cache_stall = 1'b0;
             end else if (~miss & cpu_en) begin
-                master_next_state = LOOKUP_STATE;
+                master_next_state = cpu_uncached ? REPLACE_STATE : LOOKUP_STATE;
                 is_lookup         = ~cpu_uncached;
                 cpu_i_cache_stall = 1'b0;
             end else begin
