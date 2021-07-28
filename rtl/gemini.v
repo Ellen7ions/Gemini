@@ -44,8 +44,8 @@ module gemini (
     wire [31:0]     npc_next_pc;
     wire            p_data_1;
     wire            p_data_2;
-    wire [65:0]     fifo_r_data_1;
-    wire [65:0]     fifo_r_data_2;
+    wire [98:0]     fifo_r_data_1;
+    wire [98:0]     fifo_r_data_2;
     wire            fifo_r_data_1_ok;
     wire            fifo_r_data_2_ok;
     wire [2 :0]     forwardc_rs;
@@ -741,8 +741,8 @@ module gemini (
         .id2_take_jmp_i     (id2c_take_jmp_i     ),
         .id2_jmp_target_i   (id2c_jmp_target_i   ),
 
-        .id2_pred_taken_o   (id2c_pred_taken_i  ),
-        .id2_pred_target_o  (id2c_pred_target_i ),
+        .id2_pred_taken_i   (id2c_pred_taken_i  ),
+        .id2_pred_target_i  (id2c_pred_target_i ),
         .id2_is_branch_i    (id2c_is_branch_i   ),
         .id2_is_j_imme_i    (id2c_is_j_imme_i   ),
         .id2_is_jr_i        (id2c_is_jr_i       ),
@@ -1192,6 +1192,7 @@ module gemini (
     wire [31:0]     fetch_target;
     wire            ex_is_jmp;
     wire            ex_act_taken;
+    wire [31:0]     ex_act_target;
     wire            tlb_refill_tlbl_i;
     wire            tlb_invalid_tlbl_i;
     wire            flush_pc_reg;
@@ -1201,6 +1202,8 @@ module gemini (
     wire [31:0]     pred_target_2;
     wire            w_fifo_en_1;
     wire            w_fifo_en_2;
+    wire            pc_valid_i;
+    wire [31:0]     pc_i;
 
     npc npc_cp (
         .clk                (clk                ),
@@ -1224,6 +1227,8 @@ module gemini (
         .ex_is_j_imme       (id2c_is_j_imme_i   ),
         .ex_branch_sel      (id2c_branch_sel_i  ),
         .ex_pred_taken      (id2c_pred_taken_i  ),
+        .ex_pred_target     (id2c_pred_target_i ),
+        .ex_act_target      (id2c_jmp_target_i  ),
         .ex_is_jmp          (ex_is_jmp          ),
         .ex_act_taken       (ex_act_taken       ),
         .flush_req          (b_ctrl_flush_req   )
@@ -1268,6 +1273,7 @@ module gemini (
         .ex_pc                  (id2c_pc_i              ),
         .ex_is_jmp              (ex_is_jmp              ),
         .ex_act_taken           (ex_act_taken           ),
+        .ex_act_target          (id2c_jmp_target_i      ),
         .ex_pred_taken          (id2c_pred_taken_i      ),
         .ex_pred_target         (id2c_pred_target_i     ),
         .fifo_stall             (fifo_stall_req         ),

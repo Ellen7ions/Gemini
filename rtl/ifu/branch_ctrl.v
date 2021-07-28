@@ -11,6 +11,8 @@ module branch_ctrl (
     input   wire [3 :0] ex_branch_sel,
     
     input   wire        ex_pred_taken,
+    input   wire [31:0] ex_pred_target,
+    input   wire [31:0] ex_act_target,
 
     output  wire        ex_is_jmp,
     output  wire        ex_act_taken,
@@ -35,5 +37,9 @@ module branch_ctrl (
         (!(ex_branch_sel ^ `BRANCH_SEL_BLTZAL  )) & (bltz_check )  & ex_is_branch  ;
 
     assign ex_act_taken = ex_is_jr | ex_is_j_imme | ex_take_branch;
-    assign flush_req    = ex_pred_taken != ex_act_taken;
+    assign flush_req    = 
+        ex_is_jmp & (
+            ex_pred_taken != ex_act_taken |
+            ex_act_taken & (ex_pred_target != ex_act_target)
+        );
 endmodule

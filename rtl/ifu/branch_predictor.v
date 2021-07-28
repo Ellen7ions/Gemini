@@ -16,6 +16,7 @@ module branch_predictor #(
     input   wire [31:0] ex_pc,
     input   wire        ex_is_jmp,
     input   wire        ex_act_taken,
+    input   wire [31:0] ex_act_target,
     input   wire        ex_pred_taken,
     input   wire [31:0] ex_pred_target,
 
@@ -51,18 +52,25 @@ module branch_predictor #(
     assign pred_taken_1     = pht_val_1[1] & hit_1;
     assign pred_taken_2     = pht_val_2[1] & hit_2;
     assign pred_target_1    = target[index_1]; 
-    assign pred_target_1    = target[index_2];
+    assign pred_target_2    = target[index_2];
 
     // update
     wire [$clog2(PHT_LINE)-1:0] ex_index = ex_pc[9:2];
     wire [1 :0] ex_pht_val = pht[ex_index];
+    
+    integer i;  
     always @(posedge clk) begin
         if (rst) begin
             valid   <= {PHT_LINE{1'b0}};
-        end else if (ex_is_jmp & (ex_act_taken != ex_pred_taken)) begin
+            for (i = 0; i < PHT_LINE; i = i + 1) begin
+                pht[i]      <= 2'h0;
+                target[i]   <= 32'h0;
+                tag[i]      <= 22'h0;
+            end
+        end else if (ex_is_jmp & ex_act_taken) begin
             valid   [ex_index]  <= 1'b1;
             tag     [ex_index]  <= ex_pc[31:10];
-            target  [ex_index]  <= ex_pred_target;
+            target  [ex_index]  <= ex_act_target;
         end
     end
 

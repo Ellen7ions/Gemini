@@ -12,6 +12,7 @@ module dynamic_fetch (
     input   wire [31:0] ex_pc,
     input   wire        ex_is_jmp,
     input   wire        ex_act_taken,
+    input   wire [31:0] ex_act_target,
     input   wire        ex_pred_taken,
     input   wire [31:0] ex_pred_target,
 
@@ -75,6 +76,8 @@ module dynamic_fetch (
          !(inst_2[5 : 0]    ^ `JALR_FUNCT       )
         ));
 
+    wire predictor_pred_taken_1, predictor__pred_taken_2;
+
     branch_predictor predictor0 (
         .clk            (clk            ),
         .rst            (rst            ),
@@ -84,17 +87,20 @@ module dynamic_fetch (
         .ex_pc          (ex_pc          ),
         .ex_is_jmp      (ex_is_jmp      ),
         .ex_act_taken   (ex_act_taken   ),
+        .ex_act_target  (ex_act_target  ),
         .ex_pred_taken  (ex_pred_taken  ),
         .ex_pred_target (ex_pred_target ),
 
-        .pred_taken_1   (pred_taken_1   ),
+        .pred_taken_1   (predictor_pred_taken_1   ),
         .pred_target_1  (pred_target_1  ),
-        .pred_taken_2   (pred_taken_2   ),
+        .pred_taken_2   (predictor_pred_taken_2   ),
         .pred_target_2  (pred_target_2  )
     );
 
-    wire pred_dir_1 = pred_taken_1 & inst_is_jmp_1 & inst_ok_1;
-    wire pred_dir_2 = pred_taken_2 & inst_is_jmp_2 & inst_ok_2;
+    wire pred_dir_1 = predictor_pred_taken_1 & inst_is_jmp_1 & inst_ok_1;
+    wire pred_dir_2 = predictor_pred_taken_2 & inst_is_jmp_2 & inst_ok_2;
+    assign pred_taken_1 = pred_dir_1;
+    assign pred_taken_2 = pred_dir_2;
 
     always @(posedge clk) begin
         if (rst | flush) begin
@@ -131,7 +137,7 @@ module dynamic_fetch (
             if (flush_req) begin
                 next_state  = NORMAL_STATE;
                 fetch_ena   = 1'b1;
-                fetch_target= ex_pc + 32'h8;
+                fetch_target= ex_act_taken ? ex_act_target : ex_pc + 32'h8;
                 flush_pc_reg= 1'b1;
             end else if (pred_dir_1 & inst_ok_2) begin
                 next_state  = NORMAL_STATE;
@@ -143,13 +149,13 @@ module dynamic_fetch (
                 fetch_ena   = 1'b1;
                 fetch_target= pc_plus4;
                 flush_pc_reg= 1'b1;
-                _target     = pred_dir_1;
+                _target     = pred_target_1;
             end else if (pred_dir_2) begin
                 next_state  = FETCH_DS;
                 fetch_ena   = 1'b1;
-                fetch_target= pc_plus4;
+                fetch_target= pc + 32'h8;
                 flush_pc_reg= 1'b1;
-                _target     = pred_dir_2;
+                _target     = pred_target_2;
             end else begin
                 next_state  = NORMAL_STATE; 
             end
@@ -159,7 +165,7 @@ module dynamic_fetch (
             if (flush_req) begin
                 next_state  = NORMAL_STATE;
                 fetch_ena   = 1'b1;
-                fetch_target= ex_pc + 32'h8;
+                fetch_target= ex_act_taken ? ex_act_target : ex_pc + 32'h8;
                 flush_pc_reg= 1'b1;
             end else begin
                 next_state  = FETCH_TARGET;
@@ -172,7 +178,7 @@ module dynamic_fetch (
             if (flush_req) begin
                 next_state  = NORMAL_STATE;
                 fetch_ena   = 1'b1;
-                fetch_target= ex_pc + 32'h8;
+                fetch_target= ex_act_taken ? ex_act_target : ex_pc + 32'h8;
                 flush_pc_reg= 1'b1;
             end else begin
                 next_state  = NORMAL_STATE;
