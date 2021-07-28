@@ -43,6 +43,24 @@ module dynamic_fetch (
     output  wire        w_fifo_en_1,
     output  wire        w_fifo_en_2
 );
+    reg [31:0] jmp_total_counter;
+    reg [31:0] jmp_flush_counter;
+
+    always @(posedge clk) begin
+    if (rst) begin
+        jmp_total_counter <= 32'h0;
+        jmp_flush_counter <= 32'h0;
+    end else if (~ex_stall) begin
+        if (ex_is_jmp) begin
+            jmp_total_counter <= jmp_total_counter + 32'h1;
+        end
+
+        if (flush_req) begin
+            jmp_flush_counter <= jmp_flush_counter + 32'h1;
+        end
+    end
+    end
+
     localparam NORMAL_STATE = 0;
     localparam FETCH_DS     = 1;
     localparam FETCH_TARGET = 2;
