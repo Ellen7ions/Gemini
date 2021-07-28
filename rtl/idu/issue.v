@@ -7,9 +7,9 @@ module issue (
     input   wire        rst,
     input   wire        stall,
 
-    input   wire [65:0] fifo_r_data_1,
+    input   wire [98:0] fifo_r_data_1,
     input   wire        fifo_r_data_1_ok,
-    input   wire [65:0] fifo_r_data_2,
+    input   wire [98:0] fifo_r_data_2,
     input   wire        fifo_r_data_2_ok,
 
     // pop fifo    
@@ -33,6 +33,8 @@ module issue (
     output  wire [4 :0] id1_w_reg_dst_1,
     output  wire [15:0] id1_imme_1,
     output  wire [25:0] id1_j_imme_1,
+    output  wire        id1_pred_taken_1,
+    output  wire [31:0] id1_pred_target_1,
     output  wire        id1_is_branch_1,
     output  wire        id1_is_j_imme_1,
     output  wire        id1_is_jr_1,
@@ -173,6 +175,8 @@ module issue (
     assign id1_valid_1              = p_data_1;
     assign id1_pc_1                 = fifo_r_data_1[63:32];
     assign id1_inst_1               = fifo_r_data_1[31: 0];
+    assign id1_pred_taken_1         = fifo_r_data_1[98];
+    assign id1_pred_target_1        = fifo_r_data_1[97:66];
     assign id1_in_delay_slot_1      = in_ds;
     assign id1_is_inst_adel_1       = id1_pc_1[1:0] != 2'b00;
     assign id1_is_i_refill_tlbl_1   = fifo_r_data_1[65];

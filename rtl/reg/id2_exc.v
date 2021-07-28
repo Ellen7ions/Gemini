@@ -22,6 +22,8 @@ module id2_exc (
     input   wire        id2_take_jmp_o,
     input   wire [31:0] id2_jmp_target_o,
 
+    input   wire        id2_pred_taken_o,
+    input   wire [31:0] id2_pred_target_o,
     input   wire        id2_is_branch_o,
     input   wire        id2_is_j_imme_o,
     input   wire        id2_is_jr_o,
@@ -67,6 +69,8 @@ module id2_exc (
     output  reg         id2_take_jmp_i,
     output  reg  [31:0] id2_jmp_target_i,
 
+    output  reg         id2_pred_taken_i,
+    output  reg  [31:0] id2_pred_target_i,
     output  reg         id2_is_branch_i,
     output  reg         id2_is_j_imme_i,
     output  reg         id2_is_jr_i,
@@ -140,6 +144,8 @@ module id2_exc (
             id2_is_j_imme_i     <= 1'b0;
             id2_is_jr_i         <= 1'b0;
             id2_branch_sel_i    <= 4'h0;
+            id2_pred_taken_i    <= 1'h0;
+            id2_pred_target_i   <= 32'h0;
         end else if (!flush & !stall) begin
             id2_is_ls_i         <= id2_is_ls_o;
             id2_rs_i            <= id2_rs_o;
@@ -182,6 +188,8 @@ module id2_exc (
             id2_is_j_imme_i     <= id2_is_j_imme_o;
             id2_is_jr_i         <= id2_is_jr_o;
             id2_branch_sel_i    <= id2_branch_sel_o;
+            id2_pred_taken_i    <= id2_pred_taken_o;
+            id2_pred_target_i   <= id2_pred_target_o;
         end
     end
 endmodule
