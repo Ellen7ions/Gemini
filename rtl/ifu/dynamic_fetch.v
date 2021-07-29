@@ -94,7 +94,7 @@ module dynamic_fetch (
          !(inst_2[5 : 0]    ^ `JALR_FUNCT       )
         ));
 
-    wire predictor_pred_taken_1, predictor__pred_taken_2;
+    wire predictor_pred_taken_1, predictor_pred_taken_2;
 
     branch_predictor predictor0 (
         .clk            (clk            ),
@@ -115,8 +115,13 @@ module dynamic_fetch (
         .pred_target_2  (pred_target_2  )
     );
 
-    wire pred_dir_1 = predictor_pred_taken_1 & inst_is_jmp_1 & inst_ok_1;
-    wire pred_dir_2 = predictor_pred_taken_2 & inst_is_jmp_2 & inst_ok_2;
+    wire pred_dir_1;
+    wire pred_dir_2;
+    assign pred_dir_1 = predictor_pred_taken_1 & inst_is_jmp_1 & inst_ok_1;
+    assign pred_dir_2 = predictor_pred_taken_2 & inst_is_jmp_2 & inst_ok_2;
+    // assign pred_dir_1   = 1'b0;
+    // assign pred_dir_2   = 1'b0;
+
     assign pred_taken_1 = pred_dir_1;
     assign pred_taken_2 = pred_dir_2;
 

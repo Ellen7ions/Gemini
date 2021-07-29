@@ -37,17 +37,28 @@ module branch_predictor #(
     reg [        31:0]          target[PHT_LINE-1:0];
     reg [        21:0]          tag[PHT_LINE-1:0];
 
-    wire [$clog2(PHT_LINE)-1:0] index_1 = pc[9:2];
-    wire [                21:0] tag_1   = pc[31:10];
+    wire [$clog2(PHT_LINE)-1:0] index_1;
+    wire [                21:0] tag_1;
+    wire [$clog2(PHT_LINE)-1:0] index_2;
+    wire [                21:0] tag_2;
+    wire                        hit_1;
+    wire                        hit_2;
+    wire [1                 :0] pht_val_1;
+    wire [1                 :0] pht_val_2;
+    wire [$clog2(PHT_LINE)-1:0] ex_index;
+    wire [1                 :0] ex_pht_val;
 
-    wire [$clog2(PHT_LINE)-1:0] index_2 = pc_plus4[9:2];
-    wire [                21:0] tag_2   = pc[31:10];
+    assign index_1  = pc[9:2];
+    assign tag_1    = pc[31:10];
+
+    assign index_2  = pc_plus4[9:2];
+    assign tag_2    = pc[31:10];
     
-    wire hit_1 = valid[index_1] & (tag[index_1] == tag_1);
-    wire hit_2 = valid[index_2] & (tag[index_2] == tag_2);
+    assign hit_1    = valid[index_1] & (tag[index_1] == tag_1);
+    assign hit_2    = valid[index_2] & (tag[index_2] == tag_2);
 
-    wire [1:0] pht_val_1    = pht[index_1];
-    wire [1:0] pht_val_2    = pht[index_2];
+    assign pht_val_1        = pht[index_1];
+    assign pht_val_2        = pht[index_2];
     
     assign pred_taken_1     = pht_val_1[1] & hit_1;
     assign pred_taken_2     = pht_val_2[1] & hit_2;
@@ -55,18 +66,13 @@ module branch_predictor #(
     assign pred_target_2    = target[index_2];
 
     // update
-    wire [$clog2(PHT_LINE)-1:0] ex_index = ex_pc[9:2];
-    wire [1 :0] ex_pht_val = pht[ex_index];
     
-    integer i;  
+    assign ex_index    = ex_pc[9:2];
+    assign ex_pht_val  = pht[ex_index];
+
     always @(posedge clk) begin
         if (rst) begin
             valid   <= {PHT_LINE{1'b0}};
-            for (i = 0; i < PHT_LINE; i = i + 1) begin
-                pht[i]      <= 2'h0;
-                target[i]   <= 32'h0;
-                tag[i]      <= 22'h0;
-            end
         end else if (ex_is_jmp & ex_act_taken) begin
             valid   [ex_index]  <= 1'b1;
             tag     [ex_index]  <= ex_pc[31:10];
@@ -77,7 +83,7 @@ module branch_predictor #(
     always @(posedge clk ) begin
         if (rst) begin
             
-        end else begin
+        end else if (~ex_stall) begin
             case (ex_pht_val)
             SNT : begin
                 if (ex_act_taken)
@@ -100,7 +106,7 @@ module branch_predictor #(
                     pht[ex_index]   <= WT;
             end
             default: begin
-                pht[ex_index]       <= WT;
+
             end 
             endcase
         end
