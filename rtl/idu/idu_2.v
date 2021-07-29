@@ -258,7 +258,7 @@ module idu_2 (
     wire read_rs = 
         op_code_is_addi | op_code_is_addiu  | op_code_is_slti   | op_code_is_sltiu  | op_code_is_andi   | 
         op_code_is_lui  | op_code_is_ori    | op_code_is_xori   | 
-        op_code_is_bgtz     & (id1_rt == `BGEZ_RT_CODE)     | 
+        op_code_is_bgtz     | 
         op_code_is_regimm   & (id1_rt == `BGEZ_RT_CODE)     |
         op_code_is_blez     | 
         op_code_is_regimm   & (id1_rt == `BLTZ_RT_CODE)     | 

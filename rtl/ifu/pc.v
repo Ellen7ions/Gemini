@@ -28,7 +28,7 @@ module pc(
         if (rst) begin
             pc <= 32'hbfc0_0000;
         end else if (!stall | exception_pc_ena) begin
-            pc <= reg_npc_ena & ~flush ? reg_npc : next_pc;
+            pc <= next_pc;
         end
     end
 
