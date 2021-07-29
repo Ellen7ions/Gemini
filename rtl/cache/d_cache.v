@@ -482,7 +482,7 @@ module d_cache #(
                 master_next_state = WAIT_STATE;
             end else begin
                 master_next_state = LOOKUP_STATE;
-                is_lookup         = ~cpu_uncached;
+                is_lookup         = 1'b1;
             end 
         end
 
@@ -503,7 +503,7 @@ module d_cache #(
                 master_next_state = WAIT_STATE;
             end else if (~miss & cpu_en) begin
                 master_next_state = LOOKUP_STATE;
-                is_lookup         = ~cpu_uncached;
+                is_lookup         = 1'b1;
             end else begin
                 master_next_state = MISS_STATE;
                 cpu_d_cache_stall = 1'b1;

@@ -329,7 +329,7 @@ module i_cache #(
                 cpu_i_cache_stall = 1'b0;
             end else if (~miss & cpu_en) begin
                 master_next_state = cpu_uncached ? REPLACE_STATE : LOOKUP_STATE;
-                is_lookup         = ~cpu_uncached;
+                is_lookup         = 1'b1;
                 cpu_i_cache_stall = 1'b0;
             end else begin
                 master_next_state = MISS_STATE;
