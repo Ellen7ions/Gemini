@@ -5,7 +5,7 @@ module LFSR #(
 ) (
     input   wire                clk,
     input   wire                rst,
-    input   wire [WAY_LOG-1:0]  out
+    output  wire [WAY_LOG-1:0]  out
 );
 
     reg [11 :0] x;

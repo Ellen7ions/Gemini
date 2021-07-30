@@ -74,8 +74,9 @@ module ctrl (
     assign lsu1_lsu2_stall =
         i_cache_stall_req | exc_stall_req | d_cache_stall_req;
 
-    assign mem_wb_flush =
-            1'b0;
+    assign mem_wb_flush = 
+            // 1'b0;
+        i_cache_stall_req | d_cache_stall_req | ((exc_stall_req) & ~exception_flush & ~mem_refetch);
     
     assign mem_wb_stall = 1'b0;
         //     i_cache_stall_req | d_cache_stall_req | ((exc_stall_req) & ~exception_flush & ~mem_refetch);

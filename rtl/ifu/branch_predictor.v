@@ -37,6 +37,15 @@ module branch_predictor #(
     reg [        31:0]          target[PHT_LINE-1:0];
     reg [        21:0]          tag[PHT_LINE-1:0];
 
+    integer i;
+    initial begin
+        for (i = 0; i < PHT_LINE; i = i + 1) begin
+            pht[i]      = 2'h0;
+            target[i]   = 32'h0;
+            tag[i]      = 22'h0;
+        end
+    end
+
     wire [$clog2(PHT_LINE)-1:0] index_1;
     wire [                21:0] tag_1;
     wire [$clog2(PHT_LINE)-1:0] index_2;

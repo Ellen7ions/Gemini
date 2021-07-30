@@ -57,45 +57,43 @@ module multiplier (
     end
 
     always @(*) begin
-        if (rst) begin
-            stall_all       = 1'b0;
-            next_state      = MUL_FREE;
+        stall_all       = 1'b0;
+        next_state      = MUL_FREE;
+        res_ready       = 1'b0;
+        next_counter    = 3'h0;
+        
+        case(cur_state)
+        MUL_FREE:    begin
             res_ready       = 1'b0;
-            next_counter    = 3'h0;
-        end else begin
-            case(cur_state)
-            MUL_FREE:    begin
-                res_ready       = 1'b0;
-                if (en) begin
-                    stall_all       = 1'b1;
-                    next_state      = MUL_RUNNING;
-                    next_counter    = 3'h4;
-                end else begin
-                    stall_all       = 1'b0;
-                    next_state      = MUL_FREE;
-                end
+            if (en) begin
+                stall_all       = 1'b1;
+                next_state      = MUL_RUNNING;
+                next_counter    = 3'h4;
+            end else begin
+                stall_all       = 1'b0;
+                next_state      = MUL_FREE;
             end
-
-            MUL_RUNNING: begin
-                if (counter == 3'h0) begin
-                    stall_all       = 1'b0;
-                    next_state      = MUL_FREE;
-                    res_ready       = 1'b1;
-                end else begin
-                    stall_all       = 1'b1;
-                    next_state      = MUL_RUNNING;
-                    res_ready       = 1'b0;
-                    next_counter    = counter - 3'h1;
-                end
-            end
-
-            default:     begin
-                 stall_all  = 1'b0;
-                 next_state = MUL_FREE;
-                 res_ready  = 1'b0;
-            end
-            endcase 
         end
+
+        MUL_RUNNING: begin
+            if (counter == 3'h0) begin
+                stall_all       = 1'b0;
+                next_state      = MUL_FREE;
+                res_ready       = 1'b1;
+            end else begin
+                stall_all       = 1'b1;
+                next_state      = MUL_RUNNING;
+                res_ready       = 1'b0;
+                next_counter    = counter - 3'h1;
+            end
+        end
+
+        default:     begin
+                stall_all  = 1'b0;
+                next_state = MUL_FREE;
+                res_ready  = 1'b0;
+        end
+        endcase
     end
 
     mult_unsigned uut (

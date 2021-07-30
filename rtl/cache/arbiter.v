@@ -1,9 +1,6 @@
 `timescale 1ns / 1ps
 
 module arbiter (
-    input   wire        clk,
-    input   wire        rst,
-
     input   wire [31:0] i_araddr,
     input   wire [1 :0] i_arburst,
     input   wire [7 :0] i_arlen,

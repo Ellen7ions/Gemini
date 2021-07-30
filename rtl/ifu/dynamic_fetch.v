@@ -154,6 +154,7 @@ module dynamic_fetch (
         
         _target         = 32'h0;
         only_ds         = 1'b0;
+        next_state      = NORMAL_STATE;
 
         case (cur_state)
         NORMAL_STATE: begin

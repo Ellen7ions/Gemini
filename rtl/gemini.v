@@ -454,7 +454,7 @@ module gemini (
     wire            lsu1c_wb_reg_sel_i;
     wire [31:0]     lsu1c_rt_data_i;
     wire            lsu1c_w_cp0_ena_i;
-    wire [31:0]     lsu1c_w_cp0_addr_i;
+    wire [7 :0]     lsu1c_w_cp0_addr_i;
     wire [31:0]     lsu1c_w_cp0_data_i;
 
     wire [31:0]     lsu1p_pc_i;
@@ -487,7 +487,7 @@ module gemini (
     wire            exc_wb_reg_sel_i;
     wire  [31:0]    exc_rt_data_i;
     wire            exc_w_cp0_ena_i;
-    wire  [31:0]    exc_w_cp0_addr_i;
+    wire  [7 :0]    exc_w_cp0_addr_i;
     wire  [31:0]    exc_w_cp0_data_i;
 
     wire [31:0]     exp_pc_i;
@@ -840,6 +840,10 @@ module gemini (
         .ex_is_int_o            (exc_is_int_o           ),
         .ex_is_i_refill_tlbl_o  (exc_is_i_refill_tlbl_o ),
         .ex_is_i_invalid_tlbl_o (exc_is_i_invalid_tlbl_o),
+        .ex_is_d_refill_tlbl_o  (1'b0                   ),
+        .ex_is_d_invalid_tlbl_o (1'b0                   ),
+        .ex_is_d_refill_tlbs_o  (1'b0                   ),
+        .ex_is_d_invalid_tlbs_o (1'b0                   ),
         .ex_is_refetch_o        (exc_is_refetch_o       ),
         .ex_is_tlbp_o           (exc_is_tlbp_o          ),
         .ex_is_tlbr_o           (exc_is_tlbr_o          ),
@@ -858,7 +862,6 @@ module gemini (
         .ex_pc_i                (exc_pc_i               ),
         .ex_alu_res_i           (exc_alu_res_i          ),
         .ex_ls_addr_i           (exc_ls_addr_i          ),
-        .ex_psyaddr_i           (),
         .ex_w_hilo_ena_i        (exc_w_hilo_ena_i       ),
         .ex_hi_res_i            (exc_hi_res_i           ),
         .ex_lo_res_i            (exc_lo_res_i           ),
@@ -874,6 +877,10 @@ module gemini (
         .ex_is_int_i            (exc_is_int_i           ),
         .ex_is_i_refill_tlbl_i  (exc_is_i_refill_tlbl_i ),
         .ex_is_i_invalid_tlbl_i (exc_is_i_invalid_tlbl_i),
+        .ex_is_d_refill_tlbl_i  (),
+        .ex_is_d_invalid_tlbl_i (),
+        .ex_is_d_refill_tlbs_i  (),
+        .ex_is_d_invalid_tlbs_i (),
         .ex_is_refetch_i        (exc_is_refetch_i       ),
         .ex_is_tlbp_i           (exc_is_tlbp_i          ),
         .ex_is_tlbr_i           (exc_is_tlbr_i          ),
@@ -1917,7 +1924,7 @@ module gemini (
     );
 
     mem_ctrl mem_ctrl0 (
-        .exc_ls_ena                 (exc_ls_ena_i & ~ex_lsu1_stall),
+        .exc_ls_ena                 (exc_ls_ena_i & ~i_cache_stall_req & ~exc_stall_req),
         .exc_ls_addr                (exc_ls_addr_i          ),
         .exc_rt_data                (exc_rt_data_i          ),
         .exc_ls_sel                 (exc_ls_sel_i           ),
