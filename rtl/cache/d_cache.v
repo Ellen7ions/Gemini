@@ -470,14 +470,6 @@ module d_cache #(
             lfsr_stall      = 1'b0;
             if (~cpu_en) begin
                 master_next_state = IDLE_STATE; 
-            end else if (cpu_uncached) begin
-                master_next_state   = axi_buffer_free ? |cpu_wen ? IDLE_STATE : REPLACE_STATE : MISS_STATE;
-                axi_buffer_en       = |cpu_wen;
-                axi_buffer_uncached = 1'b1;
-                axi_buffer_size     = _size;
-                axi_buffer_wstrb    = cpu_wen;
-                axi_buffer_addr     = cpu_psyaddr;
-                axi_buffer_data     = cpu_wdata;
             end else if (hit_write_conflict) begin
                 master_next_state = WAIT_STATE;
             end else begin
@@ -490,15 +482,6 @@ module d_cache #(
             lfsr_stall      = 1'b0;
             if (~miss & ~cpu_en) begin
                 master_next_state = IDLE_STATE;
-            end else if (~miss & cpu_uncached) begin
-                // master_next_state = axi_buffer_free ? REPLACE_STATE : MISS_STATE;
-                master_next_state   = axi_buffer_free ? |cpu_wen ? IDLE_STATE : REPLACE_STATE : MISS_STATE;
-                axi_buffer_en       = |cpu_wen;
-                axi_buffer_uncached = 1'b1;
-                axi_buffer_size     = _size;
-                axi_buffer_wstrb    = cpu_wen;
-                axi_buffer_addr     = cpu_psyaddr;
-                axi_buffer_data     = cpu_wdata;
             end else if (~miss & cpu_en & hit_write_conflict) begin
                 master_next_state = WAIT_STATE;
             end else if (~miss & cpu_en) begin
