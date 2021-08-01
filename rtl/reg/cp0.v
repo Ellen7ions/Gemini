@@ -48,7 +48,7 @@ module cp0 (
     reg [31:0]  BadVAddr;    // can't be written from software
     reg [32:0]  Count;
     reg [31:0]  Compare;
-    reg [31:0]  EPC;
+    (*mark_debug = "true"*) reg [31:0]  EPC;
     reg [31:0]  Status;
     reg [31:0]  Cause;
     reg [31:0]  Index;
@@ -131,8 +131,8 @@ module cp0 (
                 end
 
                 {5'd14, 3'd0}: begin
-                    if (~w_cp0_update_ena)
-                        EPC         <= w_data;
+                    // if (~w_cp0_update_ena)
+                    EPC             <= w_data;
                 end
 
                 {5'd0, 3'd0}: begin

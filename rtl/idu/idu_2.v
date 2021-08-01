@@ -276,11 +276,14 @@ module idu_2 (
         op_code_is_sb   | op_code_is_sh     | op_code_is_sw     |
         op_code_is_swl  | op_code_is_swr    | (op_code_is_special2 & func_code_is_mul);
 
+    wire read_rt   =
+        op_code_is_cop0 & !(id1_rs ^ `MTC0_RS_CODE);
+
     assign reg_r_ena_1 = 
         read_both | read_rs;
     
     assign reg_r_ena_2 =
-        read_both;
+        read_both | read_rt;
 
     assign reg_r_addr_1 = id1_rs;
     assign reg_r_addr_2 = id1_rt;

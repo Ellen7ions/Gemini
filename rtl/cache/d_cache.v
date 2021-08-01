@@ -534,18 +534,18 @@ module d_cache #(
             axi_arvalid         = ~uncached_reg ? 1'b1 : ~(|wen_reg);
             if (~replace_flag) begin
                 replace_flag = 1'b1;
-            axi_buffer_en       = tagv_douta[lfsr_sel_reg][0] & dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & (|wen_reg);
-            axi_buffer_uncached = uncached_reg;
-            axi_buffer_size     = _size_reg;
-            axi_buffer_wstrb    = wen_reg;
-            axi_buffer_addr     = uncached_reg ? psyaddr_reg : {tagv_douta[lfsr_sel_reg][20:1], index_reg, {(2 + OFFSET_LOG){1'b0}}};
-            axi_buffer_data     = wdata_reg;
-            axi_buffer_cache_line   = {
-                bank_douta[lfsr_sel_reg][96+:32],
-                bank_douta[lfsr_sel_reg][64+:32],
-                bank_douta[lfsr_sel_reg][32+:32],
-                bank_douta[lfsr_sel_reg][0 +:32]
-            };
+                axi_buffer_en       = tagv_douta[lfsr_sel_reg][0] & dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & (|wen_reg);
+                axi_buffer_uncached = uncached_reg;
+                axi_buffer_size     = _size_reg;
+                axi_buffer_wstrb    = wen_reg;
+                axi_buffer_addr     = uncached_reg ? psyaddr_reg : {tagv_douta[lfsr_sel_reg][20:1], index_reg, {(2 + OFFSET_LOG){1'b0}}};
+                axi_buffer_data     = wdata_reg;
+                axi_buffer_cache_line   = {
+                    bank_douta[lfsr_sel_reg][96+:32],
+                    bank_douta[lfsr_sel_reg][64+:32],
+                    bank_douta[lfsr_sel_reg][32+:32],
+                    bank_douta[lfsr_sel_reg][0 +:32]
+                };
             end
 
             if (axi_arready | uncached_reg & (|wen_reg) | ~uncached_reg) begin
