@@ -68,6 +68,7 @@ module myCPU (
 
     wire [31:0] d_awaddr;
     wire [7 :0] d_awlen;
+    wire [1 :0] d_awburst;
     wire [2 :0] d_awsize;
     wire        d_awvalid;
     wire        d_awready;
@@ -78,6 +79,7 @@ module myCPU (
     wire        d_wready;
     wire [31:0] d_araddr;
     wire [7 :0] d_arlen;
+    wire [1 :0] d_arburst;
     wire [2 :0] d_arsize;
     wire        d_arvalid;
     wire        d_arready;
@@ -183,6 +185,7 @@ module myCPU (
         
         .axi_awaddr             (d_awaddr               ),
         .axi_awlen              (d_awlen                ),
+        .axi_awburst            (d_awburst              ),
         .axi_awsize             (d_awsize               ),
         .axi_awvalid            (d_awvalid              ),
         .axi_awready            (d_awready              ),
@@ -193,6 +196,7 @@ module myCPU (
         .axi_wready             (d_wready               ),
         .axi_araddr             (d_araddr               ),
         .axi_arlen              (d_arlen                ),
+        .axi_arburst            (d_arburst              ),
         .axi_arsize             (d_arsize               ),
         .axi_arvalid            (d_arvalid              ),
         .axi_arready            (d_arready              ),
@@ -217,6 +221,7 @@ module myCPU (
 
         .d_araddr               (d_araddr               ),
         .d_arlen                (d_arlen                ),
+        .d_arburst              (d_arburst              ),
         .d_arsize               (d_arsize               ),
         .d_arvalid              (d_arvalid              ),
         .d_arready              (d_arready              ),
@@ -226,6 +231,7 @@ module myCPU (
         .d_rready               (d_rready               ),
         .d_awaddr               (d_awaddr               ),
         .d_awlen                (d_awlen                ),
+        .d_awburst              (d_awburst              ),
         .d_awsize               (d_awsize               ),
         .d_awvalid              (d_awvalid              ),
         .d_awready              (d_awready              ),

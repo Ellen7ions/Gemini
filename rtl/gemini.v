@@ -24,14 +24,14 @@ module gemini (
     input   wire [31:0] sram_data_rdata,
     input   wire        d_cache_stall_req,
     
-    output  wire [31:0] debug_wb_pc_1,
-    output  wire [3 :0] debug_wb_rf_wen_1,
-    output  wire [4 :0] debug_wb_rf_wnum_1,
-    output  wire [31:0] debug_wb_rf_wdata_1,
-    output  wire [31:0] debug_wb_pc_2,
-    output  wire [3 :0] debug_wb_rf_wen_2,
-    output  wire [4 :0] debug_wb_rf_wnum_2,
-    output  wire [31:0] debug_wb_rf_wdata_2
+    (*mark_debug = "true"*) output  wire [31:0] debug_wb_pc_1,
+    (*mark_debug = "true"*) output  wire [3 :0] debug_wb_rf_wen_1,
+    (*mark_debug = "true"*) output  wire [4 :0] debug_wb_rf_wnum_1,
+    (*mark_debug = "true"*) output  wire [31:0] debug_wb_rf_wdata_1,
+    (*mark_debug = "true"*) output  wire [31:0] debug_wb_pc_2,
+    (*mark_debug = "true"*) output  wire [3 :0] debug_wb_rf_wen_2,
+    (*mark_debug = "true"*) output  wire [4 :0] debug_wb_rf_wnum_2,
+    (*mark_debug = "true"*) output  wire [31:0] debug_wb_rf_wdata_2
 );
 
     wire            id2c_take_jmp_o;
@@ -154,6 +154,7 @@ module gemini (
     // wire            id2c_flush_req;
     wire            b_ctrl_flush_req;
     wire            exc_stall_req;
+    wire            exc_cp0_stall;
 
     wire            ii_id2_exception_flush;
     wire            id2_ex_exception_flush;
@@ -178,8 +179,8 @@ module gemini (
     wire [31:0]     wbp_w_reg_data_o;
 
     wire            id1c_valid_o;
-    wire [28:0]     id1c_op_codes_o;
-    wire [28:0]     id1c_func_codes_o;
+    wire [29:0]     id1c_op_codes_o;
+    wire [29:0]     id1c_func_codes_o;
     wire [31:0]     id1c_pc_o;
     wire [31:0]     id1c_inst_o;
     wire [4 :0]     id1c_rs_o;
@@ -200,8 +201,8 @@ module gemini (
     wire            id1c_valid_i;
     wire [31:0]     id1c_pc_i;
     wire [31:0]     id1c_inst_i;
-    wire [28:0]     id1c_op_codes_i;
-    wire [28:0]     id1c_func_codes_i;
+    wire [29:0]     id1c_op_codes_i;
+    wire [29:0]     id1c_func_codes_i;
     wire [4 :0]     id1c_rs_i;
     wire [4 :0]     id1c_rt_i;
     wire [4 :0]     id1c_rd_i;
@@ -219,8 +220,8 @@ module gemini (
 
     wire            id1p_valid_o;
     wire [31:0]     id1p_pc_o;
-    wire [28:0]     id1p_op_codes_o;
-    wire [28:0]     id1p_func_codes_o;
+    wire [29:0]     id1p_op_codes_o;
+    wire [29:0]     id1p_func_codes_o;
     wire [31:0]     id1p_inst_o;
     wire [4 :0]     id1p_rs_o;
     wire [4 :0]     id1p_rt_o;
@@ -234,8 +235,8 @@ module gemini (
 
     wire            id1p_valid_i;
     wire [31:0]     id1p_pc_i;
-    wire [28:0]     id1p_op_codes_i;
-    wire [28:0]     id1p_func_codes_i;
+    wire [29:0]     id1p_op_codes_i;
+    wire [29:0]     id1p_func_codes_i;
     wire [31:0]     id1p_inst_i;
     wire [4 :0]     id1p_rs_i;
     wire [4 :0]     id1p_rt_i;
@@ -465,7 +466,7 @@ module gemini (
     wire            lsu1p_wb_reg_sel_i;
     wire [31:0]     lsu1p_rt_data_i;
 
-    wire [31:0]     exc_pc_i;
+    (*mark_debug = "true"*) wire [31:0]     exc_pc_i;
     wire [31:0]     exc_alu_res_i;
     wire [31:0]     exc_ls_addr_i;
     wire [1 :0]     exc_w_hilo_ena_i;
@@ -1760,10 +1761,12 @@ module gemini (
         .ex_cp0_r_ena       (exc_cp0_r_ena      ),
         .ex_cp0_r_addr      (exc_cp0_r_addr     ),
         .ex_cp0_r_data      (cp0_r_data         ),
+        .ex_cp0_stall       (exc_cp0_stall      ),
 
         .lsu1_w_cp0_ena     (exc_w_cp0_ena_i    ),
         .lsu1_w_cp0_addr    (exc_w_cp0_addr_i   ),
-        .lsu1_w_cp0_data    (exc_w_cp0_data_i   ),
+        .lsu2_w_cp0_ena     (lsu1c_w_cp0_ena_i  ),
+        .lsu2_w_cp0_addr    (lsu1c_w_cp0_addr_i ),
 
         .id2_src_a_sel      (id2c_src_a_sel_i   ),
         .id2_src_b_sel      (id2c_src_b_sel_i   ),
@@ -2100,6 +2103,7 @@ module gemini (
         .b_ctrl_flush_req   (b_ctrl_flush_req   ),
         .with_delaysolt     (id2p_in_delay_slot_i),
         .exc_stall_req      (exc_stall_req      ),
+        .exc_cp0_stall      (exc_cp0_stall      ),
         .exception_flush    (exception_flush    ),
         .lsu1_tlb_stall_req (
             (exc_is_tlbwi_o | exc_is_tlbr_o | exc_is_tlbp_o) & (exc_w_cp0_ena_i | lsu1c_w_cp0_ena_i)

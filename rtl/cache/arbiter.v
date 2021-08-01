@@ -13,6 +13,7 @@ module arbiter (
 
     input   wire [31:0] d_araddr,
     input   wire [7 :0] d_arlen,
+    input   wire [1 :0] d_arburst,
     input   wire [2 :0] d_arsize,
     input   wire        d_arvalid,
     output  wire        d_arready,
@@ -22,6 +23,7 @@ module arbiter (
     input   wire        d_rready,
     input   wire [31:0] d_awaddr,
     input   wire [7 :0] d_awlen,
+    input   wire [1 :0] d_awburst,
     input   wire [2 :0] d_awsize,
     input   wire        d_awvalid,
     output  wire        d_awready,
@@ -91,7 +93,7 @@ module arbiter (
     assign  araddr      = raddr_sel ? d_araddr  : i_araddr;
     assign  arlen       = raddr_sel ? d_arlen[3:0]   : i_arlen[3:0];
     assign  arsize      = raddr_sel ? d_arsize  : 2'b10;
-    assign  arburst     = raddr_sel ? 2'b10 : i_arburst;
+    assign  arburst     = raddr_sel ? d_arburst : i_arburst;
     assign  arlock      = 2'h0;
     assign  arcache     = 4'h0;
     assign  arprot      = 3'h0;
@@ -103,7 +105,7 @@ module arbiter (
     assign  awaddr      = d_awaddr;
     assign  awlen       = d_awlen[3:0];
     assign  awsize      = d_awsize;
-    assign  awburst     = 2'b10;
+    assign  awburst     = d_awburst;
     assign  awlock      = 2'd0;
     assign  awcache     = 4'd0;
     assign  awprot      = 3'd0;

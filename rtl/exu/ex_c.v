@@ -49,10 +49,12 @@ module ex_c (
     output  wire            ex_cp0_r_ena,
     output  wire [7 :0]     ex_cp0_r_addr,
     input   wire [31:0]     ex_cp0_r_data,
+    output  wire            ex_cp0_stall,
 
     input   wire            lsu1_w_cp0_ena,
     input   wire [7 :0]     lsu1_w_cp0_addr,
-    input   wire [31:0]     lsu1_w_cp0_data,
+    input   wire            lsu2_w_cp0_ena,
+    input   wire [7 :0]     lsu2_w_cp0_addr,
 
     // control signals
     input   wire [2 :0]     id2_src_a_sel,
@@ -111,7 +113,7 @@ module ex_c (
     output  wire            ex_wb_reg_sel,
     output  wire            ex_w_cp0_ena,
     output  wire [7 :0]     ex_w_cp0_addr,
-    output  reg [31:0]     ex_w_cp0_data
+    output  wire [31:0]     ex_w_cp0_data
 );
 
     wire [31: 0] src_a, src_b, alu_res;
@@ -211,8 +213,7 @@ module ex_c (
                 !(id2_src_b_sel ^ `SRC_B_SEL_SA)
             }} & id2_sa         )   ;
 
-    wire [31:0] cp0_r_data = 
-        lsu1_w_cp0_ena & (lsu1_w_cp0_addr == ex_cp0_r_addr) ? lsu1_w_cp0_data : ex_cp0_r_data;
+    wire [31:0] cp0_r_data = ex_cp0_r_data;
 
     assign ex_alu_res   =
             ({32{
@@ -239,6 +240,8 @@ module ex_c (
     
     assign ex_cp0_r_addr    = id2_w_cp0_addr;
     assign ex_cp0_r_ena     = !(id2_alu_res_sel ^ `ALU_RES_SEL_CP0);
+    assign ex_cp0_stall     = 
+        ex_cp0_r_ena & (lsu1_w_cp0_ena & (lsu1_w_cp0_addr == ex_cp0_r_addr) | lsu2_w_cp0_ena & (lsu2_w_cp0_addr == ex_cp0_r_addr));
 
     assign ex_w_hilo_ena    = id2_w_hilo_ena;
     assign ex_hi_res        = alu_hi_res;
@@ -255,58 +258,58 @@ module ex_c (
 
     assign ex_w_cp0_ena     = id2_w_cp0_ena;
     assign ex_w_cp0_addr    = id2_w_cp0_addr;
-    // assign ex_w_cp0_data    = id2_rt_data;
+    assign ex_w_cp0_data    = id2_rt_data;
 
-    always @(*) begin
-        ex_w_cp0_data           = 32'h0;
-        case (id2_w_cp0_addr)
-        {5'd9, 3'd0}: begin
-            ex_w_cp0_data       = id2_rt_data;
-        end
+    // always @(*) begin
+    //     ex_w_cp0_data           = 32'h0;
+    //     case (id2_w_cp0_addr)
+    //     {5'd9, 3'd0}: begin
+    //         ex_w_cp0_data       = id2_rt_data;
+    //     end
 
-        {5'd11, 3'd0}: begin
-            ex_w_cp0_data       = id2_rt_data;
-        end
+    //     {5'd11, 3'd0}: begin
+    //         ex_w_cp0_data       = id2_rt_data;
+    //     end
 
-        {5'd12, 3'd0}: begin
-            ex_w_cp0_data[15:8] = id2_rt_data[15:8];
-            ex_w_cp0_data[1]    = id2_rt_data[1];
-            ex_w_cp0_data[0]    = id2_rt_data[0];
-        end
+    //     {5'd12, 3'd0}: begin
+    //         ex_w_cp0_data[15:8] = id2_rt_data[15:8];
+    //         ex_w_cp0_data[1]    = id2_rt_data[1];
+    //         ex_w_cp0_data[0]    = id2_rt_data[0];
+    //     end
 
-        {5'd13, 3'd0}: begin
-            ex_w_cp0_data[9 :8] = id2_rt_data[9 :8];
-        end
+    //     {5'd13, 3'd0}: begin
+    //         ex_w_cp0_data[9 :8] = id2_rt_data[9 :8];
+    //     end
 
-        {5'd14, 3'd0}: begin
-            ex_w_cp0_data       = id2_rt_data;
-        end
+    //     {5'd14, 3'd0}: begin
+    //         ex_w_cp0_data       = id2_rt_data;
+    //     end
 
-        {5'd0, 3'd0}: begin
-            ex_w_cp0_data[3 :0] = id2_rt_data[3 :0];
-        end
+    //     {5'd0, 3'd0}: begin
+    //         ex_w_cp0_data[3 :0] = id2_rt_data[3 :0];
+    //     end
 
-        {5'd2, 3'd0}: begin
-            ex_w_cp0_data       = {6'h0, id2_rt_data[25:0]};
-        end
+    //     {5'd2, 3'd0}: begin
+    //         ex_w_cp0_data       = {6'h0, id2_rt_data[25:0]};
+    //     end
 
-        {5'd3, 3'd0}: begin
-            ex_w_cp0_data       = {6'h0, id2_rt_data[25:0]};
-        end
+    //     {5'd3, 3'd0}: begin
+    //         ex_w_cp0_data       = {6'h0, id2_rt_data[25:0]};
+    //     end
 
-        {5'd10, 3'd0}: begin
-            ex_w_cp0_data       = {id2_rt_data[31:13], 5'h0, id2_rt_data[7:0]};
-        end
+    //     {5'd10, 3'd0}: begin
+    //         ex_w_cp0_data       = {id2_rt_data[31:13], 5'h0, id2_rt_data[7:0]};
+    //     end
 
-        {5'd16, 3'd0}: begin
-            ex_w_cp0_data       = {29'd0, id2_rt_data[2:0]};
-        end
+    //     {5'd16, 3'd0}: begin
+    //         ex_w_cp0_data       = {29'd0, id2_rt_data[2:0]};
+    //     end
 
-        default: begin
-            ex_w_cp0_data       = 32'h0;
-        end
-        endcase
-    end
+    //     default: begin
+    //         ex_w_cp0_data       = 32'h0;
+    //     end
+    //     endcase
+    // end
 
     alu_c alu_kernel (
         .clk            (clk            ),

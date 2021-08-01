@@ -1,5 +1,6 @@
 // op code
 `define SPECIAL_OP_CODE     6'b000_000
+`define SPECIAL2_OP_CODE    6'b011_100
 `define REGIMM_OP_CODE      6'b000_001
 `define COP0_OP_CODE        6'b010_000
 // funct code
@@ -11,6 +12,7 @@
 `define SLTU_FUNCT          6'b101_011
 `define DIV_FUNCT           6'b011_010
 `define DIVU_FUNCT          6'b011_011
+`define MUL_FUNCT           6'b000_010
 `define MULT_FUNCT          6'b011_000
 `define MULTU_FUNCT         6'b011_001
 `define AND_FUNCT           6'b100_100
@@ -90,6 +92,7 @@
 `define ALU_SEL_MULT        6'd7
 `define ALU_SEL_MULTU       6'd8
 `define ALU_SEL_AND         6'd9
+`define ALU_SEL_MUL         6'd10
 `define ALU_SEL_NOR         6'd54
 `define ALU_SEL_OR          6'd56
 `define ALU_SEL_XOR         6'd57

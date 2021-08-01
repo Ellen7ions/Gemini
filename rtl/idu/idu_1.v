@@ -4,8 +4,8 @@
 
 module idu_1 (
     input   wire [31:0]     inst,
-    output  wire [28:0]     id1_op_codes,
-    output  wire [28:0]     id1_func_codes,
+    output  wire [29:0]     id1_op_codes,
+    output  wire [29:0]     id1_func_codes,
     output  wire [4 :0]     id1_rs,
     output  wire [4 :0]     id1_rt,
     output  wire [4 :0]     id1_rd,
@@ -18,6 +18,7 @@ module idu_1 (
     output  wire            id1_is_j_imme,
     output  wire            id1_is_jr,
     output  wire            id1_is_ls,
+    output  wire            id1_is_mul,
     output  wire            id1_is_cop0,
     output  wire            id1_is_tlbp,
     output  wire            id1_is_tlbr,
@@ -39,6 +40,7 @@ module idu_1 (
     assign id1_j_imme    = inst[25: 0];
 
     wire op_code_is_special =   !(id1_op_code   ^ `SPECIAL_OP_CODE    );
+    wire op_code_is_special2=   !(id1_op_code   ^ `SPECIAL2_OP_CODE   );
     wire op_code_is_cop0    =   !(id1_op_code   ^ `COP0_OP_CODE       );
     wire op_code_is_regimm  =   !(id1_op_code   ^ `REGIMM_OP_CODE     );
     wire op_code_is_addi    =   !(id1_op_code   ^ `ADDI_OP_CODE       );
@@ -70,6 +72,7 @@ module idu_1 (
     
     assign id1_op_codes = {
         op_code_is_special,
+        op_code_is_special2,
         op_code_is_cop0,
         op_code_is_regimm,
         op_code_is_addi,
@@ -121,6 +124,7 @@ module idu_1 (
     wire func_code_is_mflo      =   !(id1_funct ^ `MFLO_FUNCT   );
     wire func_code_is_div       =   !(id1_funct ^ `DIV_FUNCT    );
     wire func_code_is_divu      =   !(id1_funct ^ `DIVU_FUNCT   );
+    wire func_code_is_mul       =   !(id1_funct ^ `MUL_FUNCT    );
     wire func_code_is_mult      =   !(id1_funct ^ `MULT_FUNCT   );
     wire func_code_is_multu     =   !(id1_funct ^ `MULTU_FUNCT  );
     wire func_code_is_jr        =   !(id1_funct ^ `JR_FUNCT     );
@@ -152,6 +156,7 @@ module idu_1 (
         func_code_is_mflo,
         func_code_is_div,
         func_code_is_divu,
+        func_code_is_mul,
         func_code_is_mult,
         func_code_is_multu,
         func_code_is_jr,
@@ -183,7 +188,10 @@ module idu_1 (
                     func_code_is_srl     |
                     func_code_is_jalr    |
                     func_code_is_mfhi    |
-                    func_code_is_mflo    
+                    func_code_is_mflo
+                ) |
+                (op_code_is_special2) * (
+                    func_code_is_mul
                 )
             }} & id1_rd) |
             ({5{
@@ -248,6 +256,9 @@ module idu_1 (
             op_code_is_special & func_code_is_break     |
             op_code_is_special & func_code_is_syscall   ;
 
+    assign id1_is_mul       =
+            op_code_is_special2 & func_code_is_mul;
+
     assign id1_is_hilo      =
             (op_code_is_special & (
                 func_code_is_div     |
@@ -278,6 +289,7 @@ module idu_1 (
             !(op_code_is_special & func_code_is_break   )   &
             !(op_code_is_special & func_code_is_syscall )   &
             !(op_code_is_special & func_code_is_eret    )   &
+            !(id1_is_tlbp | id1_is_tlbr | id1_is_tlbwi  )   &
             !(op_code_is_beq   )  &
             !(op_code_is_bne   )  &
             !(op_code_is_bgtz  )  &
@@ -315,6 +327,6 @@ module idu_1 (
             );
 
     assign id1_is_ri        =
-        ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes);
+        ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes) & ~id1_is_tlbr & ~id1_is_tlbp & ~id1_is_tlbwi & ~(op_code_is_special2 & func_code_is_mul);
 
 endmodule

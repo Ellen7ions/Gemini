@@ -16,11 +16,11 @@ module mem_ctrl (
     // refetch check ?
     output  wire [31:0]     mem2c_r_data,
 
-    output  wire            data_ram_en,
-    output  wire [3 :0]     data_load_type,
-    output  wire [3 :0]     data_ram_wen,
-    output  wire [31:0]     data_ram_addr,
-    output  wire [31:0]     data_ram_wdata,
+    (*mark_debug = "true"*) output  wire            data_ram_en,
+    (*mark_debug = "true"*) output  wire [3 :0]     data_load_type,
+    (*mark_debug = "true"*) output  wire [3 :0]     data_ram_wen,
+    (*mark_debug = "true"*) output  wire [31:0]     data_ram_addr,
+    (*mark_debug = "true"*) output  wire [31:0]     data_ram_wdata,
     input   wire [31:0]     data_ram_rdata
 );
 

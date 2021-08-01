@@ -21,8 +21,8 @@ module issue (
 
     // to iduc
     output  wire        id1_valid_1,
-    output  wire [28:0] id1_op_codes_1,
-    output  wire [28:0] id1_func_codes_1,
+    output  wire [29:0] id1_op_codes_1,
+    output  wire [29:0] id1_func_codes_1,
     output  wire [31:0] id1_pc_1,
     output  wire [31:0] id1_inst_1,
     output  wire [4 :0] id1_rs_1,
@@ -51,8 +51,8 @@ module issue (
 
     // to idup
     output  wire        id1_valid_2,
-    output  wire [28:0] id1_op_codes_2,
-    output  wire [28:0] id1_func_codes_2,
+    output  wire [29:0] id1_op_codes_2,
+    output  wire [29:0] id1_func_codes_2,
     output  wire [31:0] id1_pc_2,
     output  wire [31:0] id1_inst_2,
     output  wire [4 :0] id1_rs_2,
@@ -106,6 +106,7 @@ module issue (
         refetch ? ~cls_refetch : id1_valid_1 & (id1_is_tlbr_1 | id1_is_tlbwi_1) | id1_valid_2 & (id1_is_tlbr_2 | id1_is_tlbwi_2);
 
     wire id1_is_hilo_1, id1_is_hilo_2;
+    wire id1_is_mul_1, id1_is_mul_2;
     wire inst_jmp_1, inst_jmp_2;
     wire raw_conflict;
     wire id1_is_cop0_1, id1_is_cop0_2;
@@ -155,7 +156,8 @@ module issue (
                         id1_is_tlbp_1       |
                         id1_is_tlbr_1       |
                         id1_is_i_refill_tlbl_2  |
-                        id1_is_i_invalid_tlbl_2
+                        id1_is_i_invalid_tlbl_2 |
+                        id1_is_mul_2
                     );
                 // if () begin
                 //     p_data_2 = 1'b0;
@@ -208,6 +210,7 @@ module issue (
         .id1_is_j_imme  (id1_is_j_imme_1    ),
         .id1_is_jr      (id1_is_jr_1        ),
         .id1_is_ls      (id1_is_ls_1        ),
+        .id1_is_mul     (id1_is_mul_1       ),
         .id1_is_hilo    (id1_is_hilo_1      ),
         .id1_is_cop0    (id1_is_cop0_1      ),
         .id1_is_tlbp    (id1_is_tlbp_1      ),
@@ -233,6 +236,7 @@ module issue (
         .id1_is_j_imme  (id1_is_j_imme_2    ),
         .id1_is_jr      (id1_is_jr_2        ),
         .id1_is_ls      (id1_is_ls_2        ),
+        .id1_is_mul     (id1_is_mul_2       ),
         .id1_is_hilo    (id1_is_hilo_2      ),
         .id1_is_cop0    (id1_is_cop0_2      ),
         .id1_is_tlbp    (id1_is_tlbp_2      ),

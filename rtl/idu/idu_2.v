@@ -8,8 +8,8 @@ module idu_2 (
     input  wire             id1_valid,
     input  wire             cp0_has_int,
 
-    input  wire [28:0]      id1_op_codes,
-    input  wire [28:0]      id1_func_codes,
+    input  wire [29:0]      id1_op_codes,
+    input  wire [29:0]      id1_func_codes,
     input  wire [31:0]      id1_pc,
     input  wire [4 :0]      id1_rs,
     input  wire [4 :0]      id1_rt,
@@ -114,6 +114,7 @@ module idu_2 (
     wire [31:0]     id2_branch_target;
 
     wire op_code_is_special;
+    wire op_code_is_special2;
     wire op_code_is_cop0;
     wire op_code_is_regimm;
     wire op_code_is_addi;
@@ -145,6 +146,7 @@ module idu_2 (
 
     assign {
         op_code_is_special,
+        op_code_is_special2,
         op_code_is_cop0,
         op_code_is_regimm,
         op_code_is_addi,
@@ -196,6 +198,7 @@ module idu_2 (
     wire func_code_is_mflo;
     wire func_code_is_div;
     wire func_code_is_divu;
+    wire func_code_is_mul;
     wire func_code_is_mult;
     wire func_code_is_multu;
     wire func_code_is_jr;
@@ -227,6 +230,7 @@ module idu_2 (
         func_code_is_mflo,
         func_code_is_div,
         func_code_is_divu,
+        func_code_is_mul,
         func_code_is_mult,
         func_code_is_multu,
         func_code_is_jr,
@@ -270,7 +274,7 @@ module idu_2 (
     wire read_both =
         inst_is_special | op_code_is_beq    | op_code_is_bne    | 
         op_code_is_sb   | op_code_is_sh     | op_code_is_sw     |
-        op_code_is_swl  | op_code_is_swr;
+        op_code_is_swl  | op_code_is_swr    | (op_code_is_special2 & func_code_is_mul);
 
     assign reg_r_ena_1 = 
         read_both | read_rs;
@@ -309,7 +313,7 @@ module idu_2 (
     assign id2_is_inst_adel = id1_inst_adel;
     assign id2_is_ri        = 
             id1_valid & (
-                ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes)
+                ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes) & ~id1_is_tlbr & ~id1_is_tlbp & ~id1_is_tlbwi & ~(op_code_is_special2 & func_code_is_mul)
             );
     assign id2_is_int       = cp0_has_int & id1_valid;
 
@@ -453,6 +457,8 @@ module idu_2 (
             func_code_is_nor       |
             func_code_is_or        |
             func_code_is_xor
+        ) | (op_code_is_special2)& (
+            func_code_is_mul
         )) begin
             id2_src_b_sel = `SRC_B_SEL_RT;
         end else if (
@@ -536,6 +542,9 @@ module idu_2 (
             ({6{
                 (op_code_is_special) & (func_code_is_divu)
             }} & (`ALU_SEL_DIVU))   |
+            ({6{
+                (op_code_is_special2) & (func_code_is_mul)
+            }} & (`ALU_SEL_MUL))    |
             ({6{
                 (op_code_is_special) & (func_code_is_mult)
             }} & (`ALU_SEL_MULT))   |

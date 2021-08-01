@@ -22,6 +22,7 @@ module d_cache #(
 
     output  wire [31:0] axi_awaddr,
     output  wire [7 :0] axi_awlen,
+    output  wire [1 :0] axi_awburst,
     output  wire [2 :0] axi_awsize,
     output  wire        axi_awvalid,
     input   wire        axi_awready,
@@ -32,6 +33,7 @@ module d_cache #(
     input   wire        axi_wready,
     output  reg  [31:0] axi_araddr,
     output  reg  [7 :0] axi_arlen,
+    output  reg  [1 :0] axi_arburst,
     output  reg  [2 :0] axi_arsize,
     output  reg         axi_arvalid,
     input   wire        axi_arready,
@@ -184,8 +186,8 @@ module d_cache #(
     wire [31:0] vaddr_reg;
     wire [31:0] psyaddr_reg;
     wire [31:0] wdata_reg;
-    wire [3 :0] _size;
-    wire [3 :0] _size_reg;
+    wire [2 :0] _size;
+    wire [2 :0] _size_reg;
 
     request_buffer request_buffer0 (
         .clk        (clk                ),
@@ -236,6 +238,7 @@ module d_cache #(
 
         .axi_awaddr (axi_awaddr         ),
         .axi_awlen  (axi_awlen          ),
+        .axi_awburst(axi_awburst        ),
         .axi_awsize (axi_awsize         ),
         .axi_awvalid(axi_awvalid        ),
         .axi_awready(axi_awready        ),
@@ -398,7 +401,7 @@ module d_cache #(
         is_hit_write | is_refill & |wen_reg;
 
 
-    assign wbuffer_en_i         = (master_state == LOOKUP_STATE) & ~miss & |wen_reg & ~uncached_reg;
+    assign wbuffer_en_i         = (master_state == LOOKUP_STATE) & ~miss & (|wen_reg) & ~uncached_reg;
     assign wbuffer_hit_sel_i    = hit_sel;
     assign wbuffer_wen_i        = wen_reg;
     assign wbuffer_index_i      = index_reg;
@@ -454,6 +457,7 @@ module d_cache #(
 
         axi_araddr          = 32'h0;
         axi_arlen           = 8'h0;
+        axi_arburst         = 2'h0;
         axi_arsize          = 3'h0;
         axi_arvalid         = 1'b0;
 
@@ -523,27 +527,28 @@ module d_cache #(
         REPLACE_STATE: begin
             cpu_d_cache_stall       = 1'b1;
             lfsr_stall              = 1'b1;
-            axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
+            axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : psyaddr_reg;
             axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
+            axi_arburst         = ~uncached_reg ? 2'b01 : 2'b00;
             axi_arsize          = ~uncached_reg ? 3'b010 : _size_reg;
             axi_arvalid         = ~uncached_reg ? 1'b1 : ~(|wen_reg);
             if (~replace_flag) begin
                 replace_flag = 1'b1;
-                axi_buffer_en       = tagv_douta[lfsr_sel_reg][0] & dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & |wen_reg;
-                axi_buffer_uncached = uncached_reg;
-                axi_buffer_size     = _size_reg;
-                axi_buffer_wstrb    = wen_reg;
-                axi_buffer_addr     = uncached_reg ? psyaddr_reg : {tagv_douta[lfsr_sel_reg][20:1], index_reg, {(2 + OFFSET_LOG){1'b0}}};
-                axi_buffer_data     = wdata_reg;
-                axi_buffer_cache_line   = {
-                    bank_douta[lfsr_sel_reg][96+:32],
-                    bank_douta[lfsr_sel_reg][64+:32],
-                    bank_douta[lfsr_sel_reg][32+:32],
-                    bank_douta[lfsr_sel_reg][0 +:32]
-                };
+            axi_buffer_en       = tagv_douta[lfsr_sel_reg][0] & dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & (|wen_reg);
+            axi_buffer_uncached = uncached_reg;
+            axi_buffer_size     = _size_reg;
+            axi_buffer_wstrb    = wen_reg;
+            axi_buffer_addr     = uncached_reg ? psyaddr_reg : {tagv_douta[lfsr_sel_reg][20:1], index_reg, {(2 + OFFSET_LOG){1'b0}}};
+            axi_buffer_data     = wdata_reg;
+            axi_buffer_cache_line   = {
+                bank_douta[lfsr_sel_reg][96+:32],
+                bank_douta[lfsr_sel_reg][64+:32],
+                bank_douta[lfsr_sel_reg][32+:32],
+                bank_douta[lfsr_sel_reg][0 +:32]
+            };
             end
 
-            if (axi_arready | uncached_reg & (|wen_reg)) begin
+            if (axi_arready | uncached_reg & (|wen_reg) | ~uncached_reg) begin
                 master_next_state   = REFILL_STATE;
             end else begin
                 master_next_state   = REPLACE_STATE;

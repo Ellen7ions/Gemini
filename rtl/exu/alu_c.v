@@ -117,6 +117,11 @@ module alu_c (
             alu_hi_res  = mul_res_ready ? m_r : 32'h0;
             alu_lo_res  = mul_res_ready ? m_s : 32'h0;
         end
+        `ALU_SEL_MUL    : begin
+            mul_en      = 1'b1;
+            mul_sign    = 1'b1;
+            ext_alu_res = m_s;
+        end
         `ALU_SEL_AND    : begin
             ext_alu_res = src_a & src_b;
         end

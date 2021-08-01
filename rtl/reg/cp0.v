@@ -73,7 +73,7 @@ module cp0 (
             Cause       <= 32'd0;
             Index       <= 32'd0;
             EntryHi     <= 32'h0;
-            Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd3};   // kseg0 3'd3=cached, 3'd2=uncached
+            Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd2};   // kseg0 3'd3=cached, 3'd2=uncached
             Config1     <= {1'b0, 6'd16, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
         end else begin
             Count           <= Count + 32'h1;
@@ -164,66 +164,58 @@ module cp0 (
     end
 
     always @(*) begin
-        if (r_ena) begin
-            if (w_ena & r_addr == w_addr) begin
-                r_data = w_data;
-            end else begin
-                case (r_addr)
-                {5'd8, 3'd0}: begin
-                    r_data      = BadVAddr;
-                end
-
-                {5'd11, 3'd0}: begin
-                    r_data      = Compare;
-                end
-
-                {5'd9, 3'd0}: begin
-                    r_data      = Count;
-                end
-
-                {5'd12, 3'd0}: begin
-                    r_data      = Status;
-                end
-
-                {5'd13, 3'd0}: begin
-                    r_data      = Cause;
-                end
-
-                {5'd14, 3'd0}: begin
-                    r_data      = EPC; 
-                end
-
-                {5'd0, 3'd0}: begin
-                    r_data      = Index;
-                end
-
-                {5'd2, 3'd0}: begin
-                    r_data      = EntryLo0;
-                end
-
-                {5'd3, 3'd0}: begin
-                    r_data      = EntryLo1;
-                end
-
-                {5'd10, 3'd0}: begin
-                    r_data       = EntryHi; 
-                end
-
-                {5'd16, 3'd0}: begin
-                    r_data      = Config;
-                end
-
-                {5'd16, 3'd1}: begin
-                    r_data      = Config1;
-                end
-
-                default: begin
-                    r_data      = 32'd0;
-                end
-                endcase 
-            end
-        end else begin
-            r_data = 32'd0;
+        case (r_addr)
+        {5'd8, 3'd0}: begin
+            r_data      = BadVAddr;
         end
+
+        {5'd11, 3'd0}: begin
+            r_data      = Compare;
+        end
+
+        {5'd9, 3'd0}: begin
+            r_data      = Count;
+        end
+
+        {5'd12, 3'd0}: begin
+            r_data      = Status;
+        end
+
+        {5'd13, 3'd0}: begin
+            r_data      = Cause;
+        end
+
+        {5'd14, 3'd0}: begin
+            r_data      = EPC; 
+        end
+
+        {5'd0, 3'd0}: begin
+            r_data      = Index;
+        end
+
+        {5'd2, 3'd0}: begin
+            r_data      = EntryLo0;
+        end
+
+        {5'd3, 3'd0}: begin
+            r_data      = EntryLo1;
+        end
+
+        {5'd10, 3'd0}: begin
+            r_data       = EntryHi; 
+        end
+
+        {5'd16, 3'd0}: begin
+            r_data      = Config;
+        end
+
+        {5'd16, 3'd1}: begin
+            r_data      = Config1;
+        end
+
+        default: begin
+            r_data      = 32'd0;
+        end
+        endcase
     end
 endmodule

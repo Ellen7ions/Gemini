@@ -9,8 +9,8 @@ module issue_id2c (
 
     input   wire        id1_valid_o,
 
-    input   wire [28:0] id1_op_codes_o,
-    input   wire [28:0] id1_func_codes_o,
+    input   wire [29:0] id1_op_codes_o,
+    input   wire [29:0] id1_func_codes_o,
     input   wire [31:0] id1_pc_o,
     input   wire [31:0] id1_inst_o,
     input   wire [4 :0] id1_rs_o,
@@ -37,8 +37,8 @@ module issue_id2c (
     input   wire        id1_is_refetch_o,
 
     output  reg         id1_valid_i,
-    output  reg  [28:0] id1_op_codes_i,
-    output  reg  [28:0] id1_func_codes_i,
+    output  reg  [29:0] id1_op_codes_i,
+    output  reg  [29:0] id1_func_codes_i,
     output  reg  [31:0] id1_pc_i,
     output  reg  [31:0] id1_inst_i,
     output  reg  [4 :0] id1_rs_i,
@@ -81,8 +81,8 @@ module issue_id2c (
             id1_is_j_imme_i         <=  1'b0;
             id1_is_jr_i             <=  1'b0;
             id1_is_ls_i             <=  1'b0;
-            id1_op_codes_i          <=  29'h0;
-            id1_func_codes_i        <=  29'h0;
+            id1_op_codes_i          <=  30'h0;
+            id1_func_codes_i        <=  30'h0;
             id1_in_delay_slot_i     <=  1'h0;
             id1_is_inst_adel_i      <=  1'h0;
             id1_valid_i             <=  1'b0;
