@@ -72,16 +72,12 @@ module d_cache #(
 
     reg  [2 :0] master_state;
     reg  [2 :0] master_next_state;
-    reg  [2 :0] slave_state;
-    reg  [2 :0] slave_next_state;
 
     always @(posedge clk) begin
         if (rst) begin
             master_state    <= IDLE_STATE;
-            slave_state     <= IDLE_STATE;
         end else begin
             master_state    <= master_next_state;
-            slave_state     <= slave_next_state;
         end
     end
 
@@ -107,8 +103,23 @@ module d_cache #(
 
     wire [31         :0]        refill_dina ;
 
+    wire                        lru_ena;
+    wire                        lru_wea;
+    wire [INDEX_LOG-1:0]        lru_addra;
+    wire                        lru_dina;
+    wire                        lru_douta;
+
     genvar i, j;
     generate
+        LRU lru0 (
+            .clka   (clk            ),
+            .ena    (lru_ena        ),
+            .wea    (lru_wea        ),
+            .addra  (lru_addra      ),
+            .dina   (lru_dina       ),
+            .douta  (lru_douta      )
+        );
+
         for (i = 0; i < WAY; i = i + 1) begin: dirty
             D dirty_inst (
                 .clka   (clk            ),
@@ -251,20 +262,13 @@ module d_cache #(
         .axi_bready (axi_bready         )
     );
 
-    wire [WAY_LOG-1:0]  lfsr_sel;
-    reg  [WAY_LOG-1:0]  lfsr_sel_reg;
-    reg                 lfsr_stall;
-    LFSR #(WAY_LOG) lfsr0 (
-        .clk        (clk                ),
-        .rst        (rst                ),
-        .out        (lfsr_sel           )
-    );
-
-    always @(posedge clk ) begin
+    reg     lru_sel_stall;
+    reg     lru_sel_reg;
+    always @(posedge clk) begin
         if (rst) begin
-            lfsr_sel_reg <= {WAY_LOG{1'b0}};
-        end else if (~lfsr_stall) begin
-            lfsr_sel_reg <= lfsr_sel;
+            lru_sel_reg <= 1'b0;
+        end else if (~lru_sel_stall) begin
+            lru_sel_reg <= lru_douta;
         end
     end
 
@@ -342,7 +346,7 @@ module d_cache #(
 
     assign tagv_ena             = 
         {WAY{is_lookup | is_wait_lookup}} |
-        {lfsr_sel_reg, ~lfsr_sel_reg} & {WAY{is_replace | is_refill}};
+        {lru_sel_reg, ~lru_sel_reg} & {WAY{is_replace | is_refill}};
     assign tagv_wea             = 
         is_refill;
     assign tagv_addra           = 
@@ -356,8 +360,8 @@ module d_cache #(
         {offset_reg_sel, offset_reg_sel} & {WAY*WORD_NUM{is_wait_lookup}} |
         {wbuffer_offset_reg_sel & {WORD_NUM{wbuffer_hit_sel_reg[1]}},
          wbuffer_offset_reg_sel & {WORD_NUM{wbuffer_hit_sel_reg[0]}}} & {WAY*WORD_NUM{is_hit_write}} |
-        {{WORD_NUM{lfsr_sel_reg}}, {WORD_NUM{~lfsr_sel_reg}}} & {WAY*WORD_NUM{is_replace}}  |
-        {{4{lfsr_sel_reg}} & refill_offset_sel, {4{~lfsr_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
+        {{WORD_NUM{lru_sel_reg}}, {WORD_NUM{~lru_sel_reg}}} & {WAY*WORD_NUM{is_replace}}  |
+        {{4{lru_sel_reg}} & refill_offset_sel, {4{~lru_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
     assign bank_wea             = 
         {
             wbuffer_wen_reg & {4{is_hit_write & wbuffer_offset_reg_sel[3]}},
@@ -391,7 +395,7 @@ module d_cache #(
 
     assign dirty_ena            = 
         {WAY{is_hit_write}} & wbuffer_hit_sel_reg |
-        {WAY{is_refill | is_replace}} & {lfsr_sel_reg, ~lfsr_sel_reg};
+        {WAY{is_refill | is_replace}} & {lru_sel_reg, ~lru_sel_reg};
     assign dirty_wea            =
         is_hit_write | is_refill & |wen_reg;
     assign dirty_addra          =
@@ -400,6 +404,15 @@ module d_cache #(
     assign dirty_dina           =
         is_hit_write | is_refill & |wen_reg;
 
+    assign lru_ena              =
+        is_lookup | is_refill | is_wait_lookup;
+    assign lru_wea              =
+        is_refill;
+    assign lru_addra            = 
+        {INDEX_LOG{is_lookup}} & cpu_index |
+        {INDEX_LOG{is_refill | is_wait_lookup}} & index_reg;
+    assign lru_dina             = 
+        ~lru_sel_reg;
 
     assign wbuffer_en_i         = (master_state == LOOKUP_STATE) & ~miss & (|wen_reg) & ~uncached_reg;
     assign wbuffer_hit_sel_i    = hit_sel;
@@ -443,7 +456,7 @@ module d_cache #(
     reg replace_flag;
     always @(*) begin
         replace_flag        = 1'b0;
-        lfsr_stall          = 1'b0;
+        lru_sel_stall       = 1'b1;
         cpu_d_cache_stall   = 1'b0;
         master_next_state   = IDLE_STATE;
 
@@ -471,7 +484,6 @@ module d_cache #(
 
         case (master_state)
         IDLE_STATE: begin
-            lfsr_stall      = 1'b0;
             if (~cpu_en) begin
                 master_next_state = IDLE_STATE; 
             end else if (hit_write_conflict) begin
@@ -483,7 +495,6 @@ module d_cache #(
         end
 
         LOOKUP_STATE: begin
-            lfsr_stall      = 1'b0;
             if (~miss & ~cpu_en) begin
                 master_next_state = IDLE_STATE;
             end else if (~miss & cpu_en & hit_write_conflict) begin
@@ -493,6 +504,7 @@ module d_cache #(
                 is_lookup         = 1'b1;
             end else begin
                 master_next_state = MISS_STATE;
+                lru_sel_stall     = 1'b0;
                 cpu_d_cache_stall = 1'b1;
             end
         end
@@ -509,24 +521,16 @@ module d_cache #(
 
         MISS_STATE: begin
             cpu_d_cache_stall       = 1'b1;
-            lfsr_stall              = 1'b1;
             if (~axi_buffer_free) begin
                 master_next_state   = MISS_STATE;
             end else begin
                 master_next_state   = REPLACE_STATE;
-                lfsr_stall          = 1'b1;
                 is_replace          = 1'b1;
-                
-                // axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
-                // axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
-                // axi_arsize          = ~uncached_reg ? 3'b010 : _size;
-                // axi_arvalid         = ~uncached_reg | uncached_reg & (wen_reg == 4'h0);
             end
         end
 
         REPLACE_STATE: begin
             cpu_d_cache_stall       = 1'b1;
-            lfsr_stall              = 1'b1;
             axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : psyaddr_reg;
             axi_arlen           = ~uncached_reg ? LINE_SIZE / 4 - 1 : 0;
             axi_arburst         = ~uncached_reg ? 2'b01 : 2'b00;
@@ -534,17 +538,17 @@ module d_cache #(
             axi_arvalid         = ~uncached_reg ? 1'b1 : ~(|wen_reg);
             if (~replace_flag) begin
                 replace_flag = 1'b1;
-                axi_buffer_en       = tagv_douta[lfsr_sel_reg][0] & dirty_douta[lfsr_sel_reg] & ~uncached_reg | uncached_reg & (|wen_reg);
+                axi_buffer_en       = tagv_douta[lru_sel_reg][0] & dirty_douta[lru_sel_reg] & ~uncached_reg | uncached_reg & (|wen_reg);
                 axi_buffer_uncached = uncached_reg;
                 axi_buffer_size     = _size_reg;
                 axi_buffer_wstrb    = wen_reg;
-                axi_buffer_addr     = uncached_reg ? psyaddr_reg : {tagv_douta[lfsr_sel_reg][20:1], index_reg, {(2 + OFFSET_LOG){1'b0}}};
+                axi_buffer_addr     = uncached_reg ? psyaddr_reg : {tagv_douta[lru_sel_reg][20:1], index_reg, {(2 + OFFSET_LOG){1'b0}}};
                 axi_buffer_data     = wdata_reg;
                 axi_buffer_cache_line   = {
-                    bank_douta[lfsr_sel_reg][96+:32],
-                    bank_douta[lfsr_sel_reg][64+:32],
-                    bank_douta[lfsr_sel_reg][32+:32],
-                    bank_douta[lfsr_sel_reg][0 +:32]
+                    bank_douta[lru_sel_reg][96+:32],
+                    bank_douta[lru_sel_reg][64+:32],
+                    bank_douta[lru_sel_reg][32+:32],
+                    bank_douta[lru_sel_reg][0 +:32]
                 };
             end
 
@@ -557,7 +561,6 @@ module d_cache #(
 
         REFILL_STATE: begin
             axi_rready              = 1'b1;
-            lfsr_stall              = 1'b1;
             cpu_d_cache_stall       = 1'b1;
             if (axi_rvalid & ~uncached_reg)
                 is_refill       = 1'b1;

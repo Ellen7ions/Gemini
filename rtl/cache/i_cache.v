@@ -102,8 +102,23 @@ module i_cache #(
 
     wire [31         :0]        refill_dina ;
 
+    wire                        lru_ena;
+    wire                        lru_wea;
+    wire [INDEX_LOG-1:0]        lru_addra;
+    wire                        lru_dina;
+    wire                        lru_douta;
+    
     genvar i, j;
     generate
+        LRU lru0 (
+            .clka   (clk            ),
+            .ena    (lru_ena        ),
+            .wea    (lru_wea        ),
+            .addra  (lru_addra      ),
+            .dina   (lru_dina       ),
+            .douta  (lru_douta      )
+        );
+
         for (i = 0; i < WAY; i = i + 1) begin: tagv
             TAGV tagv_inst (
                 .clka   (clk            ),
@@ -157,20 +172,13 @@ module i_cache #(
         .wdata_o    ()
     );
 
-    wire [WAY_LOG-1:0]  lfsr_sel;
-    reg  [WAY_LOG-1:0]  lfsr_sel_reg;
-    reg                 lfsr_stall;
-    LFSR #(WAY_LOG) lfsr0 (
-        .clk        (clk                ),
-        .rst        (rst                ),
-        .out        (lfsr_sel           )
-    );
-
-    always @(posedge clk ) begin
+    reg     lru_sel_stall;
+    reg     lru_sel_reg;
+    always @(posedge clk) begin
         if (rst) begin
-            lfsr_sel_reg <= {WAY_LOG{1'b0}};
-        end else if (~lfsr_stall) begin
-            lfsr_sel_reg <= lfsr_sel;
+            lru_sel_reg <= 1'b0;
+        end else if (~lru_sel_stall) begin
+            lru_sel_reg <= lru_douta;
         end
     end
 
@@ -228,7 +236,7 @@ module i_cache #(
 
     assign tagv_ena             = 
         {WAY{is_lookup}} |
-        {lfsr_sel_reg, ~lfsr_sel_reg} & {WAY{is_refill}};
+        {lru_sel_reg, ~lru_sel_reg} & {WAY{is_refill}};
     assign tagv_wea             = 
         is_refill;
     assign tagv_addra           = 
@@ -239,7 +247,7 @@ module i_cache #(
 
     assign bank_ena             = 
         {WAY*WORD_NUM{is_lookup}} |
-        {{4{lfsr_sel_reg}} & refill_offset_sel, {4{~lfsr_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
+        {{4{lru_sel_reg}} & refill_offset_sel, {4{~lru_sel_reg}} & refill_offset_sel} & {WAY*WORD_NUM{is_refill}};
     assign bank_wea             = 
         {4{is_refill}} & 4'b1111;
     assign bank_addra           = 
@@ -249,6 +257,16 @@ module i_cache #(
         {32{is_refill}} & refill_dina;
 
 
+    assign lru_ena              =
+        is_lookup | is_refill;
+    assign lru_wea              =
+        is_refill;
+    assign lru_addra            = 
+        {INDEX_LOG{is_lookup}} & cpu_index |
+        {INDEX_LOG{is_refill}} & index_reg;
+    assign lru_dina             = 
+        ~lru_sel_reg;
+
     reg [31:0]  miss_refill_data1;
     reg [31:0]  miss_refill_data2;
     reg         miss_ok_1;
@@ -256,9 +274,6 @@ module i_cache #(
 
     assign      cpu_ok_1 = miss ? miss_ok_1 : 1'b1;
     assign      cpu_ok_2 = miss ? miss_ok_2 : ~offset_reg[0];
-
-    // assign cpu_ok_1 = 1'b1;
-    // assign cpu_ok_2 = 1'b1;
 
     reg         miss_uncached_counter;
 
@@ -291,7 +306,7 @@ module i_cache #(
             : {miss_refill_data2, miss_refill_data1};
 
     always @(*) begin
-        lfsr_stall          = 1'b0;
+        lru_sel_stall       = 1'b1;
         master_next_state   = IDLE_STATE;
         cpu_i_cache_stall   = 1'b0;
 
@@ -309,7 +324,6 @@ module i_cache #(
         miss_uncached_counter = 1'b0;
         case (master_state)
         IDLE_STATE: begin
-            lfsr_stall      = 1'b0;
             if (~cpu_en) begin
                 master_next_state = IDLE_STATE;
                 cpu_i_cache_stall = 1'b0; 
@@ -323,7 +337,6 @@ module i_cache #(
         end
 
         LOOKUP_STATE: begin
-            lfsr_stall      = 1'b0;
             if (~miss & ~cpu_en) begin
                 master_next_state = IDLE_STATE;
                 cpu_i_cache_stall = 1'b0;
@@ -333,21 +346,19 @@ module i_cache #(
                 cpu_i_cache_stall = 1'b0;
             end else begin
                 master_next_state = MISS_STATE;
+                lru_sel_stall     = 1'b0;
                 cpu_i_cache_stall = 1'b1;
             end
         end
 
         MISS_STATE: begin
             cpu_i_cache_stall       = 1'b1;
-            lfsr_stall              = 1'b0;
             master_next_state   = REPLACE_STATE;
-            lfsr_stall          = 1'b1;
             is_replace          = 1'b1;
         end
 
         REPLACE_STATE: begin
             cpu_i_cache_stall       = 1'b1;
-            lfsr_stall              = 1'b1;
             
             axi_araddr          = ~uncached_reg ? {psyaddr_reg[31:2+OFFSET_LOG], {(2 + OFFSET_LOG){1'b0}}} : {psyaddr_reg[31:2], 2'b00};
             axi_arburst         = ~uncached_reg ? 2'b10 : 2'b01;
@@ -362,7 +373,6 @@ module i_cache #(
 
         REFILL_STATE: begin
             axi_rready              = 1'b1;
-            lfsr_stall              = 1'b1;
             cpu_i_cache_stall       = 1'b1;
             if (axi_rvalid & ~uncached_reg)
                 is_refill           = 1'b1;
@@ -381,6 +391,13 @@ module i_cache #(
         end
 
         endcase
+    end
+
+    always @(posedge clk ) begin
+        if (is_refill & master_state == REFILL_STATE & lru_sel_reg) begin
+            $display("LRU is replaced at %h", vaddr_reg);
+            // $finish;
+        end
     end
 
     reg [31:0] total_counter;
