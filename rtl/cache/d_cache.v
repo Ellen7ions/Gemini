@@ -548,7 +548,7 @@ module d_cache #(
                 };
             end
 
-            if (axi_arready | uncached_reg & (|wen_reg) | ~uncached_reg) begin
+            if ((~uncached_reg | uncached_reg & ~(|wen_reg)) & axi_arready | uncached_reg & (|wen_reg)) begin
                 master_next_state   = REFILL_STATE;
             end else begin
                 master_next_state   = REPLACE_STATE;

@@ -47,18 +47,14 @@ module write_axi_buffer #(
 
     reg [3:0] counter;
     reg [3:0] next_counter;
-    reg       finished;
-    reg       next_finished;
 
     always @(posedge clk) begin
         if (rst) begin
             cur_state   <= IDLE;
-            finished    <= 1'b1;
             counter     <= 4'h0;
         end else begin
             cur_state   <= next_state;
-            finished    <= next_finished;
-            if (!next_finished) begin
+            if (next_state == WAIT_DATA) begin
                 counter <= next_counter;
             end
         end
@@ -77,7 +73,6 @@ module write_axi_buffer #(
         axi_wlast   = 1'b0;
         axi_wvalid  = 1'b0;
         axi_bready  = 1'b1;
-        next_finished   = 1'b1;
         next_counter    = 4'h0;
         next_state      = IDLE;
         case (cur_state)
@@ -91,7 +86,6 @@ module write_axi_buffer #(
                 if (axi_awready) begin
                     next_state  = WAIT_DATA;
                     next_counter= 4'd0;
-                    next_finished   = 1'b0;
                 end else begin
                     next_state  = WAIT_ADDR;
                 end
@@ -109,7 +103,6 @@ module write_axi_buffer #(
             if (axi_awready) begin
                 next_state  = WAIT_DATA;
                 next_counter= 4'd0;
-                next_finished   = 1'b0;
             end else begin
                 next_state  = WAIT_ADDR;
             end

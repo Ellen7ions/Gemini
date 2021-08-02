@@ -73,7 +73,7 @@ module cp0 (
             Cause       <= 32'd0;
             Index       <= 32'd0;
             EntryHi     <= 32'h0;
-            Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd2};   // kseg0 3'd3=cached, 3'd2=uncached
+            Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd3};   // kseg0 3'd3=cached, 3'd2=uncached
             Config1     <= {1'b0, 6'd16, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
         end else begin
             Count           <= Count + 32'h1;
