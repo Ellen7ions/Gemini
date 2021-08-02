@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
 
-module myCPU (
-    input   wire        clk,
-    input   wire        rst,
-    input   wire [5:0]  interrupt,
+module mycpu_top (
+    input   wire        aclk,
+    input   wire        aresetn,
+    input   wire [5:0]  ext_int,
 
     output  wire [3 :0] awid,
     output  wire [31:0] awaddr,
@@ -111,9 +111,9 @@ module myCPU (
     wire        d_cache_stall_req;
 
     gemini gemini0 (
-        .clk                    (clk                    ),
-        .rst                    (rst                    ),
-        .interrupt              (interrupt              ),
+        .clk                    (aclk                   ),
+        .rst                    (~aresetn               ),
+        .interrupt              (ext_int                ),
         
         .sram_inst_ena          (sram_inst_ena          ),
         .sram_inst_uncached     (sram_inst_uncached     ),
@@ -146,8 +146,8 @@ module myCPU (
     );
 
     i_cache i_cache0 (
-        .clk                    (clk                    ),
-        .rst                    (rst                    ),
+        .clk                    (aclk                   ),
+        .rst                    (~aresetn               ),
         .cpu_en                 (sram_inst_ena          ),
         .cpu_uncached           (sram_inst_uncached     ),
         .cpu_vaddr              (sram_inst_vaddr        ),
@@ -170,8 +170,8 @@ module myCPU (
     );
 
     d_cache d_cache0 (
-        .clk                    (clk                    ),
-        .rst                    (rst                    ),
+        .clk                    (aclk                   ),
+        .rst                    (~aresetn               ),
         
         .cpu_en                 (sram_data_ena          ),
         .cpu_wen                (sram_data_wen          ),
