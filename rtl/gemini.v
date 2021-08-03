@@ -24,14 +24,14 @@ module gemini (
     input   wire [31:0] sram_data_rdata,
     input   wire        d_cache_stall_req,
     
-    (*mark_debug = "true"*) output  wire [31:0] debug_wb_pc_1,
-    (*mark_debug = "true"*) output  wire [3 :0] debug_wb_rf_wen_1,
-    (*mark_debug = "true"*) output  wire [4 :0] debug_wb_rf_wnum_1,
-    (*mark_debug = "true"*) output  wire [31:0] debug_wb_rf_wdata_1,
-    (*mark_debug = "true"*) output  wire [31:0] debug_wb_pc_2,
-    (*mark_debug = "true"*) output  wire [3 :0] debug_wb_rf_wen_2,
-    (*mark_debug = "true"*) output  wire [4 :0] debug_wb_rf_wnum_2,
-    (*mark_debug = "true"*) output  wire [31:0] debug_wb_rf_wdata_2
+    output  wire [31:0] debug_wb_pc_1,
+    output  wire [3 :0] debug_wb_rf_wen_1,
+    output  wire [4 :0] debug_wb_rf_wnum_1,
+    output  wire [31:0] debug_wb_rf_wdata_1,
+    output  wire [31:0] debug_wb_pc_2,
+    output  wire [3 :0] debug_wb_rf_wen_2,
+    output  wire [4 :0] debug_wb_rf_wnum_2,
+    output  wire [31:0] debug_wb_rf_wdata_2
 );
 
     wire            id2c_take_jmp_o;
@@ -466,7 +466,7 @@ module gemini (
     wire            lsu1p_wb_reg_sel_i;
     wire [31:0]     lsu1p_rt_data_i;
 
-    (*mark_debug = "true"*) wire [31:0]     exc_pc_i;
+    wire [31:0]     exc_pc_i;
     wire [31:0]     exc_alu_res_i;
     wire [31:0]     exc_ls_addr_i;
     wire [1 :0]     exc_w_hilo_ena_i;

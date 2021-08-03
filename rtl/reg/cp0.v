@@ -48,7 +48,7 @@ module cp0 (
     reg [31:0]  BadVAddr;    // can't be written from software
     reg [32:0]  Count;
     reg [31:0]  Compare;
-    (*mark_debug = "true"*) reg [31:0]  EPC;
+    reg [31:0]  EPC;
     reg [31:0]  Status;
     reg [31:0]  Cause;
     reg [31:0]  Index;

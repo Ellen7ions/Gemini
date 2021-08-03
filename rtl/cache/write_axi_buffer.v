@@ -30,12 +30,12 @@ module write_axi_buffer #(
     output  reg                         axi_bready
 );
 
-    (*mark_debug = "true"*) reg                        uncached_reg;
-    (*mark_debug = "true"*) reg [31                :0] addr_reg;
-    (*mark_debug = "true"*) reg [3                 :0] size_reg;
-    (*mark_debug = "true"*) reg [3                 :0] wstrb_reg;
-    (*mark_debug = "true"*) reg [31                :0] data_reg;
-    (*mark_debug = "true"*) reg [LINE_SIZE * 8-1   :0] cache_line_reg;
+    reg                        uncached_reg;
+    reg [31                :0] addr_reg;
+    reg [3                 :0] size_reg;
+    reg [3                 :0] wstrb_reg;
+    reg [31                :0] data_reg;
+    reg [LINE_SIZE * 8-1   :0] cache_line_reg;
 
     localparam IDLE         = 0;
     localparam WAIT_ADDR    = 1;
