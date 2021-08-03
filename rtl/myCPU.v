@@ -53,7 +53,12 @@ module mycpu_top (
     output  wire [31:0] debug_wb_pc_2,
     output  wire [3 :0] debug_wb_rf_wen_2,
     output  wire [4 :0] debug_wb_rf_wnum_2,
-    output  wire [31:0] debug_wb_rf_wdata_2
+    output  wire [31:0] debug_wb_rf_wdata_2,
+    
+    output  wire [31:0] debug_wb_pc,
+    output  wire [3 :0] debug_wb_rf_wen,
+    output  wire [4 :0] debug_wb_rf_wnum,
+    output  wire [31:0] debug_wb_rf_wdata
 );
 
     wire [31:0] i_araddr;

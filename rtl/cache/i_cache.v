@@ -61,7 +61,6 @@ module i_cache #(
 
     localparam [2 :0] IDLE_STATE   = 0;
     localparam [2 :0] LOOKUP_STATE = 1;
-    localparam [2 :0] MISS_STATE   = 2;
     localparam [2 :0] REPLACE_STATE= 3;
     localparam [2 :0] REFILL_STATE = 4;
     localparam [2 :0] WRITE_STATE  = 5;
@@ -208,7 +207,6 @@ module i_cache #(
     assign refill_dina              = axi_rdata;
 
     reg is_lookup;
-    reg is_replace;
     reg is_refill;
     reg is_uncached_refill;
 
@@ -311,7 +309,6 @@ module i_cache #(
         cpu_i_cache_stall   = 1'b0;
 
         is_lookup           = 1'b0;
-        is_replace          = 1'b0;
         is_refill           = 1'b0;
         is_uncached_refill  = 1'b0;
 
@@ -326,7 +323,6 @@ module i_cache #(
         IDLE_STATE: begin
             if (~cpu_en) begin
                 master_next_state = IDLE_STATE;
-                cpu_i_cache_stall = 1'b0; 
             end else if (cpu_uncached) begin
                 master_next_state = REPLACE_STATE;
             end else begin
@@ -345,16 +341,10 @@ module i_cache #(
                 is_lookup         = 1'b1;
                 cpu_i_cache_stall = 1'b0;
             end else begin
-                master_next_state = MISS_STATE;
+                master_next_state = REPLACE_STATE;
                 lru_sel_stall     = 1'b0;
                 cpu_i_cache_stall = 1'b1;
             end
-        end
-
-        MISS_STATE: begin
-            cpu_i_cache_stall       = 1'b1;
-            master_next_state   = REPLACE_STATE;
-            is_replace          = 1'b1;
         end
 
         REPLACE_STATE: begin
@@ -391,13 +381,6 @@ module i_cache #(
         end
 
         endcase
-    end
-
-    always @(posedge clk ) begin
-        if (is_refill & master_state == REFILL_STATE & lru_sel_reg) begin
-            $display("LRU is replaced at %h", vaddr_reg);
-            // $finish;
-        end
     end
 
     reg [31:0] total_counter;
