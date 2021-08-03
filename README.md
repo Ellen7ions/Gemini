@@ -9,5 +9,5 @@ If you find Castor and Pollux, you find me.
 ### TODO
 
 - [x] Test d-cache
-- [ ] Optimize
+- [x] Optimize
 - [ ] PMON
