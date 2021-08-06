@@ -32,6 +32,7 @@ module issue_id2c (
     input   wire        id1_is_tlbwi_o,
     input   wire        id1_in_delay_slot_o,
     input   wire        id1_is_inst_adel_o,
+    input   wire        id1_is_ri_o,
     input   wire        id1_is_i_refill_tlbl_o,
     input   wire        id1_is_i_invalid_tlbl_o,
     input   wire        id1_is_refetch_o,
@@ -60,6 +61,7 @@ module issue_id2c (
     output  reg         id1_is_tlbwi_i,
     output  reg         id1_in_delay_slot_i,
     output  reg         id1_is_inst_adel_i,
+    output  reg         id1_is_ri_i,
     output  reg         id1_is_i_refill_tlbl_i,
     output  reg         id1_is_i_invalid_tlbl_i,
     output  reg         id1_is_refetch_i
@@ -94,6 +96,7 @@ module issue_id2c (
             id1_is_refetch_i        <=  1'b0;
             id1_pred_taken_i        <=  1'b0;
             id1_pred_target_i       <=  32'h0;
+            id1_is_ri_i             <=  1'h0;
         end else if (!flush & !stall) begin
             id1_pc_i                <=  id1_pc_o;
             id1_inst_i              <=  id1_inst_o;   
@@ -122,6 +125,7 @@ module issue_id2c (
             id1_is_refetch_i        <= id1_is_refetch_o;
             id1_pred_taken_i        <=  id1_pred_taken_o;
             id1_pred_target_i       <=  id1_pred_target_o;
+            id1_is_ri_i             <=  id1_is_ri_o;
         end
     end
     

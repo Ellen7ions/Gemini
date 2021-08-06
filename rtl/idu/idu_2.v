@@ -28,6 +28,7 @@ module idu_2 (
     input  wire             id1_is_tlbwi,
     input  wire             id1_in_delay_slot,
     input  wire             id1_inst_adel,
+    input  wire             id1_is_ri,
     input  wire             id1_is_i_refill_tlbl,
     input  wire             id1_is_i_invalid_tlbl,
     input  wire             id1_is_refetch,
@@ -316,7 +317,7 @@ module idu_2 (
     assign id2_is_inst_adel = id1_inst_adel;
     assign id2_is_ri        = 
             id1_valid & (
-                ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes) & ~id1_is_tlbr & ~id1_is_tlbp & ~id1_is_tlbwi & ~(op_code_is_special2 & func_code_is_mul)
+                id1_is_ri
             );
     assign id2_is_int       = cp0_has_int & id1_valid;
 

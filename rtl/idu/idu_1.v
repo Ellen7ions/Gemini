@@ -23,6 +23,7 @@ module idu_1 (
     output  wire            id1_is_tlbp,
     output  wire            id1_is_tlbr,
     output  wire            id1_is_tlbwi,
+    output  wire            id1_is_cache_inst,
     output  wire            id1_is_check_ov,
     output  wire            id1_is_ri,
 
@@ -271,6 +272,9 @@ module idu_1 (
                 func_code_is_mtlo    
             ));
     
+    assign id1_is_cache_inst=
+        !(id1_op_code ^ `CACHE_OP_CODE);
+    
     assign id1_is_tlbp  =
         !(inst ^ {`COP0_OP_CODE, 1'b1, 19'h0, 6'b001_000});
     assign id1_is_tlbr  =
@@ -327,6 +331,9 @@ module idu_1 (
             );
 
     assign id1_is_ri        =
-        ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0 & ~(|id1_op_codes) & ~id1_is_tlbr & ~id1_is_tlbp & ~id1_is_tlbwi & ~(op_code_is_special2 & func_code_is_mul);
+        ~inst_is_special & ~inst_is_regimm & ~inst_is_cop0  & 
+        ~(|id1_op_codes) & ~id1_is_tlbr & ~id1_is_tlbp      & 
+        ~id1_is_tlbwi    & ~(op_code_is_special2 & func_code_is_mul) &
+        ~id1_is_cache_inst;
 
 endmodule

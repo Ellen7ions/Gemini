@@ -197,6 +197,7 @@ module gemini (
     wire            id1c_is_ls_o;
     wire            id1c_in_delay_slot_o;
     wire            id1c_is_inst_adel_o;
+    wire            id1c_is_ri_o;
 
     wire            id1c_valid_i;
     wire [31:0]     id1c_pc_i;
@@ -217,6 +218,7 @@ module gemini (
     wire            id1c_is_ls_i;
     wire            id1c_in_delay_slot_i;
     wire            id1c_is_inst_adel_i;
+    wire            id1c_is_ri_i;
 
     wire            id1p_valid_o;
     wire [31:0]     id1p_pc_o;
@@ -600,6 +602,7 @@ module gemini (
         .id1_is_tlbwi_o     (id1c_is_tlbwi_o    ),
         .id1_in_delay_slot_o(id1c_in_delay_slot_o),
         .id1_is_inst_adel_o (id1c_is_inst_adel_o),
+        .id1_is_ri_o        (id1c_is_ri_o       ),
         .id1_is_i_refill_tlbl_o (id1c_is_i_refill_tlbl_o ),
         .id1_is_i_invalid_tlbl_o(id1c_is_i_invalid_tlbl_o),
         .id1_is_refetch_o       (id1c_is_refetch_o       ),
@@ -628,6 +631,7 @@ module gemini (
         .id1_is_tlbwi_i     (id1c_is_tlbwi_i    ),
         .id1_in_delay_slot_i(id1c_in_delay_slot_i),
         .id1_is_inst_adel_i (id1c_is_inst_adel_i),
+        .id1_is_ri_i        (id1c_is_ri_i       ),
         .id1_is_i_refill_tlbl_i (id1c_is_i_refill_tlbl_i ),
         .id1_is_i_invalid_tlbl_i(id1c_is_i_invalid_tlbl_i),
         .id1_is_refetch_i       (id1c_is_refetch_i       )
@@ -1372,6 +1376,7 @@ module gemini (
         .id1_is_tlbwi_1     (id1c_is_tlbwi_o    ),
         .id1_in_delay_slot_1(id1c_in_delay_slot_o),
         .id1_is_inst_adel_1 (id1c_is_inst_adel_o),
+        .id1_is_ri_1        (id1c_is_ri_o),
         .id1_is_i_refill_tlbl_1 (id1c_is_i_refill_tlbl_o ),
         .id1_is_i_invalid_tlbl_1(id1c_is_i_invalid_tlbl_o),
         .id1_is_refetch_1       (id1c_is_refetch_o       ),
@@ -1398,6 +1403,7 @@ module gemini (
         .id1_is_tlbwi_2     (),
         .id1_in_delay_slot_2(id1p_in_delay_slot_o),
         .id1_is_inst_adel_2 (),
+        .id1_is_ri_2        (),
         .id1_is_i_refill_tlbl_2 (),
         .id1_is_i_invalid_tlbl_2(),
         .id1_is_refetch_2       ()
@@ -1534,6 +1540,7 @@ module gemini (
         .id1_is_tlbwi       (id1c_is_tlbwi_i    ),
         .id1_in_delay_slot  (id1c_in_delay_slot_i),
         .id1_inst_adel      (id1c_is_inst_adel_i ),
+        .id1_is_ri          (id1c_is_ri_i),
         .id1_is_i_refill_tlbl (id1c_is_i_refill_tlbl_i  ),
         .id1_is_i_invalid_tlbl(id1c_is_i_invalid_tlbl_i ),
         .id1_is_refetch       (id1c_is_refetch_i        ),
@@ -1628,6 +1635,7 @@ module gemini (
         .id1_is_tlbwi       (),
         .id1_in_delay_slot  (id1p_in_delay_slot_i),
         .id1_inst_adel      (id1p_is_inst_adel_i ),
+        .id1_is_ri          (),
         .id1_is_i_refill_tlbl  (id1p_is_i_refill_tlbl_i ),
         .id1_is_i_invalid_tlbl (id1p_is_i_invalid_tlbl_i),
         .id1_is_refetch        (id1p_is_refetch_i       ),

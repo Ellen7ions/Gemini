@@ -52,6 +52,9 @@ module cp0 (
     reg [31:0]  Status;
     reg [31:0]  Cause;
     reg [31:0]  Index;
+    reg [31:0]  Random;
+    reg [31:0]  Wired;
+    reg [31:0]  PRId;
     reg [31:0]  EntryHi;
     reg [31:0]  EntryLo0;
     reg [31:0]  EntryLo1;
@@ -73,8 +76,9 @@ module cp0 (
             Cause       <= 32'd0;
             Index       <= 32'd0;
             EntryHi     <= 32'h0;
-            Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd3};   // kseg0 3'd3=cached, 3'd2=uncached
-            Config1     <= {1'b0, 6'd16, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
+            Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd0};   // kseg0 3'd3=cached, 3'd2=uncached
+            Config1     <= {1'b0, 6'd15, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
+            PRId        <= 32'h00004220;
         end else begin
             Count           <= Count + 32'h1;
             Cause[15:10]    <= {Cause[30] | interrupt[5], interrupt[4: 0]};
@@ -187,6 +191,10 @@ module cp0 (
 
         {5'd14, 3'd0}: begin
             r_data      = EPC; 
+        end
+
+        {5'd15, 3'd0}: begin
+            r_data      = PRId;
         end
 
         {5'd0, 3'd0}: begin

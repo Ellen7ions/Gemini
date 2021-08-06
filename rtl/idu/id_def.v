@@ -47,6 +47,7 @@
 `define LUI_OP_CODE         6'b001_111
 `define ORI_OP_CODE         6'b001_101
 `define XORI_OP_CODE        6'b001_110
+`define CACHE_OP_CODE       6'b101_111
 
 // ls
 `define LB_OP_CODE          6'b100_000

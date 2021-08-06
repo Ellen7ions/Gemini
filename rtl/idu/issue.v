@@ -45,6 +45,7 @@ module issue (
     output  wire        id1_in_delay_slot_1,
     output  wire        id1_is_check_ov_1,
     output  wire        id1_is_inst_adel_1,
+    output  wire        id1_is_ri_1,
     output  wire        id1_is_i_refill_tlbl_1,
     output  wire        id1_is_i_invalid_tlbl_1,
     output  wire        id1_is_refetch_1,
@@ -73,6 +74,7 @@ module issue (
     output  wire        id1_in_delay_slot_2,
     output  wire        id1_is_check_ov_2,
     output  wire        id1_is_inst_adel_2,
+    output  wire        id1_is_ri_2,
     output  wire        id1_is_i_refill_tlbl_2,
     output  wire        id1_is_i_invalid_tlbl_2,
     output  wire        id1_is_refetch_2
@@ -106,6 +108,7 @@ module issue (
         refetch ? ~cls_refetch : id1_valid_1 & (id1_is_tlbr_1 | id1_is_tlbwi_1) | id1_valid_2 & (id1_is_tlbr_2 | id1_is_tlbwi_2);
 
     wire id1_is_hilo_1, id1_is_hilo_2;
+    wire id1_is_cache_inst_1, id1_is_cache_inst_2;
     wire id1_is_mul_1, id1_is_mul_2;
     wire inst_jmp_1, inst_jmp_2;
     wire raw_conflict;
@@ -157,7 +160,8 @@ module issue (
                         id1_is_tlbr_1       |
                         id1_is_i_refill_tlbl_2  |
                         id1_is_i_invalid_tlbl_2 |
-                        id1_is_mul_2
+                        id1_is_mul_2        |
+                        id1_is_cache_inst_2
                     );
                 // if () begin
                 //     p_data_2 = 1'b0;
@@ -216,6 +220,7 @@ module issue (
         .id1_is_tlbp    (id1_is_tlbp_1      ),
         .id1_is_tlbr    (id1_is_tlbr_1      ),
         .id1_is_tlbwi   (id1_is_tlbwi_1     ),
+        .id1_is_cache_inst(id1_is_cache_inst_1),
         .id1_is_check_ov(id1_is_check_ov_1  ),
         .id1_is_ri      (id1_is_ri_1        )
     );
@@ -242,6 +247,7 @@ module issue (
         .id1_is_tlbp    (id1_is_tlbp_2      ),
         .id1_is_tlbr    (id1_is_tlbr_2      ),
         .id1_is_tlbwi   (id1_is_tlbwi_2     ),
+        .id1_is_cache_inst(id1_is_cache_inst_2),
         .id1_is_check_ov(id1_is_check_ov_2  ),
         .id1_is_ri      (id1_is_ri_2        )
     );
