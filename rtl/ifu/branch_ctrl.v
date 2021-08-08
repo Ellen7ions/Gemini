@@ -34,7 +34,8 @@ module branch_ctrl (
         (!(ex_branch_sel ^ `BRANCH_SEL_BLEZ    )) & (blez_check )  & ex_is_branch  |
         (!(ex_branch_sel ^ `BRANCH_SEL_BLTZ    )) & (bltz_check )  & ex_is_branch  |
         (!(ex_branch_sel ^ `BRANCH_SEL_BGEZAL  )) & (bgez_check )  & ex_is_branch  |
-        (!(ex_branch_sel ^ `BRANCH_SEL_BLTZAL  )) & (bltz_check )  & ex_is_branch  ;
+        (!(ex_branch_sel ^ `BRANCH_SEL_BLTZAL  )) & (bltz_check )  & ex_is_branch  |
+        (!(ex_branch_sel ^ `BRANCH_SEL_BAL     )) &                  ex_is_branch  ;
 
     assign ex_act_taken = ex_is_jr | ex_is_j_imme | ex_take_branch;
     assign flush_req    = 

@@ -215,8 +215,9 @@ module idu_1 (
             }} & id1_rt) |
             ({5{
                 (op_code_is_regimm) & (
-                    !(id1_rt ^ `BGEZAL_RT_CODE)   |
-                    !(id1_rt ^ `BLTZAL_RT_CODE   )
+                    !(id1_rt ^ `BGEZAL_RT_CODE  )   |
+                    !(id1_rt ^ `BLTZAL_RT_CODE  )   |
+                    !(id1_rt ^ `BAL_RT_CODE     ) & !(id1_rs ^ 5'h0)
                 ) |
                 (op_code_is_jal)
             }} & 5'd31 ) ;
@@ -319,10 +320,11 @@ module idu_1 (
             op_code_is_special  & (|id1_func_codes);
     wire inst_is_regimm     = 
             op_code_is_regimm   & (
-                ~(id1_rt ^ `BGEZ_RT_CODE   ) |    
-                ~(id1_rt ^ `BLTZ_RT_CODE   ) |
-                ~(id1_rt ^ `BGEZAL_RT_CODE ) |
-                ~(id1_rt ^ `BLTZAL_RT_CODE )  
+                !(id1_rt ^ `BGEZ_RT_CODE    ) |    
+                !(id1_rt ^ `BLTZ_RT_CODE    ) |
+                !(id1_rt ^ `BGEZAL_RT_CODE  ) |
+                !(id1_rt ^ `BLTZAL_RT_CODE  ) |
+                !(id1_rt ^ `BAL_RT_CODE     ) & !(id1_rs ^ 5'h0)
             );
     wire inst_is_cop0       =
             op_code_is_cop0     & (

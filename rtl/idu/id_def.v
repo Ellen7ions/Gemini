@@ -72,10 +72,11 @@
 `define JAL_OP_CODE         6'b000_011
 
 // jmp rt code
-`define BGEZ_RT_CODE        6'b000_01
-`define BLTZ_RT_CODE        6'b000_00
-`define BGEZAL_RT_CODE      6'b100_01
-`define BLTZAL_RT_CODE      6'b100_00
+`define BAL_RT_CODE         5'b100_01
+`define BGEZ_RT_CODE        5'b000_01
+`define BLTZ_RT_CODE        5'b000_00
+`define BGEZAL_RT_CODE      5'b100_01
+`define BLTZAL_RT_CODE      5'b100_00
 
 // cp0 rs code
 `define MFC0_RS_CODE        6'b000_00

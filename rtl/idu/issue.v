@@ -24,7 +24,7 @@ module issue (
     output  wire [29:0] id1_op_codes_1,
     output  wire [29:0] id1_func_codes_1,
     output  wire [31:0] id1_pc_1,
-    output  wire [31:0] id1_inst_1,
+    (*mark_debug="true"*) output  wire [31:0] id1_inst_1,
     output  wire [4 :0] id1_rs_1,
     output  wire [4 :0] id1_rt_1,
     output  wire [4 :0] id1_rd_1,

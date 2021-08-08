@@ -5,5 +5,6 @@
 `define BRANCH_SEL_BGTZ     4'h4
 `define BRANCH_SEL_BLEZ     4'h5
 `define BRANCH_SEL_BLTZ     4'h6
+`define BRANCH_SEL_BAL      4'h7
 `define BRANCH_SEL_BGEZAL   4'ha
 `define BRANCH_SEL_BLTZAL   4'hb

@@ -422,11 +422,14 @@ module idu_2 (
                 op_code_is_regimm & !(id1_rt   ^ `BLTZ_RT_CODE  )
             }} & (`BRANCH_SEL_BLTZ  )   |
             {4{
-                op_code_is_regimm & !(id1_rt   ^ `BGEZAL_RT_CODE)
+                op_code_is_regimm & !(id1_rt   ^ `BGEZAL_RT_CODE) & (id1_rs != 5'h0)
             }} & (`BRANCH_SEL_BGEZAL)   |
             {4{
                 op_code_is_regimm & !(id1_rt   ^ `BLTZAL_RT_CODE)
-            }} & (`BRANCH_SEL_BLTZAL)   ;
+            }} & (`BRANCH_SEL_BLTZAL)   |
+            {4{
+                op_code_is_regimm & !(id1_rt   ^ `BAL_RT_CODE   ) & !(id1_rs ^ 5'h0)
+            }} & (`BRANCH_SEL_BAL)      ;
 
     assign id2_branch_target    = id1_pc + 32'h4 + {{14{id1_imme[15]}}, id1_imme[15:0], 2'b00};
 
@@ -620,8 +623,9 @@ module idu_2 (
                 )   |
                 (op_code_is_jal)   |
                 (op_code_is_regimm) & (
-                id1_rt == `BLTZAL_RT_CODE |
-                id1_rt == `BGEZAL_RT_CODE
+                id1_rt == `BLTZAL_RT_CODE   |
+                id1_rt == `BGEZAL_RT_CODE   |
+                (id1_rt == `BAL_RT_CODE) & (id1_rs == 5'h0)      
                 )
             }} & (`ALU_RES_SEL_PC_8));
 
