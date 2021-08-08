@@ -9,7 +9,7 @@ module issue_id2c (
 
     input   wire        id1_valid_o,
 
-    input   wire [29:0] id1_op_codes_o,
+    input   wire [30:0] id1_op_codes_o,
     input   wire [29:0] id1_func_codes_o,
     input   wire [31:0] id1_pc_o,
     input   wire [31:0] id1_inst_o,
@@ -24,6 +24,7 @@ module issue_id2c (
     input   wire        id1_pred_taken_o,
     input   wire [31:0] id1_pred_target_o,
     input   wire        id1_is_branch_o,
+    input   wire        id1_is_branch_likely_o,
     input   wire        id1_is_j_imme_o,
     input   wire        id1_is_jr_o,
     input   wire        id1_is_ls_o,
@@ -38,7 +39,7 @@ module issue_id2c (
     input   wire        id1_is_refetch_o,
 
     output  reg         id1_valid_i,
-    output  reg  [29:0] id1_op_codes_i,
+    output  reg  [30:0] id1_op_codes_i,
     output  reg  [29:0] id1_func_codes_i,
     output  reg  [31:0] id1_pc_i,
     output  reg  [31:0] id1_inst_i,
@@ -53,6 +54,7 @@ module issue_id2c (
     output  reg         id1_pred_taken_i,
     output  reg  [31:0] id1_pred_target_i,
     output  reg         id1_is_branch_i,
+    output  reg         id1_is_branch_likely_i,
     output  reg         id1_is_j_imme_i,
     output  reg         id1_is_jr_i,
     output  reg         id1_is_ls_i,
@@ -83,7 +85,7 @@ module issue_id2c (
             id1_is_j_imme_i         <=  1'b0;
             id1_is_jr_i             <=  1'b0;
             id1_is_ls_i             <=  1'b0;
-            id1_op_codes_i          <=  30'h0;
+            id1_op_codes_i          <=  31'h0;
             id1_func_codes_i        <=  30'h0;
             id1_in_delay_slot_i     <=  1'h0;
             id1_is_inst_adel_i      <=  1'h0;
@@ -97,6 +99,7 @@ module issue_id2c (
             id1_pred_taken_i        <=  1'b0;
             id1_pred_target_i       <=  32'h0;
             id1_is_ri_i             <=  1'h0;
+            id1_is_branch_likely_i  <=  1'b0;
         end else if (!flush & !stall) begin
             id1_pc_i                <=  id1_pc_o;
             id1_inst_i              <=  id1_inst_o;   
@@ -126,6 +129,7 @@ module issue_id2c (
             id1_pred_taken_i        <=  id1_pred_taken_o;
             id1_pred_target_i       <=  id1_pred_target_o;
             id1_is_ri_i             <=  id1_is_ri_o;
+            id1_is_branch_likely_i  <= id1_is_branch_likely_o;
         end
     end
     

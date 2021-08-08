@@ -8,7 +8,7 @@ module idu_2 (
     input  wire             id1_valid,
     input  wire             cp0_has_int,
 
-    input  wire [29:0]      id1_op_codes,
+    input  wire [30:0]      id1_op_codes,
     input  wire [29:0]      id1_func_codes,
     input  wire [31:0]      id1_pc,
     input  wire [4 :0]      id1_rs,
@@ -20,6 +20,7 @@ module idu_2 (
     input  wire [15:0]      id1_imme,
     input  wire [25:0]      id1_j_imme,
     input  wire             id1_is_branch,
+    input  wire             id1_is_branch_likely,
     input  wire             id1_is_j_imme,
     input  wire             id1_is_jr,
     input  wire             id1_is_ls,
@@ -94,6 +95,7 @@ module idu_2 (
     // output wire             id2_take_jr,
     // output wire             id2_flush_req,
     output wire             id2_is_branch,
+    output wire             id2_is_branch_likely,
     output wire             id2_is_j_imme,
     output wire             id2_is_jr,
     output wire [3 :0]      id2_branch_sel,
@@ -144,6 +146,7 @@ module idu_2 (
     wire op_code_is_sw;
     wire op_code_is_swl;
     wire op_code_is_swr;
+    wire op_code_is_beql;
 
     assign {
         op_code_is_special,
@@ -175,7 +178,8 @@ module idu_2 (
         op_code_is_sh,
         op_code_is_sw,
         op_code_is_swl,
-        op_code_is_swr
+        op_code_is_swr,
+        op_code_is_beql
     }   = id1_op_codes;
 
     wire func_code_is_add;
@@ -273,7 +277,7 @@ module idu_2 (
         op_code_is_lwl      | op_code_is_lwr    ;
 
     wire read_both =
-        inst_is_special | op_code_is_beq    | op_code_is_bne    | 
+        inst_is_special | op_code_is_beq    | op_code_is_bne    | op_code_is_beql |
         op_code_is_sb   | op_code_is_sh     | op_code_is_sw     |
         op_code_is_swl  | op_code_is_swr    | (op_code_is_special2 & func_code_is_mul);
 
@@ -327,6 +331,7 @@ module idu_2 (
             op_code_is_addi; 
 
     assign id2_is_branch        = id1_is_branch;    
+    assign id2_is_branch_likely = id1_is_branch_likely;
     assign id2_is_j_imme        = id1_is_j_imme;    
     assign id2_is_jr            = id1_is_jr;
     assign id2_is_ls            = id1_is_ls;
@@ -404,7 +409,8 @@ module idu_2 (
             
     assign id2_branch_sel = 
             {4{
-                op_code_is_beq
+                op_code_is_beq  |
+                op_code_is_beql
             }} & (`BRANCH_SEL_BEQ   )   |
             {4{
                 op_code_is_bne

@@ -70,6 +70,7 @@
 `define BLEZ_OP_CODE        6'b000_110
 `define J_OP_CODE           6'b000_010
 `define JAL_OP_CODE         6'b000_011
+`define BEQL_OP_CODE        6'b010_100
 
 // jmp rt code
 `define BAL_RT_CODE         5'b100_01

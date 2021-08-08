@@ -9,7 +9,7 @@ module issue_id2p (
 
     input   wire        id1_valid_o,
 
-    input   wire [29:0] id1_op_codes_o,
+    input   wire [30:0] id1_op_codes_o,
     input   wire [29:0] id1_func_codes_o,
     input   wire [31:0] id1_pc_o,
     input   wire [31:0] id1_inst_o,
@@ -24,7 +24,7 @@ module issue_id2p (
     input   wire        id1_in_delay_slot_o,
 
     output  reg         id1_valid_i,
-    output  reg  [29:0] id1_op_codes_i,
+    output  reg  [30:0] id1_op_codes_i,
     output  reg  [29:0] id1_func_codes_i,
     output  reg  [31:0] id1_pc_i,
     output  reg  [31:0] id1_inst_i,
@@ -51,7 +51,7 @@ module issue_id2p (
             id1_w_reg_dst_i         <=  5'h0;
             id1_imme_i              <=  16'h0;
             id1_j_imme_i            <=  26'h0;
-            id1_op_codes_i          <=  30'h0;
+            id1_op_codes_i          <=  31'h0;
             id1_func_codes_i        <=  30'h0;
             id1_in_delay_slot_i     <=  1'h0;
             id1_valid_i             <=  1'b0;

@@ -4,7 +4,7 @@
 
 module idu_1 (
     input   wire [31:0]     inst,
-    output  wire [29:0]     id1_op_codes,
+    output  wire [30:0]     id1_op_codes,
     output  wire [29:0]     id1_func_codes,
     output  wire [4 :0]     id1_rs,
     output  wire [4 :0]     id1_rt,
@@ -15,6 +15,7 @@ module idu_1 (
     output  wire [15:0]     id1_imme,
     output  wire [25:0]     id1_j_imme,
     output  wire            id1_is_branch,
+    output  wire            id1_is_branch_likely,
     output  wire            id1_is_j_imme,
     output  wire            id1_is_jr,
     output  wire            id1_is_ls,
@@ -40,36 +41,37 @@ module idu_1 (
     assign id1_imme      = inst[15: 0];
     assign id1_j_imme    = inst[25: 0];
 
-    wire op_code_is_special =   !(id1_op_code   ^ `SPECIAL_OP_CODE    );
-    wire op_code_is_special2=   !(id1_op_code   ^ `SPECIAL2_OP_CODE   );
-    wire op_code_is_cop0    =   !(id1_op_code   ^ `COP0_OP_CODE       );
-    wire op_code_is_regimm  =   !(id1_op_code   ^ `REGIMM_OP_CODE     );
-    wire op_code_is_addi    =   !(id1_op_code   ^ `ADDI_OP_CODE       );
-    wire op_code_is_addiu   =   !(id1_op_code   ^ `ADDIU_OP_CODE      );
-    wire op_code_is_slti    =   !(id1_op_code   ^ `SLTI_OP_CODE       );
-    wire op_code_is_sltiu   =   !(id1_op_code   ^ `SLTIU_OP_CODE      );
-    wire op_code_is_andi    =   !(id1_op_code   ^ `ANDI_OP_CODE       );
-    wire op_code_is_lui     =   !(id1_op_code   ^ `LUI_OP_CODE        );
-    wire op_code_is_ori     =   !(id1_op_code   ^ `ORI_OP_CODE        );
-    wire op_code_is_xori    =   !(id1_op_code   ^ `XORI_OP_CODE       );
-    wire op_code_is_lb      =   !(id1_op_code   ^ `LB_OP_CODE         );
-    wire op_code_is_lh      =   !(id1_op_code   ^ `LH_OP_CODE         );
-    wire op_code_is_lbu     =   !(id1_op_code   ^ `LBU_OP_CODE        );
-    wire op_code_is_lhu     =   !(id1_op_code   ^ `LHU_OP_CODE        );
-    wire op_code_is_lw      =   !(id1_op_code   ^ `LW_OP_CODE         );
-    wire op_code_is_lwl     =   !(id1_op_code   ^ `LWL_OP_CODE        );
-    wire op_code_is_lwr     =   !(id1_op_code   ^ `LWR_OP_CODE        );
-    wire op_code_is_jal     =   !(id1_op_code   ^ `JAL_OP_CODE        );
-    wire op_code_is_beq     =   !(id1_op_code   ^ `BEQ_OP_CODE        );
-    wire op_code_is_bne     =   !(id1_op_code   ^ `BNE_OP_CODE        );
-    wire op_code_is_bgtz    =   !(id1_op_code   ^ `BGTZ_OP_CODE       );
-    wire op_code_is_blez    =   !(id1_op_code   ^ `BLEZ_OP_CODE       );
-    wire op_code_is_j       =   !(id1_op_code   ^ `J_OP_CODE          );
-    wire op_code_is_sb      =   !(id1_op_code   ^ `SB_OP_CODE         );
-    wire op_code_is_sh      =   !(id1_op_code   ^ `SH_OP_CODE         );
-    wire op_code_is_sw      =   !(id1_op_code   ^ `SW_OP_CODE         );
-    wire op_code_is_swl     =   !(id1_op_code   ^ `SWL_OP_CODE        );
-    wire op_code_is_swr     =   !(id1_op_code   ^ `SWR_OP_CODE        );
+    wire op_code_is_special =   !(id1_op_code   ^ `SPECIAL_OP_CODE  );
+    wire op_code_is_special2=   !(id1_op_code   ^ `SPECIAL2_OP_CODE );
+    wire op_code_is_cop0    =   !(id1_op_code   ^ `COP0_OP_CODE     );
+    wire op_code_is_regimm  =   !(id1_op_code   ^ `REGIMM_OP_CODE   );
+    wire op_code_is_addi    =   !(id1_op_code   ^ `ADDI_OP_CODE     );
+    wire op_code_is_addiu   =   !(id1_op_code   ^ `ADDIU_OP_CODE    );
+    wire op_code_is_slti    =   !(id1_op_code   ^ `SLTI_OP_CODE     );
+    wire op_code_is_sltiu   =   !(id1_op_code   ^ `SLTIU_OP_CODE    );
+    wire op_code_is_andi    =   !(id1_op_code   ^ `ANDI_OP_CODE     );
+    wire op_code_is_lui     =   !(id1_op_code   ^ `LUI_OP_CODE      );
+    wire op_code_is_ori     =   !(id1_op_code   ^ `ORI_OP_CODE      );
+    wire op_code_is_xori    =   !(id1_op_code   ^ `XORI_OP_CODE     );
+    wire op_code_is_lb      =   !(id1_op_code   ^ `LB_OP_CODE       );
+    wire op_code_is_lh      =   !(id1_op_code   ^ `LH_OP_CODE       );
+    wire op_code_is_lbu     =   !(id1_op_code   ^ `LBU_OP_CODE      );
+    wire op_code_is_lhu     =   !(id1_op_code   ^ `LHU_OP_CODE      );
+    wire op_code_is_lw      =   !(id1_op_code   ^ `LW_OP_CODE       );
+    wire op_code_is_lwl     =   !(id1_op_code   ^ `LWL_OP_CODE      );
+    wire op_code_is_lwr     =   !(id1_op_code   ^ `LWR_OP_CODE      );
+    wire op_code_is_jal     =   !(id1_op_code   ^ `JAL_OP_CODE      );
+    wire op_code_is_beq     =   !(id1_op_code   ^ `BEQ_OP_CODE      );
+    wire op_code_is_bne     =   !(id1_op_code   ^ `BNE_OP_CODE      );
+    wire op_code_is_bgtz    =   !(id1_op_code   ^ `BGTZ_OP_CODE     );
+    wire op_code_is_blez    =   !(id1_op_code   ^ `BLEZ_OP_CODE     );
+    wire op_code_is_j       =   !(id1_op_code   ^ `J_OP_CODE        );
+    wire op_code_is_sb      =   !(id1_op_code   ^ `SB_OP_CODE       );
+    wire op_code_is_sh      =   !(id1_op_code   ^ `SH_OP_CODE       );
+    wire op_code_is_sw      =   !(id1_op_code   ^ `SW_OP_CODE       );
+    wire op_code_is_swl     =   !(id1_op_code   ^ `SWL_OP_CODE      );
+    wire op_code_is_swr     =   !(id1_op_code   ^ `SWR_OP_CODE      );
+    wire op_code_is_beql    =   !(id1_op_code   ^ `BEQL_OP_CODE     );   
     
     assign id1_op_codes = {
         op_code_is_special,
@@ -101,7 +103,8 @@ module idu_1 (
         op_code_is_sh,
         op_code_is_sw,
         op_code_is_swl,
-        op_code_is_swr
+        op_code_is_swr,
+        op_code_is_beql
     };
 
     wire func_code_is_add       =   !(id1_funct ^ `ADD_FUNCT    );
@@ -223,11 +226,15 @@ module idu_1 (
             }} & 5'd31 ) ;
 
     assign id1_is_branch    =
-            (op_code_is_beq    )   |
-            (op_code_is_bne    )   |
-            (op_code_is_regimm )   |
-            (op_code_is_bgtz   )   |
-            (op_code_is_blez   )   ;
+            (id1_is_branch_likely    )   |
+            (op_code_is_beq     )   |
+            (op_code_is_bne     )   |
+            (op_code_is_regimm  )   |
+            (op_code_is_bgtz    )   |
+            (op_code_is_blez    )   ;
+    
+    assign id1_is_branch_likely = 
+            op_code_is_beql;
             
     assign id1_is_j_imme    = 
             (op_code_is_j      )   |

@@ -9,6 +9,7 @@ module branch_ctrl (
     input   wire        ex_is_jr,
     input   wire        ex_is_j_imme,
     input   wire [3 :0] ex_branch_sel,
+    input   wire        ex_is_branch_likely,
     
     input   wire        ex_pred_taken,
     input   wire [31:0] ex_pred_target,
@@ -16,7 +17,8 @@ module branch_ctrl (
 
     output  wire        ex_is_jmp,
     output  wire        ex_act_taken,
-    output  wire        flush_req
+    output  wire        flush_req,
+    output  wire        flush_delay_slot
 );
     assign ex_is_jmp = ex_is_branch | ex_is_jr | ex_is_j_imme;
     wire beq_check      = ex_rs_data == ex_rt_data;
@@ -38,9 +40,13 @@ module branch_ctrl (
         (!(ex_branch_sel ^ `BRANCH_SEL_BAL     )) &                  ex_is_branch  ;
 
     assign ex_act_taken = ex_is_jr | ex_is_j_imme | ex_take_branch;
+    
     assign flush_req    = 
         ex_is_jmp & (
             ex_pred_taken != ex_act_taken |
             ex_act_taken & (ex_pred_target != ex_act_target)
         );
+    
+    assign flush_delay_slot =
+        ex_is_branch_likely & ~ex_take_branch;
 endmodule

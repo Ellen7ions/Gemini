@@ -21,7 +21,7 @@ module issue (
 
     // to iduc
     output  wire        id1_valid_1,
-    output  wire [29:0] id1_op_codes_1,
+    output  wire [30:0] id1_op_codes_1,
     output  wire [29:0] id1_func_codes_1,
     output  wire [31:0] id1_pc_1,
     (*mark_debug="true"*) output  wire [31:0] id1_inst_1,
@@ -36,6 +36,7 @@ module issue (
     output  wire        id1_pred_taken_1,
     output  wire [31:0] id1_pred_target_1,
     output  wire        id1_is_branch_1,
+    output  wire        id1_is_branch_likely_1,
     output  wire        id1_is_j_imme_1,
     output  wire        id1_is_jr_1,
     output  wire        id1_is_ls_1,
@@ -52,7 +53,7 @@ module issue (
 
     // to idup
     output  wire        id1_valid_2,
-    output  wire [29:0] id1_op_codes_2,
+    output  wire [30:0] id1_op_codes_2,
     output  wire [29:0] id1_func_codes_2,
     output  wire [31:0] id1_pc_2,
     output  wire [31:0] id1_inst_2,
@@ -65,6 +66,7 @@ module issue (
     output  wire [15:0] id1_imme_2,
     output  wire [25:0] id1_j_imme_2,
     output  wire        id1_is_branch_2,
+    output  wire        id1_is_branch_likely_2,
     output  wire        id1_is_j_imme_2,
     output  wire        id1_is_jr_2,
     output  wire        id1_is_ls_2,
@@ -113,6 +115,7 @@ module issue (
     wire inst_jmp_1, inst_jmp_2;
     wire raw_conflict;
     wire id1_is_cop0_1, id1_is_cop0_2;
+
     assign inst_jmp_1 =
             id1_is_branch_1 | id1_is_j_imme_1 | id1_is_jr_1;
     assign inst_jmp_2 =
@@ -158,10 +161,15 @@ module issue (
                         id1_is_tlbwi_1      |
                         id1_is_tlbp_1       |
                         id1_is_tlbr_1       |
+                        id1_is_tlbwi_2      |
+                        id1_is_tlbp_2       |
+                        id1_is_tlbr_2       |
                         id1_is_i_refill_tlbl_2  |
                         id1_is_i_invalid_tlbl_2 |
-                        id1_is_mul_2        |
-                        id1_is_cache_inst_2
+                        id1_is_mul_2            |
+                        id1_is_cache_inst_2     |
+                        id1_is_branch_likely_2  |
+                        id1_is_branch_likely_1
                     );
                 // if () begin
                 //     p_data_2 = 1'b0;
@@ -211,6 +219,7 @@ module issue (
         .id1_imme       (id1_imme_1         ),
         .id1_j_imme     (id1_j_imme_1       ),
         .id1_is_branch  (id1_is_branch_1    ),
+        .id1_is_branch_likely(id1_is_branch_likely_1),
         .id1_is_j_imme  (id1_is_j_imme_1    ),
         .id1_is_jr      (id1_is_jr_1        ),
         .id1_is_ls      (id1_is_ls_1        ),
@@ -238,6 +247,7 @@ module issue (
         .id1_imme       (id1_imme_2         ),
         .id1_j_imme     (id1_j_imme_2       ),
         .id1_is_branch  (id1_is_branch_2    ),
+        .id1_is_branch_likely(id1_is_branch_likely_2),
         .id1_is_j_imme  (id1_is_j_imme_2    ),
         .id1_is_jr      (id1_is_jr_2        ),
         .id1_is_ls      (id1_is_ls_2        ),

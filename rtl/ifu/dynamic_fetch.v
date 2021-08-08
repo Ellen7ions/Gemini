@@ -70,6 +70,7 @@ module dynamic_fetch (
 
     wire inst_is_jmp_1 = 
         (!(inst_1[31:26]    ^ `BEQ_OP_CODE      ))   |
+        (!(inst_1[31:26]    ^ `BEQL_OP_CODE     ))   |
         (!(inst_1[31:26]    ^ `BNE_OP_CODE      ))   |
         (!(inst_1[31:26]    ^ `REGIMM_OP_CODE   ))   |
         (!(inst_1[31:26]    ^ `BGTZ_OP_CODE     ))   |
@@ -83,6 +84,7 @@ module dynamic_fetch (
 
     wire inst_is_jmp_2 = 
         (!(inst_2[31:26]    ^ `BEQ_OP_CODE      ))   |
+        (!(inst_1[31:26]    ^ `BEQL_OP_CODE     ))   |
         (!(inst_2[31:26]    ^ `BNE_OP_CODE      ))   |
         (!(inst_2[31:26]    ^ `REGIMM_OP_CODE   ))   |
         (!(inst_2[31:26]    ^ `BGTZ_OP_CODE     ))   |

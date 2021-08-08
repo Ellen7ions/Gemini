@@ -153,6 +153,7 @@ module gemini (
     wire            forwardp_req;
     // wire            id2c_flush_req;
     wire            b_ctrl_flush_req;
+    wire            flush_delay_slot;
     wire            exc_stall_req;
     wire            exc_cp0_stall;
 
@@ -179,7 +180,7 @@ module gemini (
     wire [31:0]     wbp_w_reg_data_o;
 
     wire            id1c_valid_o;
-    wire [29:0]     id1c_op_codes_o;
+    wire [30:0]     id1c_op_codes_o;
     wire [29:0]     id1c_func_codes_o;
     wire [31:0]     id1c_pc_o;
     wire [31:0]     id1c_inst_o;
@@ -192,6 +193,7 @@ module gemini (
     wire [15:0]     id1c_imme_o;
     wire [25:0]     id1c_j_imme_o;
     wire            id1c_is_branch_o;
+    wire            id1c_is_branch_likely_o;
     wire            id1c_is_j_imme_o;
     wire            id1c_is_jr_o;
     wire            id1c_is_ls_o;
@@ -202,7 +204,7 @@ module gemini (
     wire            id1c_valid_i;
     wire [31:0]     id1c_pc_i;
     wire [31:0]     id1c_inst_i;
-    wire [29:0]     id1c_op_codes_i;
+    wire [30:0]     id1c_op_codes_i;
     wire [29:0]     id1c_func_codes_i;
     wire [4 :0]     id1c_rs_i;
     wire [4 :0]     id1c_rt_i;
@@ -213,6 +215,7 @@ module gemini (
     wire [15:0]     id1c_imme_i;
     wire [25:0]     id1c_j_imme_i;
     wire            id1c_is_branch_i;
+    wire            id1c_is_branch_likely_i;
     wire            id1c_is_j_imme_i;
     wire            id1c_is_jr_i;
     wire            id1c_is_ls_i;
@@ -222,7 +225,7 @@ module gemini (
 
     wire            id1p_valid_o;
     wire [31:0]     id1p_pc_o;
-    wire [29:0]     id1p_op_codes_o;
+    wire [30:0]     id1p_op_codes_o;
     wire [29:0]     id1p_func_codes_o;
     wire [31:0]     id1p_inst_o;
     wire [4 :0]     id1p_rs_o;
@@ -237,7 +240,7 @@ module gemini (
 
     wire            id1p_valid_i;
     wire [31:0]     id1p_pc_i;
-    wire [29:0]     id1p_op_codes_i;
+    wire [30:0]     id1p_op_codes_i;
     wire [29:0]     id1p_func_codes_i;
     wire [31:0]     id1p_inst_i;
     wire [4 :0]     id1p_rs_i;
@@ -258,6 +261,7 @@ module gemini (
     wire            id2c_is_ri_o;
     wire            id2c_is_check_ov_o;
     wire            id2c_is_branch_o;
+    wire            id2c_is_branch_likely_o;
     wire            id2c_is_j_imme_o;
     wire            id2c_is_jr_o;
     wire            id2c_is_ls_o;
@@ -293,6 +297,7 @@ module gemini (
     wire            id2c_is_ri_i;
     wire            id2c_is_check_ov_i;
     wire            id2c_is_branch_i;
+    wire            id2c_is_branch_likely_i;
     wire            id2c_is_j_imme_i;
     wire            id2c_is_jr_i;
     wire            id2c_is_ls_i;
@@ -594,6 +599,7 @@ module gemini (
         .id1_pred_taken_o   (id1c_pred_taken_o  ),
         .id1_pred_target_o  (id1c_pred_target_o ),
         .id1_is_branch_o    (id1c_is_branch_o   ),
+        .id1_is_branch_likely_o(id1c_is_branch_likely_o),
         .id1_is_j_imme_o    (id1c_is_j_imme_o   ),
         .id1_is_jr_o        (id1c_is_jr_o       ),
         .id1_is_ls_o        (id1c_is_ls_o       ),
@@ -623,6 +629,7 @@ module gemini (
         .id1_pred_taken_i   (id1c_pred_taken_i  ),
         .id1_pred_target_i  (id1c_pred_target_i ),
         .id1_is_branch_i    (id1c_is_branch_i   ),
+        .id1_is_branch_likely_i(id1c_is_branch_likely_i),
         .id1_is_j_imme_i    (id1c_is_j_imme_i   ),
         .id1_is_jr_i        (id1c_is_jr_i       ),
         .id1_is_ls_i        (id1c_is_ls_i       ),
@@ -702,6 +709,7 @@ module gemini (
         .id2_pred_taken_o   (id1c_pred_taken_i  ),
         .id2_pred_target_o  (id1c_pred_target_i ),
         .id2_is_branch_o    (id2c_is_branch_o   ),
+        .id2_is_branch_likely_o(id2c_is_branch_likely_o),
         .id2_is_j_imme_o    (id2c_is_j_imme_o   ),
         .id2_is_jr_o        (id2c_is_jr_o       ),
         .id2_branch_sel_o   (id2c_branch_sel_o  ),
@@ -749,6 +757,7 @@ module gemini (
         .id2_pred_taken_i   (id2c_pred_taken_i  ),
         .id2_pred_target_i  (id2c_pred_target_i ),
         .id2_is_branch_i    (id2c_is_branch_i   ),
+        .id2_is_branch_likely_i(id2c_is_branch_likely_i),
         .id2_is_j_imme_i    (id2c_is_j_imme_i   ),
         .id2_is_jr_i        (id2c_is_jr_i       ),
         .id2_branch_sel_i   (id2c_branch_sel_i  ),
@@ -1238,12 +1247,14 @@ module gemini (
         .ex_is_jr           (id2c_is_jr_i       ),
         .ex_is_j_imme       (id2c_is_j_imme_i   ),
         .ex_branch_sel      (id2c_branch_sel_i  ),
+        .ex_is_branch_likely(id2c_is_branch_likely_i),
         .ex_pred_taken      (id2c_pred_taken_i  ),
         .ex_pred_target     (id2c_pred_target_i ),
         .ex_act_target      (id2c_jmp_target_i  ),
         .ex_is_jmp          (ex_is_jmp          ),
         .ex_act_taken       (ex_act_taken       ),
-        .flush_req          (b_ctrl_flush_req   )
+        .flush_req          (b_ctrl_flush_req   ),
+        .flush_delay_slot   (flush_delay_slot   )
     );
 
     pc pc_cp (
@@ -1368,6 +1379,7 @@ module gemini (
         .id1_pred_taken_1   (id1c_pred_taken_o  ),
         .id1_pred_target_1  (id1c_pred_target_o ),
         .id1_is_branch_1    (id1c_is_branch_o   ),
+        .id1_is_branch_likely_1(id1c_is_branch_likely_o),
         .id1_is_j_imme_1    (id1c_is_j_imme_o   ),
         .id1_is_jr_1        (id1c_is_jr_o       ),
         .id1_is_ls_1        (id1c_is_ls_o       ),
@@ -1395,6 +1407,7 @@ module gemini (
         .id1_imme_2         (id1p_imme_o        ),
         .id1_j_imme_2       (id1p_j_imme_o      ),
         .id1_is_branch_2    (),
+        .id1_is_branch_likely_2(),
         .id1_is_j_imme_2    (),
         .id1_is_jr_2        (),
         .id1_is_ls_2        (),
@@ -1532,6 +1545,7 @@ module gemini (
         .id1_imme           (id1c_imme_i        ),
         .id1_j_imme         (id1c_j_imme_i      ),
         .id1_is_branch      (id1c_is_branch_i   ),
+        .id1_is_branch_likely(id1c_is_branch_likely_i),
         .id1_is_j_imme      (id1c_is_j_imme_i   ),
         .id1_is_jr          (id1c_is_jr_i       ),
         .id1_is_ls          (id1c_is_ls_i       ),
@@ -1595,6 +1609,7 @@ module gemini (
         .id2_ext_imme       (id2c_ext_imme_o    ),
 
         .id2_is_branch      (id2c_is_branch_o   ),
+        .id2_is_branch_likely(id2c_is_branch_likely_o),
         .id2_is_j_imme      (id2c_is_j_imme_o   ),
         .id2_is_jr          (id2c_is_jr_o       ),
         .id2_branch_sel     (id2c_branch_sel_o  ),
@@ -2109,6 +2124,7 @@ module gemini (
         .forwardc_req       (forwardc_req       ),
         .forwardp_req       (forwardp_req       ),
         .b_ctrl_flush_req   (b_ctrl_flush_req   ),
+        .flush_delay_slot   (flush_delay_slot   ),
         .with_delaysolt     (id2p_in_delay_slot_i),
         .exc_stall_req      (exc_stall_req      ),
         .exc_cp0_stall      (exc_cp0_stall      ),
