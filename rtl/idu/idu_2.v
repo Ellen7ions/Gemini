@@ -27,6 +27,7 @@ module idu_2 (
     input  wire             id1_is_tlbp,
     input  wire             id1_is_tlbr,
     input  wire             id1_is_tlbwi,
+    input  wire             id1_is_tlbwr,
     input  wire             id1_in_delay_slot,
     input  wire             id1_inst_adel,
     input  wire             id1_is_ri,
@@ -69,6 +70,7 @@ module idu_2 (
     output wire             id2_is_tlbp,
     output wire             id2_is_tlbr,
     output wire             id2_is_tlbwi,
+    output wire             id2_is_tlbwr,
     output wire             id2_is_i_refill_tlbl,
     output wire             id2_is_i_invalid_tlbl,
     output wire             id2_is_refetch,
@@ -273,13 +275,13 @@ module idu_2 (
         op_code_is_regimm   & (id1_rt == `BLTZ_RT_CODE)     | 
         op_code_is_regimm   & (id1_rt == `BGEZAL_RT_CODE)   |
         op_code_is_regimm   & (id1_rt == `BLTZAL_RT_CODE)   |
-        op_code_is_lb       | op_code_is_lbu    | op_code_is_lh     | op_code_is_lhu | op_code_is_lw | 
-        op_code_is_lwl      | op_code_is_lwr    ;
+        op_code_is_lb       | op_code_is_lbu    | op_code_is_lh     | op_code_is_lhu | op_code_is_lw ;
 
     wire read_both =
         inst_is_special | op_code_is_beq    | op_code_is_bne    | op_code_is_beql |
         op_code_is_sb   | op_code_is_sh     | op_code_is_sw     |
-        op_code_is_swl  | op_code_is_swr    | (op_code_is_special2 & func_code_is_mul);
+        op_code_is_swl  | op_code_is_swr    | (op_code_is_special2 & func_code_is_mul) |
+        op_code_is_lwl  | op_code_is_lwr    ;
 
     wire read_rt   =
         op_code_is_cop0 & !(id1_rs ^ `MTC0_RS_CODE);
@@ -338,6 +340,7 @@ module idu_2 (
     assign id2_is_tlbp          = id1_is_tlbp;
     assign id2_is_tlbr          = id1_is_tlbr;
     assign id2_is_tlbwi         = id1_is_tlbwi;
+    assign id2_is_tlbwr         = id1_is_tlbwr;
     assign id2_is_i_refill_tlbl = id1_is_i_refill_tlbl;
     assign id2_is_i_invalid_tlbl= id1_is_i_invalid_tlbl;
     assign id2_is_refetch       = id1_is_refetch;

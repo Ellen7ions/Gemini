@@ -34,6 +34,7 @@ module ex_lsu1c (
     input   wire            ex_is_tlbp_o,
     input   wire            ex_is_tlbr_o,
     input   wire            ex_is_tlbwi_o,
+    input   wire            ex_is_tlbwr_o,
     input   wire            ex_has_exception_o,
 
     input   wire            ex_w_reg_ena_o,
@@ -73,6 +74,7 @@ module ex_lsu1c (
     output  reg             ex_is_tlbp_i,
     output  reg             ex_is_tlbr_i,
     output  reg             ex_is_tlbwi_i,
+    output  reg             ex_is_tlbwr_i,
     output  reg             ex_has_exception_i,
 
     output  reg             ex_w_reg_ena_i,
@@ -126,6 +128,7 @@ module ex_lsu1c (
             ex_is_tlbwi_i           <= 1'b0                 ;
             ex_is_refetch_i         <= 1'b0                 ;
             ex_is_tlbp_i            <= 1'b0                 ;
+            ex_is_tlbwr_i           <= 1'b0                 ;
         end else if (!flush & !stall) begin
             ex_alu_res_i            <= ex_alu_res_o         ;
             ex_w_hilo_ena_i         <= ex_w_hilo_ena_o      ;
@@ -164,6 +167,7 @@ module ex_lsu1c (
             ex_is_tlbr_i            <= ex_is_tlbr_o         ;
             ex_is_tlbwi_i           <= ex_is_tlbwi_o        ;
             ex_is_tlbp_i            <= ex_is_tlbp_o         ;
+            ex_is_tlbwr_i           <= ex_is_tlbwr_o        ;
         end
     end
     

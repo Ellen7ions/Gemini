@@ -34,6 +34,7 @@ module id2_exc (
     input   wire        id2_is_tlbp_o,
     input   wire        id2_is_tlbr_o,
     input   wire        id2_is_tlbwi_o,
+    input   wire        id2_is_tlbwr_o,
     input   wire [4 :0] id2_rs_o,
     input   wire [4 :0] id2_rt_o,
     input   wire [4 :0] id2_rd_o,
@@ -82,6 +83,7 @@ module id2_exc (
     output  reg         id2_is_tlbp_i,
     output  reg         id2_is_tlbr_i,
     output  reg         id2_is_tlbwi_i,
+    output  reg         id2_is_tlbwr_i,
     output  reg  [4 :0] id2_rs_i,
     output  reg  [4 :0] id2_rt_i,
     output  reg  [4 :0] id2_rd_i,
@@ -149,6 +151,7 @@ module id2_exc (
             id2_pred_taken_i    <= 1'h0;
             id2_pred_target_i   <= 32'h0;
             id2_is_branch_likely_i<= 1'b0;
+            id2_is_tlbwr_i      <= 1'b0;
         end else if (!flush & !stall) begin
             id2_is_ls_i         <= id2_is_ls_o;
             id2_rs_i            <= id2_rs_o;
@@ -194,6 +197,7 @@ module id2_exc (
             id2_pred_taken_i    <= id2_pred_taken_o;
             id2_pred_target_i   <= id2_pred_target_o;
             id2_is_branch_likely_i<=id2_is_branch_likely_o;
+            id2_is_tlbwr_i      <= id2_is_tlbwr_o;
         end
     end
 endmodule

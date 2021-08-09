@@ -22,6 +22,7 @@ module ex_c (
     input   wire            id2_is_tlbp,
     input   wire            id2_is_tlbr,
     input   wire            id2_is_tlbwi,
+    input   wire            id2_is_tlbwr,
 
     // addr signals
     input   wire [4 :0]     id2_rd,
@@ -103,6 +104,7 @@ module ex_c (
     output  wire            ex_is_tlbp,
     output  wire            ex_is_tlbr,
     output  wire            ex_is_tlbwi,
+    output  wire            ex_is_tlbwr,
 
     output  wire [31:0]     ex_pc,
     output  wire [31:0]     ex_rt_data,
@@ -149,6 +151,7 @@ module ex_c (
     assign ex_is_tlbp           = id2_is_tlbp;
     assign ex_is_tlbr           = id2_is_tlbr;
     assign ex_is_tlbwi          = id2_is_tlbwi;
+    assign ex_is_tlbwr          = id2_is_tlbwr;
 
     assign ex_has_exception =
             ex_is_eret          |

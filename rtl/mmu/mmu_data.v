@@ -18,8 +18,10 @@ module mmu_data #(
     input   wire                        is_tlbp,
     input   wire                        is_tlbr,
     input   wire                        is_tlbwi,
+    input   wire                        is_tlbwr,
     
     // r cp0
+    input   wire [              31:0]   r_cp0_Random,
     input   wire [              31:0]   r_cp0_Config,
     input   wire [              31:0]   r_cp0_Index,
     input   wire [              31:0]   r_cp0_EntryHi,
@@ -130,8 +132,8 @@ module mmu_data #(
     assign w_cp0_EntryLo1   =
         {6'h0, r_pfn1, r_c1, r_d1, r_v1, r_g};
     
-    assign we       = is_tlbwi;
-    assign w_index  = r_cp0_Index[3:0];
+    assign we       = is_tlbwi | is_tlbwr;
+    assign w_index  = is_tlbwi ? r_cp0_Index[3:0] : r_cp0_Random[3:0];
     assign w_vpn    = r_cp0_EntryHi[31:13];
     assign w_asid   = r_cp0_EntryHi[7 :0];
     assign w_g      = r_cp0_EntryLo0[0] & r_cp0_EntryLo1[0];

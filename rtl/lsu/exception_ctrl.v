@@ -31,6 +31,8 @@ module exception_ctrl (
 
     // from cp0
     input   wire [31:0]     r_cp0_epc,
+    input   wire [31:0]     r_cp0_ebase,
+    input   wire            bev,
     // update pc
     output  wire            exception_pc_ena,
     output  reg  [31:0]     exception_pc,
@@ -66,10 +68,11 @@ module exception_ctrl (
     assign flush_pipline    = exception_has_1 | refetch;
     assign exception_pc_ena = exception_has_1 | refetch;
         
+    wire [31:0] exp_ebase = bev ? 32'hbfc0_0200 : r_cp0_ebase;
 
     always @(*) begin
         cp0_cls_exl         = 1'b0;
-        exception_pc        = 32'hbfc0_0380;
+        exception_pc        = exp_ebase + 32'h180;
         w_cp0_update_ena    = 1'b1;
         w_cp0_exccode       = 5'h00;
         w_cp0_bd            = 1'b0;
@@ -90,7 +93,7 @@ module exception_ctrl (
                 w_cp0_exccode           = 5'h00;
             end else if (exception_is_i_refill_tlbl_1) begin
                 w_cp0_exccode   = 5'h02;
-                exception_pc    = 32'hbfc0_0200;
+                exception_pc    = exp_ebase;
                 w_cp0_entryhi_ena       = 1'b1;
                 w_cp0_entryhi[31:13]    = pc_1[31:13];
                 w_cp0_badvaddr_ena      = 1'b1;
@@ -119,7 +122,7 @@ module exception_ctrl (
                 exception_pc        = r_cp0_epc;
             end else if (exception_is_d_refill_tlbl_1) begin
                 w_cp0_exccode   = 5'h02;
-                exception_pc    = 32'hbfc0_0200;
+                exception_pc    = exp_ebase;
                 w_cp0_entryhi_ena       = 1'b1;
                 w_cp0_entryhi[31:13]    = mem_badvaddr_1[31:13];
                 w_cp0_badvaddr_ena      = 1'b1;
@@ -132,7 +135,7 @@ module exception_ctrl (
                 w_cp0_badvaddr          = mem_badvaddr_1;
             end else if (exception_is_d_refill_tlbs_1) begin
                 w_cp0_exccode   = 5'h03;
-                exception_pc    = 32'hbfc0_0200;
+                exception_pc    = exp_ebase;
                 w_cp0_entryhi_ena       = 1'b1;
                 w_cp0_entryhi[31:13]    = mem_badvaddr_1[31:13];
                 w_cp0_badvaddr_ena      = 1'b1;

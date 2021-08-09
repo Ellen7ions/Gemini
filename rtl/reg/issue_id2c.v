@@ -31,6 +31,7 @@ module issue_id2c (
     input   wire        id1_is_tlbp_o,
     input   wire        id1_is_tlbr_o,
     input   wire        id1_is_tlbwi_o,
+    input   wire        id1_is_tlbwr_o,
     input   wire        id1_in_delay_slot_o,
     input   wire        id1_is_inst_adel_o,
     input   wire        id1_is_ri_o,
@@ -61,6 +62,7 @@ module issue_id2c (
     output  reg         id1_is_tlbp_i,
     output  reg         id1_is_tlbr_i,
     output  reg         id1_is_tlbwi_i,
+    output  reg         id1_is_tlbwr_i,
     output  reg         id1_in_delay_slot_i,
     output  reg         id1_is_inst_adel_i,
     output  reg         id1_is_ri_i,
@@ -100,6 +102,7 @@ module issue_id2c (
             id1_pred_target_i       <=  32'h0;
             id1_is_ri_i             <=  1'h0;
             id1_is_branch_likely_i  <=  1'b0;
+            id1_is_tlbwr_i          <= 1'b0;
         end else if (!flush & !stall) begin
             id1_pc_i                <=  id1_pc_o;
             id1_inst_i              <=  id1_inst_o;   
@@ -130,6 +133,7 @@ module issue_id2c (
             id1_pred_target_i       <=  id1_pred_target_o;
             id1_is_ri_i             <=  id1_is_ri_o;
             id1_is_branch_likely_i  <= id1_is_branch_likely_o;
+            id1_is_tlbwr_i          <= id1_is_tlbwr_o;
         end
     end
     

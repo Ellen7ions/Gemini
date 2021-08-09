@@ -17,11 +17,15 @@ module cp0 (
 
     // show
     output  wire [31:0] epc,
+    output  wire [31:0] ebase,
     output  wire [31:0] index,
     output  wire [31:0] entryhi,
     output  wire [31:0] entrylo0,
     output  wire [31:0] entrylo1,
     output  wire [31:0] config_,
+    output  wire [31:0] random,
+
+    output  wire        bev,
 
     output  wire        cp0_has_int,
 
@@ -49,6 +53,7 @@ module cp0 (
     reg [32:0]  Count;
     reg [31:0]  Compare;
     reg [31:0]  EPC;
+    reg [31:0]  Ebase;
     reg [31:0]  Status;
     reg [31:0]  Cause;
     reg [31:0]  Index;
@@ -61,12 +66,15 @@ module cp0 (
     reg [31:0]  Config;
     reg [31:0]  Config1;
 
+    assign bev          = Status[22];
     assign epc          = EPC;
+    assign ebase        = Ebase;
     assign index        = Index;
     assign entryhi      = EntryHi;
     assign entrylo0     = EntryLo0;
     assign entrylo1     = EntryLo1;
     assign config_      = Config;
+    assign random       = Random;
     assign cp0_has_int  = ((Cause[15:8] & Status[15:8]) != 8'h0) & Status[0] & ~Status[1];
 
     always @(posedge clk) begin
@@ -76,12 +84,21 @@ module cp0 (
             Cause       <= 32'd0;
             Index       <= 32'd0;
             EntryHi     <= 32'h0;
+            Ebase       <= 32'h8000_0000;
+            Random      <= 32'h15;
+            Wired       <= 32'h0;
             Config      <= {1'b1, 15'd0, 1'b0, 2'd0, 3'd0, 3'd1, 4'd0, 3'd0};   // kseg0 3'd3=cached, 3'd2=uncached
             Config1     <= {1'b0, 6'd15, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
             PRId        <= 32'h00004220;
         end else begin
             Count           <= Count + 32'h1;
             Cause[15:10]    <= {Cause[30] | interrupt[5], interrupt[4: 0]};
+
+            if (Random == Wired) begin
+                Random      <= 32'h15;
+            end else begin
+                Random      <= Random - 32'h1;
+            end
 
             if (Compare != 32'h0 && Count[32:1] == Compare)
                 Cause[30]   <= 1'b1;
@@ -115,6 +132,11 @@ module cp0 (
 
             if (w_ena) begin
                 case (w_addr)
+                {5'd6, 3'd0}: begin
+                    Wired[3:0]      <= w_data[3:0];
+                    Random          <= 32'h15;
+                end
+
                 {5'd9, 3'd0}: begin
                     Count           <= {w_data, 1'b0};    
                 end
@@ -125,7 +147,8 @@ module cp0 (
                 end
 
                 {5'd12, 3'd0}: begin
-                    Status[15:8]   <= w_data[15:8];
+                    Status[22]      <= w_data[22];
+                    Status[15:8]    <= w_data[15:8];
                     Status[1]       <= w_data[1];
                     Status[0]       <= w_data[0];
                 end
@@ -137,6 +160,10 @@ module cp0 (
                 {5'd14, 3'd0}: begin
                     // if (~w_cp0_update_ena)
                     EPC             <= w_data;
+                end
+
+                {5'd15, 3'd1}: begin
+                    Ebase[29:12]    <= w_data[29:12];
                 end
 
                 {5'd0, 3'd0}: begin
@@ -169,6 +196,10 @@ module cp0 (
 
     always @(*) begin
         case (r_addr)
+        {5'd1, 3'd0}: begin
+            r_data      = Random;
+        end
+
         {5'd8, 3'd0}: begin
             r_data      = BadVAddr;
         end
@@ -195,6 +226,10 @@ module cp0 (
 
         {5'd15, 3'd0}: begin
             r_data      = PRId;
+        end
+
+        {5'd15, 3'd1}: begin
+            r_data      = Ebase;
         end
 
         {5'd0, 3'd0}: begin

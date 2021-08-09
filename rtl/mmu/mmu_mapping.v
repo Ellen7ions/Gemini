@@ -9,7 +9,9 @@ module mmu_mapping #(
     input   wire        is_tlbp,
     input   wire        is_tlbr,
     input   wire        is_tlbwi,
+    input   wire        is_tlbwr,
 
+    input   wire [31:0] r_cp0_Random,
     input   wire [31:0] r_cp0_Config,
     input   wire [31:0] r_cp0_Index,
     input   wire [31:0] r_cp0_EntryHi,
@@ -170,7 +172,9 @@ module mmu_mapping #(
         .is_tlbp            (is_tlbp                ),
         .is_tlbr            (is_tlbr                ),
         .is_tlbwi           (is_tlbwi               ),
+        .is_tlbwr           (is_tlbwr               ),
         
+        .r_cp0_Random       (r_cp0_Random           ),
         .r_cp0_Config       (r_cp0_Config           ),
         .r_cp0_Index        (r_cp0_Index            ),
         .r_cp0_EntryHi      (r_cp0_EntryHi          ),

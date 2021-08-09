@@ -78,9 +78,11 @@ module gemini (
     wire            id1c_is_tlbp_o;
     wire            id1c_is_tlbr_o;
     wire            id1c_is_tlbwi_o;
+    wire            id1c_is_tlbwr_o;
     wire            id1c_is_tlbp_i;
     wire            id1c_is_tlbr_i;
     wire            id1c_is_tlbwi_i;
+    wire            id1c_is_tlbwr_i;
     wire            id1c_is_i_refill_tlbl_o;
     wire            id1c_is_i_invalid_tlbl_o;
     wire            id1c_is_refetch_o;
@@ -103,9 +105,11 @@ module gemini (
     wire            id2c_is_tlbp_o;
     wire            id2c_is_tlbr_o;
     wire            id2c_is_tlbwi_o;
+    wire            id2c_is_tlbwr_o;
     wire            id2c_is_tlbp_i;
     wire            id2c_is_tlbr_i;
     wire            id2c_is_tlbwi_i;
+    wire            id2c_is_tlbwr_i;
 
     wire            exc_is_i_refill_tlbl_o;
     wire            exc_is_i_invalid_tlbl_o;
@@ -118,6 +122,7 @@ module gemini (
     wire            exc_is_tlbr_o;
     wire            exc_is_tlbp_o;
     wire            exc_is_tlbwi_o;
+    wire            exc_is_tlbwr_o;
     wire            exc_is_i_refill_tlbl_i;
     wire            exc_is_i_invalid_tlbl_i;
     wire            exc_is_d_refill_tlbl_i;
@@ -129,6 +134,7 @@ module gemini (
     wire            exc_is_tlbr_i;
     wire            exc_is_tlbp_i;
     wire            exc_is_tlbwi_i;
+    wire            exc_is_tlbwr_i;
 
     wire            memc_is_refetch_o;
     wire            memc_is_refetch_i;
@@ -454,6 +460,7 @@ module gemini (
     wire            lsu1c_is_refetch_i;
     wire            lsu1c_is_tlbr_i;
     wire            lsu1c_is_tlbwi_i;
+    wire            lsu1c_is_tlbwr_i;
     wire            lsu1c_has_exception_i;
     wire            lsu1c_w_reg_ena_i;
     wire [4 :0]     lsu1c_w_reg_dst_i;
@@ -569,11 +576,14 @@ module gemini (
     wire            cp0_cls_exl;
     wire            exception_flush;
     wire [31:0]     cp0_epc;
+    wire [31:0]     cp0_ebase;
+    wire            cp0_bev;
     wire [31:0]     cp0_index;
     wire [31:0]     cp0_entryhi;
     wire [31:0]     cp0_entrylo0;
     wire [31:0]     cp0_entrylo1;
     wire [31:0]     cp0_config;
+    wire [31:0]     cp0_random;
 
     issue_id2c issue_id2c0 (
         .clk                (clk                ),
@@ -606,6 +616,7 @@ module gemini (
         .id1_is_tlbp_o      (id1c_is_tlbp_o     ),
         .id1_is_tlbr_o      (id1c_is_tlbr_o     ),
         .id1_is_tlbwi_o     (id1c_is_tlbwi_o    ),
+        .id1_is_tlbwr_o     (id1c_is_tlbwr_o    ),
         .id1_in_delay_slot_o(id1c_in_delay_slot_o),
         .id1_is_inst_adel_o (id1c_is_inst_adel_o),
         .id1_is_ri_o        (id1c_is_ri_o       ),
@@ -636,6 +647,7 @@ module gemini (
         .id1_is_tlbp_i      (id1c_is_tlbp_i     ),
         .id1_is_tlbr_i      (id1c_is_tlbr_i     ),
         .id1_is_tlbwi_i     (id1c_is_tlbwi_i    ),
+        .id1_is_tlbwr_i     (id1c_is_tlbwr_i    ),
         .id1_in_delay_slot_i(id1c_in_delay_slot_i),
         .id1_is_inst_adel_i (id1c_is_inst_adel_i),
         .id1_is_ri_i        (id1c_is_ri_i       ),
@@ -718,6 +730,7 @@ module gemini (
         .id2_is_tlbp_o      (id2c_is_tlbp_o     ),
         .id2_is_tlbr_o      (id2c_is_tlbr_o     ),
         .id2_is_tlbwi_o     (id2c_is_tlbwi_o    ),
+        .id2_is_tlbwr_o     (id2c_is_tlbwr_o    ),
         .id2_rs_o           (id2c_rs_o          ),
         .id2_rt_o           (id2c_rt_o          ),
         .id2_rd_o           (id2c_rd_o          ),
@@ -766,6 +779,7 @@ module gemini (
         .id2_is_tlbp_i      (id2c_is_tlbp_i     ),
         .id2_is_tlbr_i      (id2c_is_tlbr_i     ),
         .id2_is_tlbwi_i     (id2c_is_tlbwi_i    ),
+        .id2_is_tlbwr_i     (id2c_is_tlbwr_i    ),
         .id2_rs_i           (id2c_rs_i          ),
         .id2_rt_i           (id2c_rt_i          ),
         .id2_rd_i           (id2c_rd_i          ),
@@ -862,6 +876,7 @@ module gemini (
         .ex_is_tlbp_o           (exc_is_tlbp_o          ),
         .ex_is_tlbr_o           (exc_is_tlbr_o          ),
         .ex_is_tlbwi_o          (exc_is_tlbwi_o         ),
+        .ex_is_tlbwr_o          (exc_is_tlbwr_o         ),
         .ex_has_exception_o     (exc_has_exception_o    ),
         .ex_w_reg_ena_o         (exc_w_reg_ena_o        ),
         .ex_w_reg_dst_o         (exc_w_reg_dst_o        ),
@@ -899,6 +914,7 @@ module gemini (
         .ex_is_tlbp_i           (exc_is_tlbp_i          ),
         .ex_is_tlbr_i           (exc_is_tlbr_i          ),
         .ex_is_tlbwi_i          (exc_is_tlbwi_i         ),
+        .ex_is_tlbwr_i          (exc_is_tlbwr_i         ),
         .ex_has_exception_i     (exc_has_exception_i    ),
         .ex_w_reg_ena_i         (exc_w_reg_ena_i        ),
         .ex_w_reg_dst_i         (exc_w_reg_dst_i        ),
@@ -967,6 +983,7 @@ module gemini (
         .ex_is_refetch_o        (exc_is_refetch_i         ),
         .ex_is_tlbr_o           (exc_is_tlbr_i            ),
         .ex_is_tlbwi_o          (exc_is_tlbwi_i           ),
+        .ex_is_tlbwr_o          (exc_is_tlbwr_i           ),
         .ex_has_exception_o     (exc_has_exception_i      ),
         .ex_w_reg_ena_o         (exc_w_reg_ena_i          ),
         .ex_w_reg_dst_o         (exc_w_reg_dst_i          ),
@@ -1004,6 +1021,7 @@ module gemini (
         .ex_is_refetch_i        (lsu1c_is_refetch_i       ),
         .ex_is_tlbr_i           (lsu1c_is_tlbr_i          ),
         .ex_is_tlbwi_i          (lsu1c_is_tlbwi_i         ),
+        .ex_is_tlbwr_i          (lsu1c_is_tlbwr_i         ),
         .ex_has_exception_i     (lsu1c_has_exception_i    ),
         .ex_w_reg_ena_i         (lsu1c_w_reg_ena_i        ),
         .ex_w_reg_dst_i         (lsu1c_w_reg_dst_i        ),
@@ -1103,6 +1121,8 @@ module gemini (
     wire        is_tlbp;
     wire        is_tlbr;
     wire        is_tlbwi;
+    wire        is_tlbwr;
+    wire [31:0] r_cp0_Random;
     wire [31:0] r_cp0_Config;
     wire [31:0] r_cp0_Index;
     wire [31:0] r_cp0_EntryHi;
@@ -1148,6 +1168,8 @@ module gemini (
         .is_tlbp                (is_tlbp                ),
         .is_tlbr                (is_tlbr                ),
         .is_tlbwi               (is_tlbwi               ),
+        .is_tlbwr               (is_tlbwr               ),
+        .r_cp0_Random           (r_cp0_Random           ),
         .r_cp0_Config           (r_cp0_Config           ),
         .r_cp0_Index            (r_cp0_Index            ),
         .r_cp0_EntryHi          (r_cp0_EntryHi          ),
@@ -1203,11 +1225,13 @@ module gemini (
     assign is_tlbp              = exc_is_tlbp_o;
     assign is_tlbr              = lsu1c_is_tlbr_i;
     assign is_tlbwi             = lsu1c_is_tlbwi_i;
+    assign is_tlbwr             = lsu1c_is_tlbwr_i;
     assign r_cp0_Index          = cp0_index;
     assign r_cp0_EntryHi        = cp0_entryhi;    
     assign r_cp0_EntryLo0       = cp0_entrylo0;    
     assign r_cp0_EntryLo1       = cp0_entrylo1;
     assign r_cp0_Config         = cp0_config;
+    assign r_cp0_Random         = cp0_random;
 
     wire            fetch_ena;
     wire [31:0]     fetch_target;
@@ -1386,6 +1410,7 @@ module gemini (
         .id1_is_tlbp_1      (id1c_is_tlbp_o     ),
         .id1_is_tlbr_1      (id1c_is_tlbr_o     ),
         .id1_is_tlbwi_1     (id1c_is_tlbwi_o    ),
+        .id1_is_tlbwr_1     (id1c_is_tlbwr_o    ),
         .id1_in_delay_slot_1(id1c_in_delay_slot_o),
         .id1_is_inst_adel_1 (id1c_is_inst_adel_o),
         .id1_is_ri_1        (id1c_is_ri_o),
@@ -1414,6 +1439,7 @@ module gemini (
         .id1_is_tlbp_2      (),
         .id1_is_tlbr_2      (),
         .id1_is_tlbwi_2     (),
+        .id1_is_tlbwr_2     (),
         .id1_in_delay_slot_2(id1p_in_delay_slot_o),
         .id1_is_inst_adel_2 (),
         .id1_is_ri_2        (),
@@ -1552,6 +1578,7 @@ module gemini (
         .id1_is_tlbp        (id1c_is_tlbp_i     ),
         .id1_is_tlbr        (id1c_is_tlbr_i     ),
         .id1_is_tlbwi       (id1c_is_tlbwi_i    ),
+        .id1_is_tlbwr       (id1c_is_tlbwr_i    ),
         .id1_in_delay_slot  (id1c_in_delay_slot_i),
         .id1_inst_adel      (id1c_is_inst_adel_i ),
         .id1_is_ri          (id1c_is_ri_i),
@@ -1590,6 +1617,7 @@ module gemini (
         .id2_is_tlbp        (id2c_is_tlbp_o     ),
         .id2_is_tlbr        (id2c_is_tlbr_o     ),
         .id2_is_tlbwi       (id2c_is_tlbwi_o    ),
+        .id2_is_tlbwr       (id2c_is_tlbwr_o    ),
         .id2_is_i_refill_tlbl (id2c_is_i_refill_tlbl_o  ),
         .id2_is_i_invalid_tlbl(id2c_is_i_invalid_tlbl_o ),
         .id2_is_refetch       (id2c_is_refetch_o        ),
@@ -1648,6 +1676,7 @@ module gemini (
         .id1_is_tlbp        (),
         .id1_is_tlbr        (),
         .id1_is_tlbwi       (),
+        .id1_is_tlbwr       (),
         .id1_in_delay_slot  (id1p_in_delay_slot_i),
         .id1_inst_adel      (id1p_is_inst_adel_i ),
         .id1_is_ri          (),
@@ -1686,6 +1715,7 @@ module gemini (
         .id2_is_tlbp        (),
         .id2_is_tlbr        (),
         .id2_is_tlbwi       (),
+        .id2_is_tlbwr       (),
         .id2_is_i_refill_tlbl (),
         .id2_is_i_invalid_tlbl(),
         .id2_is_refetch       (),
@@ -1765,6 +1795,7 @@ module gemini (
         .id2_is_tlbp            (id2c_is_tlbp_i             ),
         .id2_is_tlbr            (id2c_is_tlbr_i             ),
         .id2_is_tlbwi           (id2c_is_tlbwi_i            ),
+        .id2_is_tlbwr           (id2c_is_tlbwr_i            ),
 
         .id2_rd             (id2c_rd_i          ),
         .id2_w_reg_dst      (id2c_w_reg_dst_i   ),
@@ -1828,6 +1859,7 @@ module gemini (
         .ex_is_tlbp             (exc_is_tlbp_o          ),
         .ex_is_tlbr             (exc_is_tlbr_o          ),
         .ex_is_tlbwi            (exc_is_tlbwi_o         ),
+        .ex_is_tlbwr            (exc_is_tlbwr_o         ),
 
         .ex_pc              (exc_pc_o           ),
         .ex_rt_data         (exc_rt_data_o      ),
@@ -1994,6 +2026,8 @@ module gemini (
         .exception_has_exp_1        (lsu1c_has_exception_i    ),
 
         .r_cp0_epc                  (cp0_epc            ),
+        .r_cp0_ebase                (cp0_ebase          ),
+        .bev                        (cp0_bev            ),
 
         .exception_pc_ena           (exception_pc_ena   ),
         .exception_pc               (exception_pc       ),
@@ -2031,11 +2065,15 @@ module gemini (
         .w_data                     (cp0_w_data         ),
 
         .epc                        (cp0_epc            ),
+        .ebase                      (cp0_ebase          ),
         .index                      (cp0_index          ),
         .entryhi                    (cp0_entryhi        ),
         .entrylo0                   (cp0_entrylo0       ),
         .entrylo1                   (cp0_entrylo1       ),
         .config_                    (cp0_config         ),
+        .random                     (cp0_random         ),
+
+        .bev                        (cp0_bev            ),
 
         .cp0_has_int                (cp0_has_int        ),
         .cp0_cls_exl                (cp0_cls_exl        ),
