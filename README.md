@@ -10,4 +10,5 @@ If you find Castor and Pollux, you find me.
 
 - [x] Test d-cache
 - [x] Optimize
-- [ ] PMON
+- [x] PMON
+- [x] uCore
