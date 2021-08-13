@@ -1939,6 +1939,7 @@ module gemini (
         .ex_mem_is_refetch          (lsu1c_is_refetch_i         ),
         .ex_mem_is_tlbr             (lsu1c_is_tlbr_i            ),
         .ex_mem_is_tlbwi            (lsu1c_is_tlbwi_i           ),
+        .ex_mem_is_tlbwr            (lsu1c_is_tlbwr_i           ),
         .ex_mem_has_exception       (lsu1c_has_exception_i      ),
 
         .ex_mem_w_hilo_ena  (lsu1c_w_hilo_ena_i   ),
@@ -2046,7 +2047,7 @@ module gemini (
         .flush_pipline              (exception_flush    )        
     );
 
-    wire        cp0_w_ena = memc_w_cp0_ena_o & ~memc_is_refetch_o;
+    wire        cp0_w_ena = memc_w_cp0_ena_o & ~memc_is_refetch_o & ~memc_has_exception_o;
     wire [7 :0] cp0_w_addr= memc_w_cp0_addr_o;
     wire [31:0] cp0_w_data= memc_w_cp0_data_o;
 
@@ -2168,7 +2169,7 @@ module gemini (
         .exc_cp0_stall      (exc_cp0_stall      ),
         .exception_flush    (exception_flush    ),
         .lsu1_tlb_stall_req (
-            (exc_is_tlbwi_o | exc_is_tlbr_o | exc_is_tlbp_o) & (exc_w_cp0_ena_i | lsu1c_w_cp0_ena_i)
+            (exc_is_tlbwr_o | exc_is_tlbwi_o | exc_is_tlbr_o | exc_is_tlbp_o) & (exc_w_cp0_ena_i | lsu1c_w_cp0_ena_i)
         ),
         .mem_refetch        (memc_is_refetch_o  ),
         

@@ -109,7 +109,7 @@ module issue (
     end
 
     assign update_refetch = 
-        refetch ? ~cls_refetch : id1_valid_1 & (id1_is_tlbr_1 | id1_is_tlbwi_1) | id1_valid_2 & (id1_is_tlbr_2 | id1_is_tlbwi_2 | id1_is_tlbwr_2);
+        refetch ? ~cls_refetch : id1_valid_1 & (id1_is_tlbr_1 | id1_is_tlbwi_1 | id1_is_tlbwr_1) | id1_valid_2 & (id1_is_tlbr_2 | id1_is_tlbwi_2 | id1_is_tlbwr_2);
 
     wire id1_is_hilo_1, id1_is_hilo_2;
     wire id1_is_cache_inst_1, id1_is_cache_inst_2;

@@ -3,7 +3,7 @@
 module cp0 (
     input   wire        clk,
     input   wire        rst,
-    input   wire [5 :0] interrupt,
+    (*mark_debug="true"*) input   wire [5 :0] interrupt,
     
     // read cp0 from software
     input   wire        r_ena,
@@ -27,7 +27,7 @@ module cp0 (
 
     output  wire        bev,
 
-    output  wire        cp0_has_int,
+    (*mark_debug="true"*) output  wire        cp0_has_int,
 
     input   wire        cp0_cls_exl,
 
@@ -54,8 +54,8 @@ module cp0 (
     reg [31:0]  Compare;
     reg [31:0]  EPC;
     reg [31:0]  Ebase;
-    reg [31:0]  Status;
-    reg [31:0]  Cause;
+    (*mark_debug="true"*) reg [31:0]  Status;
+    (*mark_debug="true"*) reg [31:0]  Cause;
     reg [31:0]  Index;
     reg [31:0]  Random;
     reg [31:0]  Wired;
@@ -65,6 +65,8 @@ module cp0 (
     reg [31:0]  EntryLo1;
     reg [31:0]  Config;
     reg [31:0]  Config1;
+
+    (*mark_debug="true"*) reg         timer_int;
 
     assign bev          = Status[22];
     assign epc          = EPC;
@@ -80,7 +82,8 @@ module cp0 (
     always @(posedge clk) begin
         if (rst) begin
             Status      <= {9'd0, 1'd1, 6'd0, 8'd0, 6'd0, 1'd0, 1'd0};
-            Count       <= 32'h0;
+            timer_int   <= 1'b0;
+            Count       <= 33'h0;
             Cause       <= 32'd0;
             Index       <= 32'd0;
             EntryHi     <= 32'h0;
@@ -91,8 +94,8 @@ module cp0 (
             Config1     <= {1'b0, 6'd15, 3'd2, 3'd3, 3'd1, 3'd2, 3'd3, 3'd1, 7'd0};
             PRId        <= 32'h00004220;
         end else begin
-            Count           <= Count + 32'h1;
-            Cause[15:10]    <= {Cause[30] | interrupt[5], interrupt[4: 0]};
+            Count           <= Count + 33'h1;
+            Cause[15:10]    <= {timer_int | interrupt[5], interrupt[4: 0]};
 
             if (Random == Wired) begin
                 Random      <= 32'h15;
@@ -101,7 +104,7 @@ module cp0 (
             end
 
             if (Compare != 32'h0 && Count[32:1] == Compare)
-                Cause[30]   <= 1'b1;
+                timer_int   <= 1'b1;
 
             if (cp0_cls_exl) begin
                 Status[1]   <= 1'b0;
@@ -143,12 +146,13 @@ module cp0 (
 
                 {5'd11, 3'd0}: begin
                     Compare         <= w_data;
-                    Cause[30]       <= 1'b0;
+                    timer_int       <= 1'b0;
                 end
 
                 {5'd12, 3'd0}: begin
                     Status[22]      <= w_data[22];
                     Status[15:8]    <= w_data[15:8];
+                    Status[4]       <= w_data[4];
                     Status[1]       <= w_data[1];
                     Status[0]       <= w_data[0];
                 end
@@ -209,7 +213,7 @@ module cp0 (
         end
 
         {5'd9, 3'd0}: begin
-            r_data      = Count;
+            r_data      = Count[32:1];
         end
 
         {5'd12, 3'd0}: begin

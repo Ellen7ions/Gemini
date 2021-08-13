@@ -14,15 +14,15 @@ module tlb #(
     output  wire                        s_d_1,
     output  wire                        s_v_1,
 
-    (*mark_debug="true"*) input   wire [              18:0]   s_vpn_2,
-    (*mark_debug="true"*) input   wire                        s_odd_2,
-    (*mark_debug="true"*) input   wire [              7 :0]   s_asid_2,
-    (*mark_debug="true"*) output  wire                        s_found_2,
-    (*mark_debug="true"*) output  wire [$clog2(TLBNUM)-1:0]   s_index_2,
-    (*mark_debug="true"*) output  wire [              19:0]   s_pfn_2,
-    (*mark_debug="true"*) output  wire [              2 :0]   s_c_2,
-    (*mark_debug="true"*) output  wire                        s_d_2,
-    (*mark_debug="true"*) output  wire                        s_v_2,
+    input   wire [              18:0]   s_vpn_2,
+    input   wire                        s_odd_2,
+    input   wire [              7 :0]   s_asid_2,
+    output  wire                        s_found_2,
+    output  wire [$clog2(TLBNUM)-1:0]   s_index_2,
+    output  wire [              19:0]   s_pfn_2,
+    output  wire [              2 :0]   s_c_2,
+    output  wire                        s_d_2,
+    output  wire                        s_v_2,
 
     input   wire                        we,
     input   wire [$clog2(TLBNUM)-1:0]   w_index,
@@ -52,9 +52,9 @@ module tlb #(
     output  wire                        r_v1
 );
 
-    (*mark_debug="true"*) reg     [               18:0]   tlb_vpn     [TLBNUM-1:0];
-    (*mark_debug="true"*) reg     [               7 :0]   tlb_asid    [TLBNUM-1:0];
-    (*mark_debug="true"*) reg                             tlb_g       [TLBNUM-1:0];
+    reg     [               18:0]   tlb_vpn     [TLBNUM-1:0];
+    reg     [               7 :0]   tlb_asid    [TLBNUM-1:0];
+    reg                             tlb_g       [TLBNUM-1:0];
     reg     [               19:0]   tlb_pfn0    [TLBNUM-1:0];
     reg     [               2 :0]   tlb_c0      [TLBNUM-1:0];
     reg                             tlb_d0      [TLBNUM-1:0];

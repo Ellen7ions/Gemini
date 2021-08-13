@@ -39,6 +39,7 @@ module lsu2c (
     input   wire        ex_mem_is_refetch,
     input   wire        ex_mem_is_tlbr,
     input   wire        ex_mem_is_tlbwi,
+    input   wire        ex_mem_is_tlbwr,
     input   wire        ex_mem_has_exception,
     
     input   wire [1 :0] ex_mem_w_hilo_ena,
@@ -79,9 +80,17 @@ module lsu2c (
     assign mem_w_cp0_addr    = ex_mem_w_cp0_addr;
     assign mem_w_cp0_data    = ex_mem_w_cp0_data;
 
-    assign mem_has_exception = ex_mem_has_exception;
+    assign mem_has_exception = 
+        ex_mem_has_exception        |
+        ex_mem_is_i_refill_tlbl     |
+        ex_mem_is_i_invalid_tlbl    |
+        ex_mem_is_d_refill_tlbl     |
+        ex_mem_is_d_invalid_tlbl    |
+        ex_mem_is_d_refill_tlbs     |
+        ex_mem_is_d_invalid_tlbs    |
+        ex_mem_is_modify            ;
     assign mem_refetch       = ex_mem_is_refetch;
-    assign cls_refetch       = ex_mem_is_tlbr | ex_mem_is_tlbwi;
+    assign cls_refetch       = ex_mem_is_tlbr | ex_mem_is_tlbwi | ex_mem_is_tlbwr;
     
     always @(*) begin
         case ({ex_mem_ls_ena, ex_mem_ls_sel})
