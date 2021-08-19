@@ -1,0 +1,3 @@
+[submodule "ucore-thumips"]
+	path = ucore-thumips
+	url = git@github.com:Ellen7ions/ucore-thumips.git
